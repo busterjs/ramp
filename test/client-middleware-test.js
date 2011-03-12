@@ -14,15 +14,11 @@ buster.testCase("Client middleware", {
                 res.end();
             }
         });
-        this.httpServer.listen(16178, function (e) {
-            done();
-        });
+        this.httpServer.listen(16178, done);
     },
 
     tearDown: function (done) {
-        this.httpServer.on("close", function () {
-            done();
-        });
+        this.httpServer.on("close", done);
         this.httpServer.close();
     },
 
