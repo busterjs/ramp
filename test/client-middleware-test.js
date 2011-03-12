@@ -14,7 +14,7 @@ buster.testCase("Client middleware", {
                 res.end();
             }
         });
-        this.httpServer.listen(16178, done);
+        this.httpServer.listen(h.SERVER_PORT, done);
     },
 
     tearDown: function (done) {
