@@ -67,5 +67,26 @@ buster.testCase("Client middleware", {
                 done();
             }).end();
         }).end();
+    },
+
+    "with a client": {
+        setUp: function (done) {
+            var self = this;
+            httpRequest({path: "/capture", method: "POST"}, function (res, body) {
+                self.clientUrl = res.headers.location;
+                done();
+            }).end();
+        },
+
+        "test getting client index page": function (done) {
+            httpRequest({path: this.clientUrl}, function (res, body) {
+                buster.assert.equals(res.statusCode, 200);
+                buster.assert.equals(res.headers["content-type"], "text/html");
+                buster.assert.match(body, "<frameset");
+                buster.assert.match(body, /\<frame .*src=.buster\.html./);
+                buster.assert.match(body, /\<frame .*src=.client\.html./);
+                done();
+            }).end();
+        }
     }
 });
