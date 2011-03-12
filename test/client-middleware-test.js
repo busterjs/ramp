@@ -5,7 +5,7 @@ var http = require("http");
 var h = require("./test-helper");
 
 buster.testCase("Client middleware", {
-  setUp: function (done) {
+    setUp: function (done) {
         var self = this;
         this.cm = Object.create(clientMiddleware);
         this.httpServer = http.createServer(function (req, res) {
