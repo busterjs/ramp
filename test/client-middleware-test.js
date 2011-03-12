@@ -2,20 +2,7 @@ var buster = require("buster-test");
 var clientMiddleware = require("./../lib/client-middleware");
 
 var http = require("http");
-var httpRequest = function (options, callback) {
-    options.host = options.host || "localhost";
-    options.port = options.port || 16178
-    options.method = options.method || "GET";
-
-    var req = http.request(options, function (res) {
-        var body = "";
-        res.on("data", function (chunk) { body += chunk; });
-        res.on("end", function () { callback(res, body); });
-    });
-    return req;
-};
-
-var NO_RESPONSE_STATUS_CODE = 418;
+var h = require("./test-helper");
 
 buster.testCase("Client middleware", {
   setUp: function (done) {
@@ -23,7 +10,7 @@ buster.testCase("Client middleware", {
         this.cm = Object.create(clientMiddleware);
         this.httpServer = http.createServer(function (req, res) {
             if (!self.cm.respond(req, res)) {
-                res.writeHead(NO_RESPONSE_STATUS_CODE);
+                res.writeHead(h.NO_RESPONSE_STATUS_CODE);
                 res.end();
             }
         });
@@ -40,7 +27,7 @@ buster.testCase("Client middleware", {
     },
 
     "test serves index page": function (done) {
-        httpRequest({path: "/"}, function (res, body) {
+        h.request({path: "/"}, function (res, body) {
             buster.assert.equals(res.statusCode, 200);
             buster.assert.equals(res.headers["content-type"], "text/html");
             buster.assert.match(body, /\<form .*action=.\/capture/);
@@ -50,7 +37,7 @@ buster.testCase("Client middleware", {
     },
 
     "test creating/capturing client": function (done) {
-        httpRequest({path: "/capture", method: "POST"}, function (res, body) {
+        h.request({path: "/capture", method: "POST"}, function (res, body) {
             buster.assert.equals(res.statusCode, 201);
             buster.assert("location" in res.headers);
             buster.assert(res.headers.location != "/");
@@ -59,9 +46,9 @@ buster.testCase("Client middleware", {
     },
 
     "test different clients gets different URLs": function (done) {
-        httpRequest({path: "/capture", method: "POST"}, function (res, body) {
+        h.request({path: "/capture", method: "POST"}, function (res, body) {
             var clientOneUrl = res.headers.location;
-            httpRequest({path: "/capture", method: "POST"}, function (res, body) {
+            h.request({path: "/capture", method: "POST"}, function (res, body) {
                 var clientTwoUrl = res.headers.location;
                 buster.assert.notEquals(clientOneUrl, clientTwoUrl);
                 done();
@@ -72,14 +59,14 @@ buster.testCase("Client middleware", {
     "with a client": {
         setUp: function (done) {
             var self = this;
-            httpRequest({path: "/capture", method: "POST"}, function (res, body) {
+            h.request({path: "/capture", method: "POST"}, function (res, body) {
                 self.clientUrl = res.headers.location;
                 done();
             }).end();
         },
 
         "test getting client index page": function (done) {
-            httpRequest({path: this.clientUrl}, function (res, body) {
+            h.request({path: this.clientUrl}, function (res, body) {
                 buster.assert.equals(res.statusCode, 200);
                 buster.assert.equals(res.headers["content-type"], "text/html");
                 buster.assert.match(body, "<frameset");
