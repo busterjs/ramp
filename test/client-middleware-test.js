@@ -1,4 +1,4 @@
-var buster = require("buster-test");
+var buster = require("buster");
 var clientMiddleware = require("./../lib/client-middleware");
 
 var http = require("http");
