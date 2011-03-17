@@ -37,6 +37,10 @@ buster.testCase("Client middleware", {
             buster.assert.equals(res.statusCode, 201);
             buster.assert("location" in res.headers);
             buster.assert(res.headers.location != "/");
+
+            var data = JSON.parse(body);
+            buster.assert(data.hasOwnProperty("messagingUrl"));
+            buster.assert(data.messagingUrl.length > 1); // Not just a slash.
             done();
         }).end();
     },
@@ -57,6 +61,7 @@ buster.testCase("Client middleware", {
             var self = this;
             h.request({path: "/capture", method: "POST"}, function (res, body) {
                 self.clientUrl = res.headers.location;
+                self.clientData = JSON.parse(body);
                 done();
             }).end();
         },
@@ -70,6 +75,25 @@ buster.testCase("Client middleware", {
                 buster.assert.match(body, /\<frame .*src=.client\.html./);
                 done();
             }).end();
+        },
+
+        "test client has messaging": function (done) {
+            // We're kind of testing the messaging middleware here, but what
+            // the hey. It's important that a client has messaging so we're
+            // adding a full integration test for that.
+            var self = this;
+            h.request({path: self.clientData.messagingUrl, method: "POST"}, function (res, body) {
+                buster.assert.equals(201, res.statusCode);
+
+                h.request({path: self.clientData.messagingUrl, method: "GET"}, function (res, body) {
+                    buster.assert.equals(200, res.statusCode);
+                    var data = JSON.parse(body);
+                    buster.assert.equals(1, data.length);
+                    buster.assert.equals("foo", data[0].topic);
+                    buster.assert.equals("bar", data[0].data);
+                    done();
+                }).end();
+            }).end(new Buffer('[{"topic":"foo","data":"bar"}]', "utf8"));
         }
     }
 });

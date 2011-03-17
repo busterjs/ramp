@@ -28,3 +28,6 @@
 [submodule "node_modules/sinon"]
 	path = node_modules/sinon
 	url = git://github.com/cjohansen/Sinon.JS.git
+[submodule "node_modules/buster-multicast"]
+	path = node_modules/buster-multicast
+	url = git@git.cjohansen.no:buster-js/buster-multicast.git
