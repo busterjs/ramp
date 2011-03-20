@@ -68,21 +68,25 @@ buster.testCase("Client middleware", {
         },
 
         "test getting client index page": function (done) {
+            var self = this;
             h.request({path: this.clientUrl}, function (res, body) {
                 buster.assert.equals(res.statusCode, 200);
                 buster.assert.equals(res.headers["content-type"], "text/html");
                 buster.assert.match(body, "<frameset");
-                buster.assert.match(body, /\<frame .*src=.buster\.html./);
+                buster.assert.match(body, /\<frame .*src=..+buster\.html./);
                 buster.assert.equals(body.match(/\<frame/g).length - 1, 2);
+                buster.assert.match(body, self.clientUrl + "/buster.html");
                 done();
             }).end();
         },
 
         "test buster.html serves buster scripts": function (done) {
+            var self = this;
             h.request({path: this.clientUrl + "/buster.html"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 200);
                 buster.assert.equals(res.headers["content-type"], "text/html");
-                buster.assert.match(body, /\<script .*src=.client\-iframe\.js/);
+                buster.assert.match(body, /\<script .*src=..+client\-iframe\.js/);
+                buster.assert.match(body, self.clientUrl + "/client-iframe.js");
                 done();
             }).end();
         },
