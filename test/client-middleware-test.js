@@ -72,7 +72,15 @@ buster.testCase("Client middleware", {
                 buster.assert.equals(res.headers["content-type"], "text/html");
                 buster.assert.match(body, "<frameset");
                 buster.assert.match(body, /\<frame .*src=.buster\.html./);
-                buster.assert.match(body, /\<frame .*src=.client\.html./);
+                buster.assert.equals(body.match(/\<frame/g).length - 1, 2);
+                done();
+            }).end();
+        },
+
+        "test buster.html serves buster scripts": function (done) {
+            h.request({path: this.clientUrl + "/buster.html"}, function (res, body) {
+                buster.assert.equals(res.statusCode, 200);
+                buster.assert.equals(res.headers["content-type"], "text/html");
                 done();
             }).end();
         },
