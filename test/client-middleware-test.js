@@ -7,7 +7,7 @@ var h = require("./test-helper");
 buster.testCase("Client middleware", {
     setUp: function (done) {
         var self = this;
-        this.cm = Object.create(clientMiddleware);
+        this.cm = clientMiddleware.create();
         this.httpServer = http.createServer(function (req, res) {
             if (!self.cm.respond(req, res)) {
                 res.writeHead(h.NO_RESPONSE_STATUS_CODE);
