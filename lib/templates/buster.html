@@ -1,5 +1,7 @@
 <html>
   <head></head>
   <body></body>
-  <script type="text/javascript" src="<%= clientRoot %>/client-iframe.js"></script>
+  <% for (var i = 0, ii = scripts.length; i < ii; i++) { %>
+    <script type="text/javascript" src="<%= clientRoot %><%= scripts[i].pathname %>"></script>
+  <% } %>
 </html>
