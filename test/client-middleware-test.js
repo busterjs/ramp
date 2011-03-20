@@ -34,7 +34,7 @@ buster.testCase("Client middleware", {
 
     "test creating/capturing client": function (done) {
         h.request({path: "/capture", method: "POST"}, function (res, body) {
-            buster.assert.equals(res.statusCode, 201);
+            buster.assert.equals(res.statusCode, 302);
             buster.assert("location" in res.headers);
             buster.assert(res.headers.location != "/");
 
