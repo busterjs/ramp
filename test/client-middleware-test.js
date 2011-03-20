@@ -85,6 +85,21 @@ buster.testCase("Client middleware", {
             }).end();
         },
 
+        "test serves env.js": function (done) {
+            var self = this;
+            h.request({path: this.clientUrl + "/env.js"}, function (res, body) {
+                buster.assert.equals(res.statusCode, 200);
+                buster.assert.equals(res.headers["content-type"], "text/javascript");
+
+                var scope = {};
+                require("vm").runInNewContext(body, scope);
+                buster.assert("buster" in scope);
+                buster.assert.equals(typeof(scope.buster), "object");
+                buster.assert.equals(scope.buster.messagingUrl, self.clientData.messagingUrl);
+                done();
+            }).end();
+        },
+
         "test client has messaging": function (done) {
             // We're kind of testing the messaging middleware here, but what
             // the hey. It's important that a client has messaging so we're
