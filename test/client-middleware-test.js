@@ -88,9 +88,9 @@ buster.testCase("Client middleware", {
 
                 var scope = {};
                 require("vm").runInNewContext(body, scope);
-                buster.assert("buster" in scope);
-                buster.assert.equals(typeof(scope.buster), "object");
-                buster.assert.equals(scope.buster.messagingUrl, self.clientData.messagingUrl);
+                buster.assert("busterSessionEnv" in scope);
+                buster.assert.equals(typeof(scope.busterSessionEnv), "object");
+                buster.assert.equals(scope.busterSessionEnv.messagingUrl, self.clientData.messagingUrl);
                 done();
             }).end();
         },
