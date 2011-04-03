@@ -170,6 +170,21 @@ buster.testCase("Session middleware", {
                     done();
                 }).end();
             }).end(this.validSessionPayload);
+        },
+
+        "test killing session that isn't current does nothing but deleting the session": function (done) {
+            var sessionStart = sinon.spy();
+            this.sessionMiddleware.on("session:start", sessionStart);
+            var sessionEnd = sinon.spy();
+            this.sessionMiddleware.on("session:end", sessionEnd);
+
+            h.request({path: "/sessions", method: "POST"}, function (res, body) {
+                h.request({path: JSON.parse(body).rootPath, method: "DELETE"}, function () {
+                    buster.assert.isFalse(sessionStart.called);
+                    buster.assert.isFalse(sessionEnd.called);
+                    done();
+                }).end();
+            }).end(this.validSessionPayload);
         }
     }
 });
