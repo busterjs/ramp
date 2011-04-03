@@ -1,3 +1,4 @@
 #!/usr/bin/env node
 
 require("./test/client-middleware-test");
+require("./test/session-middleware-test");
