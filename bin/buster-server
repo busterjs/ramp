@@ -1,0 +1,11 @@
+#!/usr/bin/env node
+
+var clientMiddleware = require("./../lib/capture/client-middleware").create();
+var http = require("http");
+
+http.createServer(function (req, res) {
+    if (clientMiddleware.respond(req, res)) return;
+
+    res.writeHead(404);
+    res.end();
+}).listen(4224);
