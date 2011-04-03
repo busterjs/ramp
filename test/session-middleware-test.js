@@ -48,6 +48,46 @@ buster.testCase("Session middleware", {
         }).end(this.validSessionPayload);
     },
 
+    "test posting malformed data": function (done) {
+        var self = this;
+        h.request({path: "/sessions", method: "POST"}, function (res, body) {
+            buster.assert.equals(500, res.statusCode);
+            buster.assert.match(/invalid JSON/i, body);
+            buster.assert.equals(0, self.sessionMiddleware.sessions.length);
+            done();
+        }).end("{not json}!");
+    },
+
+    "test posting data without resources": function (done) {
+        var self = this;
+        h.request({path: "/sessions", method: "POST"}, function (res, body) {
+            buster.assert.equals(500, res.statusCode);
+            buster.assert.match(body, /missing.+resources/i);
+            buster.assert.equals(0, self.sessionMiddleware.sessions.length);
+            done();
+        }).end('{"load":[]}');
+    },
+
+    "test posting data without load": function (done) {
+        var self = this;
+        h.request({path: "/sessions", method: "POST"}, function (res, body) {
+            buster.assert.equals(500, res.statusCode);
+            buster.assert.match(body, /missing.+load/i);
+            buster.assert.equals(0, self.sessionMiddleware.sessions.length);
+            done();
+        }).end('{"resources":[]}');
+    },
+
+    "test posting data with load entry not represented in resources": function (done) {
+        var self = this;
+        h.request({path: "/sessions", method: "POST"}, function (res, body) {
+            buster.assert.equals(500, res.statusCode);
+            buster.assert.match(body, /load.+\/foo\.js.+resources/i);
+            buster.assert.equals(0, self.sessionMiddleware.sessions.length);
+            done();
+        }).end('{"load":["/foo.js"],"resources":[]}');
+    },
+
     "with created session": {
         setUp: function (done) {
             var self = this;
