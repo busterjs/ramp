@@ -155,6 +155,21 @@ buster.testCase("Session middleware", {
                 load: [],
                 resources: {"/foo.js": {content: "5 + 5;"}}
             }), "utf8"));
+        },
+
+        "test killing first session with second session created": function (done) {
+            var self = this;
+            var sessionStart = sinon.spy();
+            this.sessionMiddleware.on("session:start", sessionStart);
+            h.request({path: "/sessions", method: "POST"}, function (res, body) {
+                var newSession = JSON.parse(body);
+                h.request({path: self.session.rootPath, method: "DELETE"}, function (res, body) {
+                    buster.assert(sessionStart.calledOnce);
+                    var sessionInfo = sessionStart.getCall(0).args[0];
+                    buster.assert.equals(newSession.rootPath, sessionInfo.rootPath);
+                    done();
+                }).end();
+            }).end(this.validSessionPayload);
         }
     }
 });
