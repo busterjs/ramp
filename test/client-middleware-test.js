@@ -80,17 +80,6 @@ buster.testCase("Client middleware", {
             }).end();
         },
 
-        "test buster.html serves buster scripts": function (done) {
-            var self = this;
-            h.request({path: this.clientUrl + "/buster.html"}, function (res, body) {
-                buster.assert.equals(res.statusCode, 200);
-                buster.assert.equals(res.headers["content-type"], "text/html");
-                buster.assert.match(body, /\<script .*src=..+client\-iframe\.js/);
-                buster.assert.match(body, self.clientUrl + "/client-iframe.js");
-                done();
-            }).end();
-        },
-
         "test serves env.js": function (done) {
             var self = this;
             h.request({path: this.clientUrl + "/env.js"}, function (res, body) {
@@ -103,18 +92,6 @@ buster.testCase("Client middleware", {
                 buster.assert.equals(typeof(scope.buster), "object");
                 buster.assert.equals(scope.buster.messagingUrl, self.clientData.messagingUrl);
                 done();
-            }).end();
-        },
-
-        "test serves client-iframe.js": function (done) {
-            var self = this;
-            h.request({path: this.clientUrl + "/client-iframe.js"}, function (res, body) {
-                buster.assert.equals(res.statusCode, 200);
-                buster.assert.equals(res.headers["content-type"], "text/javascript");
-                fs.readFile(__dirname + "/../lib/capture/client-iframe.js", function (err, data) {
-                    buster.assert.equals(body, data.toString("utf8"));
-                    done();
-                });
             }).end();
         },
 
@@ -135,6 +112,49 @@ buster.testCase("Client middleware", {
                     done();
                 }).end();
             }).end(new Buffer('[{"topic":"foo","data":"bar"}]', "utf8"));
+        },
+
+        "test buster.html loads all scripts": function (done) {
+            var client = this.cm.clients[0];
+            client.scripts = [
+                {path: "/foo.js", read:function(){}},
+                {path: "/bar.js", read:function(){}},
+                {path: "/baz/maz.js", read:function(){}}
+            ];
+
+            h.request({path: this.clientUrl + "/buster.html"}, function (res, body) {
+                buster.assert.equals(res.statusCode, 200);
+                buster.assert.equals(res.headers["content-type"], "text/html");
+                buster.assert.match(body, client.url + "/foo.js");
+                buster.assert.match(body, client.url + "/bar.js");
+                buster.assert.match(body, client.url + "/baz/maz.js");
+                done();
+            }).end();
+        },
+
+        "test client serves all scripts": function (done) {
+            var client = this.cm.clients[0];
+            client.scripts = [
+                {
+                    path: "/foo.js",
+                    read: function (done) { done("doing it"); }
+                },
+                {
+                    path: "/bar/baz.js",
+                    read: function (done) { done("buster yo"); }
+                }
+            ];
+
+            h.request({path: client.url + "/foo.js", method: "GET"}, function (res, body) {
+                buster.assert.equals(200, res.statusCode);
+                buster.assert.equals("doing it", body);
+
+                h.request({path: client.url + "/bar/baz.js", method: "GET"}, function (res, body) {
+                    buster.assert.equals(200, res.statusCode);
+                    buster.assert.equals("buster yo", body);
+                    done();
+                }).end();
+            }).end();
         }
     }
 });
