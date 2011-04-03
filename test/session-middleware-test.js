@@ -79,6 +79,13 @@ buster.testCase("Session middleware", {
         }).end();
     },
 
+    "test does not serve none existing resources": function (done) {        
+        h.request({path: this.session.resourceContextPath + "/does/not/exist.js", method: "GET"}, function (res, body) {
+            buster.assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
+            done();
+        }).end();
+    },
+
     "test provides session environment script": function (done) {
         var self = this;
         h.request({path: this.session.rootPath + "/env.js", method: "GET"}, function (res, body) {
