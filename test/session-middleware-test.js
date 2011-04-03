@@ -1,6 +1,7 @@
 var buster = require("buster");
 var http = require("http");
 var vm = require("vm");
+var sinon = require("sinon");
 var busterSessionMiddleware = require("./../lib/session/session-middleware");
 
 var h = require("./test-helper");
@@ -8,9 +9,9 @@ var h = require("./test-helper");
 buster.testCase("Session middleware", {
     setUp: function (done) {
         var self = this;
-        var middleware = Object.create(busterSessionMiddleware);
+        this.sessionMiddleware = Object.create(busterSessionMiddleware);
         this.httpServer = http.createServer(function (req, res) {
-            if (!middleware.respond(req, res)) {
+            if (!self.sessionMiddleware.respond(req, res)) {
                 res.writeHead(h.NO_RESPONSE_STATUS_CODE);
                 res.end();
             };
@@ -113,8 +114,11 @@ buster.testCase("Session middleware", {
 
     "test killing sessions": function (done) {
         var self = this;
+        var sessionEnd = sinon.spy();
+        this.sessionMiddleware.on("session:end", sessionEnd);
         h.request({path: this.session.rootPath, method: "DELETE"}, function (res, body) {
             buster.assert.equals(200, res.statusCode);
+            buster.assert(sessionEnd.calledOnce);
 
             h.request({path: self.session.resourceContextPath + "/foo.js", method: "GET"}, function (res, body) {
                 buster.assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
