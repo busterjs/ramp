@@ -1,5 +1,5 @@
 var buster = require("buster");
-var clientMiddleware = require("./../lib/client-middleware");
+var clientMiddleware = require("./../lib/capture/client-middleware");
 
 var fs = require("fs");
 var http = require("http");
@@ -111,7 +111,7 @@ buster.testCase("Client middleware", {
             h.request({path: this.clientUrl + "/client-iframe.js"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 200);
                 buster.assert.equals(res.headers["content-type"], "text/javascript");
-                fs.readFile(__dirname + "/../lib/client-iframe.js", function (err, data) {
+                fs.readFile(__dirname + "/../lib/capture/client-iframe.js", function (err, data) {
                     buster.assert.equals(body, data.toString("utf8"));
                     done();
                 });
