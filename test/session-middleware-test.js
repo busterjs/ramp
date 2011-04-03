@@ -52,7 +52,7 @@ buster.testCase("Session middleware", {
         var self = this;
         h.request({path: "/sessions", method: "POST"}, function (res, body) {
             buster.assert.equals(500, res.statusCode);
-            buster.assert.match(/invalid JSON/i, body);
+            buster.assert.match(body, /invalid JSON/i);
             buster.assert.equals(0, self.sessionMiddleware.sessions.length);
             done();
         }).end("{not json}!");
