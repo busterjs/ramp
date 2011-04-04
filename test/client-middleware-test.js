@@ -63,6 +63,7 @@ buster.testCase("Client middleware", {
             h.request({path: "/capture", method: "POST"}, function (res, body) {
                 self.clientUrl = res.headers.location;
                 self.clientData = JSON.parse(body);
+                self.client = self.cm.clients[0];
                 done();
             }).end();
         },
@@ -115,8 +116,8 @@ buster.testCase("Client middleware", {
         },
 
         "test buster.html loads all scripts": function (done) {
-            var client = this.cm.clients[0];
-            client.scripts = [
+            var self = this;
+            this.client.scripts = [
                 {path: "/foo.js", read:function(){}},
                 {path: "/bar.js", read:function(){}},
                 {path: "/baz/maz.js", read:function(){}}
@@ -125,16 +126,16 @@ buster.testCase("Client middleware", {
             h.request({path: this.clientUrl + "/buster.html"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 200);
                 buster.assert.equals(res.headers["content-type"], "text/html");
-                buster.assert.match(body, client.url + "/foo.js");
-                buster.assert.match(body, client.url + "/bar.js");
-                buster.assert.match(body, client.url + "/baz/maz.js");
+                buster.assert.match(body, self.client.url + "/foo.js");
+                buster.assert.match(body, self.client.url + "/bar.js");
+                buster.assert.match(body, self.client.url + "/baz/maz.js");
                 done();
             }).end();
         },
 
         "test client serves all scripts": function (done) {
-            var client = this.cm.clients[0];
-            client.scripts = [
+            var self = this;
+            this.client.scripts = [
                 {
                     path: "/foo.js",
                     read: function (done) { done("doing it"); }
@@ -145,11 +146,11 @@ buster.testCase("Client middleware", {
                 }
             ];
 
-            h.request({path: client.url + "/foo.js", method: "GET"}, function (res, body) {
+            h.request({path: this.client.url + "/foo.js", method: "GET"}, function (res, body) {
                 buster.assert.equals(200, res.statusCode);
                 buster.assert.equals("doing it", body);
 
-                h.request({path: client.url + "/bar/baz.js", method: "GET"}, function (res, body) {
+                h.request({path: self.client.url + "/bar/baz.js", method: "GET"}, function (res, body) {
                     buster.assert.equals(200, res.statusCode);
                     buster.assert.equals("buster yo", body);
                     done();
