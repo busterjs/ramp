@@ -1,0 +1,8 @@
+Getting started
+~~~~~~~~~~~~~~~
+
+* node bin/buster-server
+* Open http://localhost:4224/ in a browser
+* Click dat capture button.
+* curl -d '{"load":["/test.js"],"resources":{"/test.js":{"content":"alert(\"\")"}}}' http://localhost:4224/sessions
+* curl -X DELETE http://localhost:4224/path/to/session (rootPath in response from above call).
