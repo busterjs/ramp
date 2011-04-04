@@ -156,6 +156,23 @@ buster.testCase("Client middleware", {
                     done();
                 }).end();
             }).end();
+        },
+
+        "test binding to session middleware": function (done) {
+            var self = this;
+            var sessionMiddleware = Object.create(buster.eventEmitter);
+            this.cm.bindToSessionMiddleware(sessionMiddleware);
+
+            var msgUrl = this.client.messagingMiddlewareClient.url;
+            sessionMiddleware.emit("session:start", {foo: "test"});
+            h.request({path: msgUrl, method: "GET"}, function (res, body) {
+                buster.assert.equals(JSON.parse(body)[0].data.foo, "test");
+
+                sessionMiddleware.emit("session:end");
+                h.request({path: msgUrl, method: "GET"}, function (res, body) {
+                    done();
+                }).end();
+            }).end();
         }
     }
 });
