@@ -163,7 +163,7 @@ buster.testCase("Client middleware", {
             var sessionMiddleware = Object.create(buster.eventEmitter);
             this.cm.bindToSessionMiddleware(sessionMiddleware);
 
-            var msgUrl = this.client.messagingMiddlewareClient.url;
+            var msgUrl = this.client.multicastMiddlewareClient.url;
             sessionMiddleware.emit("session:start", {foo: "test"});
             h.request({path: msgUrl, method: "GET"}, function (res, body) {
                 buster.assert.equals(JSON.parse(body)[0].data.foo, "test");
