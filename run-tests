@@ -2,3 +2,4 @@
 
 require("./test/client-middleware-test");
 require("./test/session-middleware-test");
+require("./test/buster-server-test");
