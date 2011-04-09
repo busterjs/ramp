@@ -158,6 +158,24 @@ buster.testCase("Client middleware", {
             }).end();
         },
 
+        "test client serves all built-in scripts": function (done) {
+            var self = this;
+            var numResponses = 0;
+            var handler = function (res, script) {
+                buster.assert.equals(200, res.statusCode, "Built-in script '" + script.path + "' failed to load");
+                numResponses++;
+                if (numResponses == self.client.scripts.length) done();
+            }
+
+            for (var i = 0, ii = this.client.scripts.length; i < ii; i++) {
+                (function (script) {
+                    h.request({path: self.client.url + script.path, method: "GET"}, function (res, body) {
+                        handler(res, script);
+                    }).end();
+                }(this.client.scripts[i]));
+            }
+        },
+
         "test binding to session middleware": function (done) {
             var self = this;
             var sessionMiddleware = Object.create(buster.eventEmitter);
