@@ -4,17 +4,17 @@ TestCase("Buster server captured client", {
         this.client = buster.create(buster.server.capturedClient);
     },
 
-    "test createMessagingClient": function () {
+    "test createMulticastClient": function () {
         window.busterSessionEnv = {
-            messagingClientId: 123,
+            multicastClientId: 123,
             messagingUrl: "/foo"
         };
 
-        this.client.createMessagingClient();
+        this.client.createMulticastClient();
 
-        assert("messagingClient" in this.client);
-        assertEquals(123, this.client.messagingClient.id);
-        assertEquals("/foo", this.client.messagingClient.url);
+        assert("multicastClient" in this.client);
+        assertEquals(123, this.client.multicastClient.id);
+        assertEquals("/foo", this.client.multicastClient.url);
     },
 
     "test getting cross frame instance": function () {
