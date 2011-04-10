@@ -30,11 +30,13 @@ buster.testCase("Session middleware", {
                 }
             }
         }), "utf8")
+        this.sandbox = sinon.sandbox.create();
     },
 
     tearDown: function (done) {
         this.httpServer.on("close", done);
         this.httpServer.close();
+        this.sandbox.restore();
     },
 
     "test emits event with session info when creating session": function (done) {
@@ -88,7 +90,7 @@ buster.testCase("Session middleware", {
         }).end('{"load":["/foo.js"],"resources":[]}');
     },
 
-    "with created session": {
+    "with HTTP created session": {
         setUp: function (done) {
             var self = this;
             h.request({path: "/sessions", method: "POST"}, function (res, body) {
@@ -111,6 +113,7 @@ buster.testCase("Session middleware", {
             var expectedPrefix = this.session.resourceContextPath.slice(0, this.session.rootPath.length)
             buster.assert.equals(expectedPrefix, this.session.rootPath);
         },
+
 
         "test hosts resources": function (done) {
             h.request({path: this.session.resourceContextPath + "/foo.js", method: "GET"}, function (res, body) {
@@ -226,5 +229,18 @@ buster.testCase("Session middleware", {
                 }).end();
             }).end(this.validSessionPayload);
         }
+    },
+
+    "test programmatically created session": function () {
+        var spy = this.sandbox.spy(this.sessionMiddleware, "createSessionWithData");
+        this.session = this.sessionMiddleware.createSession({load:[],resources:[]});
+        buster.assert(spy.calledOnce);
+    },
+
+    "test programmatically created session throws on validation error": function () {
+        var self = this;
+        buster.assert.exception(function () {
+            self.sessionMiddleware.createSession({});
+        });
     }
 });
