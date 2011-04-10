@@ -79,6 +79,20 @@ buster.testCase("Client middleware", {
             }).end();
         },
 
+        "test setting custom env variables": function (done) {
+            this.client.env.foo = "bar";
+
+            h.request({path: this.client.url + "/env.js"}, function (res, body) {
+                buster.assert.equals(res.statusCode, 200);
+                buster.assert.equals(res.headers["content-type"], "text/javascript");
+
+                var scope = {};
+                require("vm").runInNewContext(body, scope);
+                buster.assert.equals("bar", scope.buster.env.foo);
+                done();
+            }).end();
+        },
+
         "test client has messaging": function (done) {
             // We're kind of testing the messaging middleware here, but what
             // the hey. It's important that a client has messaging so we're
