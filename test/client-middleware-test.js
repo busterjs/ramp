@@ -25,8 +25,7 @@ buster.testCase("Client middleware", {
 
     "test creating/capturing client": function () {
         var client = this.cm.createClient();
-        buster.assert(client.hasOwnProperty("messagingUrl"));
-        buster.assert(client.messagingUrl.length > 1); // Not just a slash.
+        buster.assert(typeof(client), "object");
     },
 
     "test different clients gets different URLs": function () {
@@ -65,7 +64,7 @@ buster.testCase("Client middleware", {
                 require("vm").runInNewContext(body, scope);
                 buster.assert("busterSessionEnv" in scope);
                 buster.assert.equals(typeof(scope.busterSessionEnv), "object");
-                buster.assert.equals(scope.busterSessionEnv.messagingUrl, self.client.messagingUrl);
+                buster.assert.equals(scope.busterSessionEnv.multicastUrl, self.client.multicast.url);
                 done();
             }).end();
         },
@@ -75,10 +74,10 @@ buster.testCase("Client middleware", {
             // the hey. It's important that a client has messaging so we're
             // adding a full integration test for that.
             var self = this;
-            h.request({path: self.client.messagingUrl, method: "POST"}, function (res, body) {
+            h.request({path: self.client.multicast.url, method: "POST"}, function (res, body) {
                 buster.assert.equals(201, res.statusCode);
 
-                h.request({path: self.client.messagingUrl, method: "GET"}, function (res, body) {
+                h.request({path: self.client.multicast.url, method: "GET"}, function (res, body) {
                     buster.assert.equals(200, res.statusCode);
                     var data = JSON.parse(body);
                     buster.assert.equals(1, data.length);
@@ -155,7 +154,7 @@ buster.testCase("Client middleware", {
             var sessionMiddleware = Object.create(buster.eventEmitter);
             this.cm.bindToSessionMiddleware(sessionMiddleware);
 
-            var msgUrl = this.client.multicastMiddlewareClient.url;
+            var msgUrl = this.client.multicast.url;
             sessionMiddleware.emit("session:start", {foo: "test"});
             h.request({path: msgUrl, method: "GET"}, function (res, body) {
                 buster.assert.equals(JSON.parse(body)[0].data.foo, "test");
