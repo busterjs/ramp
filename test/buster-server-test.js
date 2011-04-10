@@ -42,5 +42,25 @@ buster.testCase("buster-server glue", {
             buster.assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
             done();
         }).end();
+    },
+
+    "test creating session": function () {
+        var stub = this.sandbox.stub(this.server.sessionMiddleware, "createSession");
+        this.server.createSession("foo");
+        buster.assert(stub.calledOnce);
+        buster.assert(stub.calledWithExactly("foo"));
+    },
+
+    "test destroying session": function () {
+        var stub = this.sandbox.stub(this.server.sessionMiddleware, "destroySession");
+        this.server.destroySession("foo");
+        buster.assert(stub.calledOnce);
+        buster.assert(stub.calledWithExactly("foo"));
+    },
+
+    "test creating client": function () {
+        var stub = this.sandbox.stub(this.server.clientMiddleware, "createClient");
+        this.server.createClient();
+        buster.assert(stub.calledOnce);
     }
 });
