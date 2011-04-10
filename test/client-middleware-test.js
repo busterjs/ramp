@@ -60,7 +60,16 @@ buster.testCase("Client middleware", {
                 buster.assert.equals(res.statusCode, 200);
                 buster.assert.equals(res.headers["content-type"], "text/javascript");
 
+                // Clean scope
                 var scope = {};
+                require("vm").runInNewContext(body, scope);
+                buster.assert("buster" in scope);
+                buster.assert("env" in scope.buster);
+                buster.assert.equals(typeof(scope.buster.env), "object");
+                buster.assert.equals(scope.buster.env.multicastUrl, self.client.multicast.url);
+
+                // Scope where buster is already defined
+                var scope = {buster: {}};
                 require("vm").runInNewContext(body, scope);
                 buster.assert("buster" in scope);
                 buster.assert("env" in scope.buster);
