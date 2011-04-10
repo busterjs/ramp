@@ -7,7 +7,7 @@ TestCase("Buster server captured client", {
     "test createMulticastClient": function () {
         buster.env = {
             multicastClientId: 123,
-            messagingUrl: "/foo"
+            multicastUrl: "/foo"
         };
 
         this.client.createMulticastClient();
