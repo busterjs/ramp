@@ -1,11 +1,11 @@
 TestCase("Buster server captured client", {
     setUp: function () {
-        delete window.busterSessionEnv;
+        delete buster.env;
         this.client = buster.create(buster.server.capturedClient);
     },
 
     "test createMulticastClient": function () {
-        window.busterSessionEnv = {
+        buster.env = {
             multicastClientId: 123,
             messagingUrl: "/foo"
         };
