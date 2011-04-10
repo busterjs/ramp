@@ -242,5 +242,15 @@ buster.testCase("Session middleware", {
         buster.assert.exception(function () {
             self.sessionMiddleware.createSession({});
         });
+    },
+
+    "test programmatically destroying session": function (done) {
+        var session = this.sessionMiddleware.createSession({load:[],resources:[]});
+        this.sessionMiddleware.destroySession(session.id);
+
+        h.request({path: session.resourceContextPath + "/", method: "GET"}, function (res, body) {
+            buster.assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
+            done();
+        }).end();
     }
 });
