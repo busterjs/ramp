@@ -255,5 +255,47 @@ buster.testCase("Session middleware", {
             buster.assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
             done();
         }).end();
+    },
+
+    "test destroying session in queue with HTTP": function (done) {
+        var self = this;
+
+        var spy = sinon.spy.create();
+        this.sessionMiddleware.on("session:end", spy);
+
+        this.sessionMiddleware.createSession({load:[],resources:[]});
+        this.sessionMiddleware.createSession({load:[],resources:[]});
+        var session = this.sessionMiddleware.createSession({load:[],resources:[]});
+
+        h.request({path: session.rootPath, method: "DELETE"}, function (res, body) {
+            // Callback is only called when current session ends.
+            buster.assert.equals(0, spy.callCount);
+
+            buster.assert.equals(2, self.sessionMiddleware.sessions.length);
+
+            var sessionInList = false;
+            for (var i = 0, ii = self.sessionMiddleware.sessions.length; i < ii; i++) {
+                if (self.sessionMiddleware.sessions[i] == session) sessionInList = true;
+            }
+            buster.assert.isFalse(sessionInList);
+
+            done();
+        }).end();
+    },
+
+    "test destroying session in queue programmatically": function () {
+        this.sessionMiddleware.createSession({load:[],resources:[]});
+        this.sessionMiddleware.createSession({load:[],resources:[]});
+        var session = this.sessionMiddleware.createSession({load:[],resources:[]});
+
+        this.sessionMiddleware.destroySession(session.id);
+
+        buster.assert.equals(2, this.sessionMiddleware.sessions.length);
+
+        var sessionInList = false;
+        for (var i = 0, ii = this.sessionMiddleware.sessions.length; i < ii; i++) {
+            if (this.sessionMiddleware.sessions[i] == session) sessionInList = true;
+        }
+        buster.assert.isFalse(sessionInList);
     }
 });
