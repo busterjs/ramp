@@ -231,10 +231,13 @@ buster.testCase("Session middleware", {
         }
     },
 
-    "test programmatically created session": function () {
-        var spy = this.sandbox.spy(this.sessionMiddleware, "createSessionWithData");
-        this.session = this.sessionMiddleware.createSession({load:[],resources:[]});
-        buster.assert(spy.calledOnce);
+    "test programmatically created session is created and loaded": function (done) {
+        this.sessionMiddleware.on("session:start", function (session) {
+            buster.assert(session.resources.hasOwnProperty("foo"));
+            done();
+        });
+
+        this.sessionMiddleware.createSession({load:[],resources:{"foo":{}}});
     },
 
     "test programmatically created session throws on validation error": function () {
