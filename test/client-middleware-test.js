@@ -23,67 +23,41 @@ buster.testCase("Client middleware", {
         this.httpServer.close();
     },
 
-    "test serves index page": function (done) {
-        h.request({path: "/"}, function (res, body) {
-            buster.assert.equals(res.statusCode, 200);
-            buster.assert.equals(res.headers["content-type"], "text/html");
-            buster.assert.match(body, /\<form .*action=.\/capture/);
-            buster.assert.match(body, /\<form .*method=.post/);
-            done();
-        }).end();
+    "test creating/capturing client": function () {
+        var client = this.cm.createClient();
+        buster.assert(client.hasOwnProperty("messagingUrl"));
+        buster.assert(client.messagingUrl.length > 1); // Not just a slash.
     },
 
-    "test creating/capturing client": function (done) {
-        h.request({path: "/capture", method: "POST"}, function (res, body) {
-            buster.assert.equals(res.statusCode, 302);
-            buster.assert("location" in res.headers);
-            buster.assert(res.headers.location != "/");
+    "test different clients gets different URLs": function () {
+        var clientOne = this.cm.createClient();
+        var clientTwo = this.cm.createClient();
 
-            var data = JSON.parse(body);
-            buster.assert(data.hasOwnProperty("messagingUrl"));
-            buster.assert(data.messagingUrl.length > 1); // Not just a slash.
-            done();
-        }).end();
-    },
-
-    "test different clients gets different URLs": function (done) {
-        h.request({path: "/capture", method: "POST"}, function (res, body) {
-            var clientOneUrl = res.headers.location;
-            h.request({path: "/capture", method: "POST"}, function (res, body) {
-                var clientTwoUrl = res.headers.location;
-                buster.assert.notEquals(clientOneUrl, clientTwoUrl);
-                done();
-            }).end();
-        }).end();
+        buster.assert.notEquals(clientOne.url, clientTwo.url);
     },
 
     "with a client": {
-        setUp: function (done) {
+        setUp: function () {
             var self = this;
-            h.request({path: "/capture", method: "POST"}, function (res, body) {
-                self.clientUrl = res.headers.location;
-                self.clientData = JSON.parse(body);
-                self.client = self.cm.clients[0];
-                done();
-            }).end();
+            this.client = this.cm.createClient();
         },
 
         "test getting client index page": function (done) {
             var self = this;
-            h.request({path: this.clientUrl}, function (res, body) {
+            h.request({path: this.client.url}, function (res, body) {
                 buster.assert.equals(res.statusCode, 200);
                 buster.assert.equals(res.headers["content-type"], "text/html");
                 buster.assert.match(body, "<frameset");
                 buster.assert.match(body, /\<frame .*src=..+buster\.html./);
                 buster.assert.equals(body.match(/\<frame/g).length - 1, 2);
-                buster.assert.match(body, self.clientUrl + "/buster.html");
+                buster.assert.match(body, self.client.url + "/buster.html");
                 done();
             }).end();
         },
 
         "test serves env.js": function (done) {
             var self = this;
-            h.request({path: this.clientUrl + "/env.js"}, function (res, body) {
+            h.request({path: this.client.url + "/env.js"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 200);
                 buster.assert.equals(res.headers["content-type"], "text/javascript");
 
@@ -91,7 +65,7 @@ buster.testCase("Client middleware", {
                 require("vm").runInNewContext(body, scope);
                 buster.assert("busterSessionEnv" in scope);
                 buster.assert.equals(typeof(scope.busterSessionEnv), "object");
-                buster.assert.equals(scope.busterSessionEnv.messagingUrl, self.clientData.messagingUrl);
+                buster.assert.equals(scope.busterSessionEnv.messagingUrl, self.client.messagingUrl);
                 done();
             }).end();
         },
@@ -101,10 +75,10 @@ buster.testCase("Client middleware", {
             // the hey. It's important that a client has messaging so we're
             // adding a full integration test for that.
             var self = this;
-            h.request({path: self.clientData.messagingUrl, method: "POST"}, function (res, body) {
+            h.request({path: self.client.messagingUrl, method: "POST"}, function (res, body) {
                 buster.assert.equals(201, res.statusCode);
 
-                h.request({path: self.clientData.messagingUrl, method: "GET"}, function (res, body) {
+                h.request({path: self.client.messagingUrl, method: "GET"}, function (res, body) {
                     buster.assert.equals(200, res.statusCode);
                     var data = JSON.parse(body);
                     buster.assert.equals(1, data.length);
@@ -123,7 +97,7 @@ buster.testCase("Client middleware", {
                 {path: "/baz/maz.js", read:function(){}}
             ];
 
-            h.request({path: this.clientUrl + "/buster.html"}, function (res, body) {
+            h.request({path: this.client.url + "/buster.html"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 200);
                 buster.assert.equals(res.headers["content-type"], "text/html");
                 buster.assert.match(body, self.client.url + "/foo.js");
