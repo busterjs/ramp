@@ -39,5 +39,14 @@ TestCase("Buster server captured client", {
         this.client.sessionEnd({data: {resourceContextPath: ""}});
         assert(obj.hasOwnProperty("src"));
         assertEquals(obj.src, "");
+    },
+
+    "test creates buster object with multicast on other frame": function () {
+        var win = {}
+        this.client.crossFrame = function () { return {window: function () { return win; }} };
+        this.client.exposeBusterObject();
+        assert(win.hasOwnProperty("buster"));
+        assertEquals(typeof(win.buster), "object");
+        assertSame(win.buster.multicastClient, this.client.multcastClient);
     }
 });
