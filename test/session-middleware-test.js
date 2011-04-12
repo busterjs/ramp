@@ -90,6 +90,14 @@ buster.testCase("Session middleware", {
         }).end('{"load":["/foo.js"],"resources":[]}');
     },
 
+    "test returns temporary work-in-progress list of known resources": function (done) {
+        h.request({path: "/resources", method: "GET"}, function (res, body) {
+            buster.assert.equals(200, res.statusCode);
+            buster.assert.equals(body, "[]");
+            done();
+        }).end();
+    },
+
     "with HTTP created session": {
         setUp: function (done) {
             var self = this;
