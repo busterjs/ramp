@@ -62,5 +62,10 @@ buster.testCase("buster-server glue", {
         var stub = this.sandbox.stub(this.server.clientMiddleware, "createClient");
         this.server.createClient();
         buster.assert(stub.calledOnce);
+    },
+
+    "test creating session when uninitialized also calls out to client middleware": function () {
+        this.server.createSession({load:[],resources:[]});
+        buster.assert(this.server.clientMiddleware.currentSession);
     }
 });
