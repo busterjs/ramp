@@ -1,5 +1,6 @@
 var buster = require("buster");
 var clientMiddleware = require("./../lib/capture/client-middleware");
+var clientMiddlewareClient = require("./../lib/capture/client");
 
 var fs = require("fs");
 var http = require("http");
@@ -24,8 +25,17 @@ buster.testCase("Client middleware", {
     },
 
     "test creating/capturing client": function () {
+        this.stub(clientMiddlewareClient, "startSession");
         var client = this.cm.createClient();
         buster.assert(typeof(client), "object");
+        buster.assert.isFalse(client.startSession.called);
+    },
+
+    "test capturing client with session in progress": function () {
+        this.cm.startSession({});
+        this.stub(clientMiddlewareClient, "startSession");
+        var client = this.cm.createClient();
+        buster.assert(client.startSession.calledOnce);
     },
 
     "test different clients gets different URLs": function () {
