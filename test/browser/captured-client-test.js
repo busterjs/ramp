@@ -13,8 +13,6 @@ TestCase("Buster server captured client", {
         this.client.createMulticastClient();
 
         assert("multicastClient" in this.client);
-        assertEquals(123, this.client.multicastClient.id);
-        assertEquals("/foo", this.client.multicastClient.url);
     },
 
     "test getting cross frame instance": function () {
