@@ -124,7 +124,7 @@ buster.testCase("Client middleware", {
 
         "test buster.html loads all scripts": function (done) {
             var self = this;
-            this.client.scripts = [
+            this.client.scriptServingMiddleware._scripts = [
                 {path: "/foo.js", read:function(){}},
                 {path: "/bar.js", read:function(){}},
                 {path: "/baz/maz.js", read:function(){}}
@@ -142,7 +142,7 @@ buster.testCase("Client middleware", {
 
         "test client serves all scripts": function (done) {
             var self = this;
-            this.client.scripts = [
+            this.client.scriptServingMiddleware._scripts = [
                 {
                     path: "/foo.js",
                     read: function (done) { done("doing it"); }
@@ -171,15 +171,15 @@ buster.testCase("Client middleware", {
             var handler = function (res, script) {
                 buster.assert.equals(200, res.statusCode, "Built-in script '" + script.path + "' failed to load");
                 numResponses++;
-                if (numResponses == self.client.scripts.length) done();
+                if (numResponses == self.client.scriptServingMiddleware.scripts.length) done();
             }
 
-            for (var i = 0, ii = this.client.scripts.length; i < ii; i++) {
+            for (var i = 0, ii = this.client.scriptServingMiddleware.scripts.length; i < ii; i++) {
                 (function (script) {
                     h.request({path: self.client.url + script.path, method: "GET"}, function (res, body) {
                         handler(res, script);
                     }).end();
-                }(this.client.scripts[i]));
+                }(this.client.scriptServingMiddleware.scripts[i]));
             }
         },
 
