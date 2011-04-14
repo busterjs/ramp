@@ -1,7 +1,7 @@
-TestCase("Buster server captured client", {
+TestCase("Buster server control frame", {
     setUp: function () {
         delete buster.env;
-        this.client = buster.create(buster.server.capturedClient);
+        this.client = buster.create(buster.server.controlFrame);
     },
 
     "test createMulticastClient": function () {
