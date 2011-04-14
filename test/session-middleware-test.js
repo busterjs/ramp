@@ -155,26 +155,9 @@ buster.testCase("Session middleware", {
             }).end();
         },
 
-        "test provides session environment script": function (done) {
-            var self = this;
-            h.request({path: this.session.rootPath + "/env.js", method: "GET"}, function (res, body) {
-                buster.assert.equals(200, res.statusCode);
-                buster.assert.equals("text/javascript", res.headers["content-type"]);
-
-                var ctx = {};
-                vm.runInNewContext(body, ctx);
-                buster.assert.equals("object", typeof ctx.buster);
-                buster.assert.equals(self.session.rootPath, ctx.buster.rootPath);
-                buster.assert.equals(self.session.resourceContextPath, ctx.buster.resourceContextPath);
-
-                done();
-            }).end();
-        },
-
         "test inserts buster scripts and session scripts into root resource": function (done) {
             var self = this;
             h.request({path: this.session.resourceContextPath + "/", method: "GET"}, function (res, body) {
-                buster.assert.match(body, '<script src="' + self.session.rootPath  + '/env.js"');
                 buster.assert.match(body, '<script src="' + self.session.resourceContextPath  + '/foo.js"');
                 done();
             }).end();
