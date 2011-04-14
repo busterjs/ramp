@@ -2,7 +2,7 @@ var buster = require("buster");
 var sinon = require("sinon");
 
 var busterServer = require("./../lib/buster-server");
-var clientMiddleware = require("./../lib/capture/client-middleware");
+var clientMiddleware = require("./../lib/client/client-middleware");
 
 var http = require("http");
 var h = require("./test-helper");

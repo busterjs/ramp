@@ -1,6 +1,6 @@
 var buster = require("buster");
-var clientMiddleware = require("./../lib/capture/client-middleware");
-var clientMiddlewareClient = require("./../lib/capture/client");
+var clientMiddleware = require("./../lib/client/client-middleware");
+var clientMiddlewareClient = require("./../lib/client/client");
 
 var fs = require("fs");
 var http = require("http");
