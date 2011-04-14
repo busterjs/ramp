@@ -57,9 +57,9 @@ buster.testCase("Client middleware", {
                 buster.assert.equals(res.statusCode, 200);
                 buster.assert.equals(res.headers["content-type"], "text/html");
                 buster.assert.match(body, "<frameset");
-                buster.assert.match(body, /\<frame .*src=..+buster\.html./);
+                buster.assert.match(body, /\<frame .*src=..+control_frame\.html./);
                 buster.assert.equals(body.match(/\<frame/g).length - 1, 2);
-                buster.assert.match(body, self.client.url + "/buster.html");
+                buster.assert.match(body, self.client.url + "/control_frame.html");
                 done();
             }).end();
         },
@@ -122,7 +122,7 @@ buster.testCase("Client middleware", {
             }).end(new Buffer('[{"topic":"foo","data":"bar"}]', "utf8"));
         },
 
-        "test buster.html loads all scripts": function (done) {
+        "test control_frame.html loads all scripts": function (done) {
             var self = this;
             this.client.scriptServingMiddleware._scripts = [
                 {path: "/foo.js", read:function(){}},
@@ -130,7 +130,7 @@ buster.testCase("Client middleware", {
                 {path: "/baz/maz.js", read:function(){}}
             ];
 
-            h.request({path: this.client.url + "/buster.html"}, function (res, body) {
+            h.request({path: this.client.url + "/control_frame.html"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 200);
                 buster.assert.equals(res.headers["content-type"], "text/html");
                 buster.assert.match(body, self.client.url + "/foo.js");
