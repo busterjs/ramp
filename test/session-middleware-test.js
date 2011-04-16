@@ -6,9 +6,22 @@ var busterSessionMiddleware = require("./../lib/session/session-middleware");
 
 var h = require("./test-helper");
 
+function waitFor(num, callback) {
+    var calls = 0;
+
+    return function () {
+        calls += 1;
+
+        if (calls == num) {
+            callback();
+        }
+    };
+}
+
 buster.testCase("Session middleware", {
     setUp: function (done) {
         var self = this;
+        var wait = waitFor(2, done);
         this.sessionMiddleware = Object.create(busterSessionMiddleware);
         this.httpServer = http.createServer(function (req, res) {
             if (!self.sessionMiddleware.respond(req, res)) {
@@ -16,7 +29,14 @@ buster.testCase("Session middleware", {
                 res.end();
             };
         });
-        this.httpServer.listen(h.SERVER_PORT, done);
+        this.httpServer.listen(h.SERVER_PORT, wait);
+
+        this.proxyBackend = http.createServer(function (req, res) {
+            res.writeHead(200, { "X-Buster-Backend": "Yes" });
+            res.end("PROXY: " + req.url);
+        });
+
+        this.proxyBackend.listen(h.PROXY_PORT, wait);
 
         this.validSessionPayload = new Buffer(JSON.stringify({
             load: ["/foo.js"],
@@ -27,16 +47,20 @@ buster.testCase("Session middleware", {
                 "/bar/baz.js": {
                     content: "5 + 5;",
                     headers: {"Content-Type": "text/custom"}
+                },
+                "/other": {
+                    backend: "http://localhost:" + h.PROXY_PORT + "/"
                 }
             }
-        }), "utf8")
-        this.sandbox = sinon.sandbox.create();
+        }), "utf8");
     },
 
     tearDown: function (done) {
-        this.httpServer.on("close", done);
+        var wait = waitFor(2, done);
+        this.proxyBackend.on("close", wait);
+        this.proxyBackend.close();
+        this.httpServer.on("close", wait);
         this.httpServer.close();
-        this.sandbox.restore();
     },
 
     "test emits event with session info when creating session": function (done) {
@@ -121,7 +145,6 @@ buster.testCase("Session middleware", {
             var expectedPrefix = this.session.resourceContextPath.slice(0, this.session.rootPath.length)
             buster.assert.equals(expectedPrefix, this.session.rootPath);
         },
-
 
         "test hosts resources": function (done) {
             h.request({path: this.session.resourceContextPath + "/foo.js", method: "GET"}, function (res, body) {
@@ -243,6 +266,20 @@ buster.testCase("Session middleware", {
                     done();
                 }).end();
             }).end(this.validSessionPayload);
+        },
+
+        "proxy requests": {
+            "should proxy requests to /other": function (done) {
+                h.request({
+                    path: this.session.resourceContextPath + "/other/file.js",
+                    method: "GET"
+                }, function (res, body) {
+                    buster.assert.equals(200, res.statusCode);
+                    buster.assert.equals(body, "PROXY: /other/file.js");
+                    buster.assert.equals(res.headers["x-buster-backend"], "Yes");
+                    done();
+                }).end();
+            }
         }
     },
 

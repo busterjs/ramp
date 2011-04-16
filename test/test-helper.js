@@ -3,6 +3,7 @@ var http = require("http");
 module.exports = {
     NO_RESPONSE_STATUS_CODE: 418,
     SERVER_PORT: 16178,
+    PROXY_PORT: 16177,
 
     request: function (options, callback) {
         options.host = options.host || "localhost";
