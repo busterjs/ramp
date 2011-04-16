@@ -1,5 +1,9 @@
 #!/usr/bin/env node
+var buster = require("buster");
+var glob = require("glob");
 
-require("./test/client-middleware-test");
-require("./test/session-middleware-test");
-require("./test/buster-server-test");
+glob.glob("test/*-test.js", function (err, files) {
+    files.forEach(function (f) {
+        require("./" + f);
+    });
+});
