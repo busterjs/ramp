@@ -1,11 +1,16 @@
 (function () {
     function mockCrossFrame() {
         var frame = {};
-        return function () {
+        var window = {};
+        var result = function () {
             return {
-                frame: function () { return frame; }
+                frame: function () { return frame; },
+                window: function () { return window; }
             }
         }
+        result._window = window;
+
+        return result;
     }
 
     function mockMulticastClient() {
@@ -16,6 +21,8 @@
         setUp: function () {
             this.cf = buster.create(buster.server.controlFrame);
             this.sandbox = sinon.sandbox.create();
+
+            delete buster.clientReady;
 
             this.env = {};
             this.originalEnv = buster.env;
@@ -60,16 +67,33 @@
             assert(this.cf.sessionEnd.calledWithExactly(event));
         },
 
-        "test sessionStart sets src on the client frame to the root resource": function () {
+        "test sessionStart": function () {
             this.cf.crossFrame = mockCrossFrame();
             this.cf.sessionStart({data: {resourceContextPath: "/foo"}});
             assertEquals("/foo/", this.cf.crossFrame().frame().src);
+
+            assertEquals(typeof(buster.clientReady), "function");
+
+            this.sandbox.stub(this.cf, "exposeBusterObject");
+            buster.clientReady();
+            assert(this.cf.exposeBusterObject.calledOnce);
         },
 
         "test sessionEnd blanks src on the client frame": function () {
             this.cf.crossFrame = mockCrossFrame();
             this.cf.sessionEnd({});
             assertEquals("", this.cf.crossFrame().frame().src);
+        },
+
+        "test exposeBusterObject": function () {
+            this.cf.crossFrame = mockCrossFrame();
+            // When this functino is called, buster is already defined on the
+            // cross frame window object.
+            this.cf.crossFrame._window.buster = {};
+            this.cf.multicastClient = {};
+            this.cf.exposeBusterObject();            
+
+            assertSame(this.cf.crossFrame().window().buster.multicastClient, this.cf.multicastClient);
         },
 
         "test crossFrame": function () {
