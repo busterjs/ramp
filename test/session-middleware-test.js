@@ -41,6 +41,10 @@ buster.testCase("Session middleware", {
                 "/foo.js": {
                     content: "var a = 5 + 5;"
                 },
+                "/foo.min.js": {
+                    content: "var a = 5 + 5;",
+                    minify: true
+                },
                 "/bar/baz.js": {
                     content: "var b = 5 + 5; // Yes",
                     headers: {"Content-Type": "text/custom"}
@@ -157,7 +161,7 @@ buster.testCase("Session middleware", {
             h.request({path: this.session.resourceContextPath + "/foo.js", method: "GET"}, function (res, body) {
                 buster.assert.equals(200, res.statusCode);
                 buster.assert.equals("var a = 5 + 5;", body);
-                buster.assert.equals("text/javascript", res.headers["content-type"]);
+                buster.assert.equals("application/javascript", res.headers["content-type"]);
                 done();
             }).end();
         },
@@ -303,13 +307,12 @@ buster.testCase("Session middleware", {
             }
         },
 
-        "combined resources": {
+        "bundles": {
             "should serve combined contents with custom header": function (done) {
                 h.request({
-                    path: this.session.resourceContextPath + "/bundle.js",
-                    method: "GET"
+                    path: this.session.resourceContextPath + "/bundle.js"
                 }, function (res, body) {
-                    buster.assert.equals(200, res.statusCode);
+                    buster.assert.equals(res.statusCode, 200);
                     buster.assert.equals(body, "var a = 5 + 5;var b = 5 + 5; // Yes");
                     buster.assert.match(res.headers, {
                         "expires": "Sun, 15 Mar 2012 22:22 37 GMT"
@@ -321,11 +324,49 @@ buster.testCase("Session middleware", {
 
             "should serve combined contents minified": function (done) {
                 h.request({
-                    path: this.session.resourceContextPath + "/bundle.min.js",
-                    method: "GET"
+                    path: this.session.resourceContextPath + "/bundle.min.js"
                 }, function (res, body) {
-                    buster.assert.equals(200, res.statusCode);
+                    buster.assert.equals(res.statusCode, 200);
                     buster.assert.equals(body, "var a=10,b=10");
+                    done();
+                }).end();
+            },
+
+            "should serve single resource contents minified": function (done) {
+                h.request({
+                    path: this.session.resourceContextPath + "/foo.min.js"
+                }, function (res, body) {
+                    buster.assert.equals(res.statusCode, 200);
+                    buster.assert.equals(body, "var a=10");
+                    done();
+                }).end();
+            }
+        },
+
+        "mime types": {
+            "should serve javascript with reasonable mime-type": function (done) {
+                h.request({
+                    path: this.session.resourceContextPath + "/foo.js"
+                }, function (res, body) {
+                    buster.assert.equals(res.headers["content-type"], "application/javascript");
+                    done();
+                }).end();
+            },
+
+            "should serve javascript with reasonable mime-type and other headers": function (done) {
+                h.request({
+                    path: this.session.resourceContextPath + "/bundle.js"
+                }, function (res, body) {
+                    buster.assert.equals(res.headers["content-type"], "application/javascript");
+                    done();
+                }).end();
+            },
+
+            "should not overwrite custom mime-type": function (done) {
+                h.request({
+                    path: this.session.resourceContextPath + "/bar/baz.js"
+                }, function (res, body) {
+                    buster.assert.equals(res.headers["content-type"], "text/custom");
                     done();
                 }).end();
             }
