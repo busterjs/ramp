@@ -34,3 +34,6 @@
 [submodule "node_modules/ejs"]
 	path = node_modules/ejs
 	url = git://github.com/visionmedia/ejs.git
+[submodule "node_modules/json"]
+	path = node_modules/json
+	url = https://github.com/douglascrockford/JSON-js.git
