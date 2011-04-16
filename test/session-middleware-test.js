@@ -308,6 +308,16 @@ buster.testCase("Session middleware", {
                     done();
                 }).end();
             },
+
+            "should serve combined contents minified": function (done) {
+                h.request({
+                    path: this.session.resourceContextPath + "/bundle.min.js",
+                    method: "GET"
+                }, function (res, body) {
+                    buster.assert.equals(200, res.statusCode);
+                    buster.assert.equals(body, "var a=10,b=10");
+                    done();
+                }).end();
             }
         }
     },
