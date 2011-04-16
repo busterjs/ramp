@@ -5,7 +5,8 @@
         var result = function () {
             return {
                 frame: function () { return frame; },
-                window: function () { return window; }
+                window: function () { return window; },
+                addOnLoadListener: function (cb) { cb(); }
             }
         }
         result._window = window;
@@ -68,6 +69,7 @@
         },
 
         "test sessionStart": function () {
+            var clock = this.sandbox.useFakeTimers();
             this.cf.crossFrame = mockCrossFrame();
             this.cf.sessionStart({data: {resourceContextPath: "/foo"}});
             assertEquals("/foo/", this.cf.crossFrame().frame().src);
@@ -77,6 +79,10 @@
             this.sandbox.stub(this.cf, "exposeBusterObject");
             buster.clientReady();
             assert(this.cf.exposeBusterObject.calledOnce);
+
+            this.cf.crossFrame._window.focus = sinon.spy();
+            clock.tick(1);
+            assert(this.cf.crossFrame._window.focus.calledOnce);
         },
 
         "test sessionEnd blanks src on the client frame": function () {
