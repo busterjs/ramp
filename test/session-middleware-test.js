@@ -3,6 +3,7 @@ var http = require("http");
 var vm = require("vm");
 var sinon = require("sinon");
 var busterSessionMiddleware = require("./../lib/session/session-middleware");
+var multicastMiddleware = require("buster-multicast").multicastMiddleware;
 
 var h = require("./test-helper");
 
@@ -21,12 +22,16 @@ function waitFor(num, callback) {
 buster.testCase("Session middleware", {
     setUp: function (done) {
         var self = this;
+        this.multicastMiddleware = Object.create(multicastMiddleware);
+
         this.sessionMiddleware = Object.create(busterSessionMiddleware);
+        this.sessionMiddleware.multicast = this.multicastMiddleware.createClient();
         this.httpServer = http.createServer(function (req, res) {
-            if (!self.sessionMiddleware.respond(req, res)) {
-                res.writeHead(h.NO_RESPONSE_STATUS_CODE);
-                res.end();
-            };
+            if (self.sessionMiddleware.respond(req, res)) return true;
+            if (self.multicastMiddleware.respond(req, res)) return true;
+
+            res.writeHead(h.NO_RESPONSE_STATUS_CODE);
+            res.end();
         });
         this.httpServer.listen(h.SERVER_PORT, done);
 
@@ -141,6 +146,11 @@ buster.testCase("Session middleware", {
             // resourceContextPath should be prefixed with rootPath.
             var expectedPrefix = this.session.resourceContextPath.slice(0, this.session.rootPath.length)
             buster.assert.equals(expectedPrefix, this.session.rootPath);
+
+            buster.assert("multicastUrl" in this.session);
+            buster.assert.equals(this.session.multicastUrl, this.sessionMiddleware.multicast.url);
+            buster.assert("multicastClientId" in this.session);
+            buster.assert.equals(this.session.multicastClientId, this.sessionMiddleware.multicast.clientId);
         },
 
         "test hosts resources": function (done) {
@@ -388,5 +398,21 @@ buster.testCase("Session middleware", {
             if (this.sessionMiddleware.sessions[i] == session) sessionInList = true;
         }
         buster.assert.isFalse(sessionInList);
+    },
+
+    "test has messaging": function (done) {
+        var self = this;
+        h.request({path: this.sessionMiddleware.multicast.url, method: "POST"}, function (res, body) {
+            buster.assert.equals(201, res.statusCode);
+
+            h.request({path: self.sessionMiddleware.multicast.url, method: "GET"}, function (res, body) {
+                buster.assert.equals(200, res.statusCode);
+                var data = JSON.parse(body);
+                buster.assert.equals(1, data.length);
+                buster.assert.equals("foo", data[0].topic);
+                buster.assert.equals("bar", data[0].data);
+                done();
+            }).end();
+        }).end(new Buffer('[{"topic":"foo","data":"bar"}]', "utf8"));
     }
 });

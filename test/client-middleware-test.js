@@ -13,10 +13,11 @@ buster.testCase("Client middleware", {
         this.cm = Object.create(clientMiddleware);
         this.cm.multicastMiddleware = Object.create(multicastMiddleware);
         this.httpServer = http.createServer(function (req, res) {
-            if (!self.cm.respond(req, res)) {
-                res.writeHead(h.NO_RESPONSE_STATUS_CODE);
-                res.end();
-            }
+            if (self.cm.respond(req, res)) return true;
+            if (self.cm.multicastMiddleware.respond(req, res)) return true;
+
+            res.writeHead(h.NO_RESPONSE_STATUS_CODE);
+            res.end();
         });
         this.httpServer.listen(h.SERVER_PORT, done);
     },
