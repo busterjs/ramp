@@ -21,7 +21,6 @@ function waitFor(num, callback) {
 buster.testCase("Session middleware", {
     setUp: function (done) {
         var self = this;
-        var wait = waitFor(2, done);
         this.sessionMiddleware = Object.create(busterSessionMiddleware);
         this.httpServer = http.createServer(function (req, res) {
             if (!self.sessionMiddleware.respond(req, res)) {
@@ -29,14 +28,7 @@ buster.testCase("Session middleware", {
                 res.end();
             };
         });
-        this.httpServer.listen(h.SERVER_PORT, wait);
-
-        this.proxyBackend = http.createServer(function (req, res) {
-            res.writeHead(200, { "X-Buster-Backend": "Yes" });
-            res.end("PROXY: " + req.url);
-        });
-
-        this.proxyBackend.listen(h.PROXY_PORT, wait);
+        this.httpServer.listen(h.SERVER_PORT, done);
 
         this.validSessionPayload = new Buffer(JSON.stringify({
             load: ["/foo.js"],
@@ -56,10 +48,7 @@ buster.testCase("Session middleware", {
     },
 
     tearDown: function (done) {
-        var wait = waitFor(2, done);
-        this.proxyBackend.on("close", wait);
-        this.proxyBackend.close();
-        this.httpServer.on("close", wait);
+        this.httpServer.on("close", done);
         this.httpServer.close();
     },
 
@@ -269,6 +258,20 @@ buster.testCase("Session middleware", {
         },
 
         "proxy requests": {
+            setUp: function (done) {
+                this.proxyBackend = http.createServer(function (req, res) {
+                    res.writeHead(200, { "X-Buster-Backend": "Yes" });
+                    res.end("PROXY: " + req.url);
+                });
+
+                this.proxyBackend.listen(h.PROXY_PORT, done);
+            },
+
+            tearDown: function (done) {
+                this.proxyBackend.on("close", done);
+                this.proxyBackend.close();
+            },
+
             "should proxy requests to /other": function (done) {
                 h.request({
                     path: this.session.resourceContextPath + "/other/file.js",
