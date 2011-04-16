@@ -1,6 +1,7 @@
 var buster = require("buster");
 var clientMiddleware = require("./../lib/client/client-middleware");
 var clientMiddlewareClient = require("./../lib/client/client");
+var multicastMiddleware = require("buster-multicast").multicastMiddleware;
 
 var fs = require("fs");
 var http = require("http");
@@ -9,7 +10,8 @@ var h = require("./test-helper");
 buster.testCase("Client middleware", {
     setUp: function (done) {
         var self = this;
-        this.cm = clientMiddleware.create();
+        this.cm = Object.create(clientMiddleware);
+        this.cm.multicastMiddleware = Object.create(multicastMiddleware);
         this.httpServer = http.createServer(function (req, res) {
             if (!self.cm.respond(req, res)) {
                 res.writeHead(h.NO_RESPONSE_STATUS_CODE);
