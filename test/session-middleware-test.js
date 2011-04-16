@@ -36,6 +36,10 @@ buster.testCase("Session middleware", {
                 "/foo.js": {
                     content: "var a = 5 + 5;"
                 },
+                "/foo.min.js": {
+                    content: "var a = 5 + 5;",
+                    minify: true
+                },
                 "/bar/baz.js": {
                     content: "var b = 5 + 5; // Yes",
                     headers: {"Content-Type": "text/custom"}
@@ -293,7 +297,7 @@ buster.testCase("Session middleware", {
             }
         },
 
-        "combined resources": {
+        "bundles": {
             "should serve combined contents with custom header": function (done) {
                 h.request({
                     path: this.session.resourceContextPath + "/bundle.js",
@@ -316,6 +320,17 @@ buster.testCase("Session middleware", {
                 }, function (res, body) {
                     buster.assert.equals(200, res.statusCode);
                     buster.assert.equals(body, "var a=10,b=10");
+                    done();
+                }).end();
+            },
+
+            "should serve single resource contents minified": function (done) {
+                h.request({
+                    path: this.session.resourceContextPath + "/foo.min.js",
+                    method: "GET"
+                }, function (res, body) {
+                    buster.assert.equals(200, res.statusCode);
+                    buster.assert.equals(body, "var a=10");
                     done();
                 }).end();
             }
