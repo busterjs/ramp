@@ -34,14 +34,22 @@ buster.testCase("Session middleware", {
             load: ["/foo.js"],
             resources: {
                 "/foo.js": {
-                    content: "5 + 5;"
+                    content: "var a = 5 + 5;"
                 },
                 "/bar/baz.js": {
-                    content: "5 + 5;",
+                    content: "var b = 5 + 5; // Yes",
                     headers: {"Content-Type": "text/custom"}
                 },
                 "/other": {
                     backend: "http://localhost:" + h.PROXY_PORT + "/"
+                },
+                "/bundle.js": {
+                    combine: ["/foo.js", "/bar/baz.js"],
+                    headers: { "Expires": "Sun, 15 Mar 2012 22:22 37 GMT" }
+                },
+                "/bundle.min.js": {
+                    combine: ["/bundle.js"],
+                    minify: true
                 }
             }
         }), "utf8");
@@ -138,7 +146,7 @@ buster.testCase("Session middleware", {
         "test hosts resources": function (done) {
             h.request({path: this.session.resourceContextPath + "/foo.js", method: "GET"}, function (res, body) {
                 buster.assert.equals(200, res.statusCode);
-                buster.assert.equals("5 + 5;", body);
+                buster.assert.equals("var a = 5 + 5;", body);
                 buster.assert.equals("text/javascript", res.headers["content-type"]);
                 done();
             }).end();
@@ -282,6 +290,24 @@ buster.testCase("Session middleware", {
                     buster.assert.equals(res.headers["x-buster-backend"], "Yes");
                     done();
                 }).end();
+            }
+        },
+
+        "combined resources": {
+            "should serve combined contents with custom header": function (done) {
+                h.request({
+                    path: this.session.resourceContextPath + "/bundle.js",
+                    method: "GET"
+                }, function (res, body) {
+                    buster.assert.equals(200, res.statusCode);
+                    buster.assert.equals(body, "var a = 5 + 5;var b = 5 + 5; // Yes");
+                    buster.assert.match(res.headers, {
+                        "expires": "Sun, 15 Mar 2012 22:22 37 GMT"
+                    });
+
+                    done();
+                }).end();
+            },
             }
         }
     },
