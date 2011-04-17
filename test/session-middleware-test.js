@@ -382,6 +382,21 @@ buster.testCase("Session middleware", {
         this.sessionMiddleware.createSession({load:[],resources:{"foo":{}}});
     },
 
+    "test programmatically creating session with none-string as content": function () {
+        var self = this;
+        buster.assert.exception(function () {
+            self.sessionMiddleware.createSession({load:[],resources:{"/foo.js":{content: new Buffer([0x50])}}});
+        });
+
+        buster.assert.exception(function () {
+            self.sessionMiddleware.createSession({load:[],resources:{"/foo.js":{content: 123}}});
+        });
+
+        buster.assert.exception(function () {
+            self.sessionMiddleware.createSession({load:[],resources:{"/foo.js":{content: {}}}});
+        });
+    },
+
     "test programmatically created session throws on validation error": function () {
         var self = this;
         buster.assert.exception(function () {
