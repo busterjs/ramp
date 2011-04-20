@@ -313,7 +313,7 @@ buster.testCase("Session middleware", {
                     path: this.session.resourceContextPath + "/bundle.js"
                 }, function (res, body) {
                     buster.assert.equals(res.statusCode, 200);
-                    buster.assert.equals(body, "var a = 5 + 5;var b = 5 + 5; // Yes");
+                    buster.assert.equals(body, "var a = 5 + 5;\nvar b = 5 + 5; // Yes\n");
                     buster.assert.match(res.headers, {
                         "expires": "Sun, 15 Mar 2012 22:22 37 GMT"
                     });
