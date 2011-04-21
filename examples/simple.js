@@ -26,7 +26,7 @@ http.createServer(function (req, res) {
 
     if (req.method == "GET" && req.url == "/") {
         res.writeHead(200, {"Content-Type": "text/html"});
-        res.write('<form method="POST" action="/capture"><button>Capture</button></form>');
+        res.write('<form method="POST" action="/capture"><input type="submit" value="Capture"></form>');
         res.end();
         return;
     }
