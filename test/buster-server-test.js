@@ -37,6 +37,18 @@ buster.testCase("buster-server glue", {
         }).end();
     },
 
+    "test configures multicast middleware with context path": function (done) {
+        h.request({
+            path: "/sessions/messaging/clients",
+            method: "GET"
+        }, function (res, body) {
+            buster.assert.equals(JSON.parse(body), [{
+                id: 1, url: "/sessions/messaging"
+            }]);
+            done();
+        }).end();
+    },
+
     "test unknown URL": function (done) {
         h.request({path: "/doesnotexist", method: "GET"}, function (res, body) {
             buster.assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
