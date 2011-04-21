@@ -43,3 +43,6 @@
 [submodule "node_modules/node-mime"]
 	path = node_modules/node-mime
 	url = https://github.com/bentomas/node-mime.git
+[submodule "node_modules/glob"]
+	path = node_modules/glob
+	url = https://github.com/isaacs/node-glob.git
