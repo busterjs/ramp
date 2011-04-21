@@ -42,7 +42,7 @@ buster.testCase("buster-server glue", {
             path: "/sessions/messaging/clients",
             method: "GET"
         }, function (res, body) {
-            buster.assert.equals(JSON.parse(body), [{
+            buster.assert.match(JSON.parse(body), [{
                 id: 1, url: "/sessions/messaging"
             }]);
             done();
@@ -79,5 +79,27 @@ buster.testCase("buster-server glue", {
     "test creating session when uninitialized also calls out to client middleware": function () {
         this.server.createSession({load:[],resources:[]});
         buster.assert(this.server.clientMiddleware.currentSession);
+    },
+
+
+    "should identify messaging client": function (done) {
+        var self = this;
+        h.request({
+            path: "/sessions",
+            method: "POST",
+            headers: {
+                "User-Agent": "Mozilla/5.0 (X11; U; Linux i686; en-US) AppleWebKit/534.7 (KHTML, like Gecko) Chrome/7.0.517.44 Safari/534.7"
+            }
+        }, function (res, body) {
+            h.request({
+                path: "/sessions/messaging/clients"
+            }, function (res, body) {
+                buster.assert.match(JSON.parse(body), [
+                    { agent: { browser: "Chrome" } }
+                ]);
+
+                done();
+            }).end();
+        }).end();
     }
 });
