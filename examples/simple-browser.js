@@ -8,6 +8,6 @@
     }, false);
 
     buster.multicastClient.on("update", function (event) {
-        indicator.innerHTML = String.fromCharCode(event.data);
+        indicator.innerHTML += String.fromCharCode(event.data);
     });
 }());
