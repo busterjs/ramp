@@ -15,7 +15,7 @@
     }
 
     function mockMulticastClient() {
-        return {on: sinon.spy(), listen: sinon.spy()};
+        return {on: sinon.spy(), connect: sinon.spy()};
     }
 
     TestCase("Buster server control frame", {
@@ -118,15 +118,12 @@
 
             this.cf.multicastClient = mockMulticastClient();
 
-            this.env.multicastClientId = 123;
+            this.env.clientId = 123;
             this.env.multicastUrl = "/foo";
             // Making buster.nextTick fire. By a long shot.
             clock.tick(1000);
-            assert(this.cf.multicastClient.listen.calledOnce);
-            assert(this.cf.multicastClient.listen.calledWith({
-                clientId: this.env.multicastClientId,
-                url: this.env.multicastUrl
-            }));
+            assert(this.cf.multicastClient.connect.calledOnce);
+            assert(this.cf.multicastClient.connect.calledWith("/foo"));
         }
     });
 

@@ -28,11 +28,13 @@ buster.testCase("buster-server glue", {
     },
 
     "test binds client and session on first request": function (done) {
-        var stub = this.sandbox.stub(clientMiddleware, "bindToSessionMiddleware");
+        this.sandbox.stub(clientMiddleware, "bindToSessionMiddleware");
+        this.sandbox.stub(clientMiddleware, "bindToMulticastMiddleware");
 
         // Performing a request to make the middlewares respond.
         h.request({path: "/doesnotexist", method: "GET"}, function (res, body) {
-            buster.assert(stub.calledOnce);
+            buster.assert(clientMiddleware.bindToSessionMiddleware.calledOnce);
+            buster.assert(clientMiddleware.bindToMulticastMiddleware.calledOnce);
             done();
         }).end();
     },

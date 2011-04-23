@@ -1,4 +1,5 @@
 var buster = require("buster");
+var sinon = require("sinon");
 var clientMiddleware = require("./../lib/client/client-middleware");
 var clientMiddlewareClient = require("./../lib/client/client");
 var multicastMiddleware = require("buster-multicast").multicastMiddleware;
@@ -79,7 +80,8 @@ buster.testCase("Client middleware", {
                 buster.assert("buster" in scope);
                 buster.assert("env" in scope.buster);
                 buster.assert.equals(typeof(scope.buster.env), "object");
-                buster.assert.equals(scope.buster.env.multicastUrl, self.client.multicast.url);
+                buster.assert.equals(scope.buster.env.multicastUrl, self.cm.multicastMiddleware.contextPath + "/");
+                buster.assert.equals(self.client.id, scope.buster.env.clientId);
 
                 // Scope where buster is already defined
                 var scope = {buster: {}};
@@ -87,7 +89,7 @@ buster.testCase("Client middleware", {
                 buster.assert("buster" in scope);
                 buster.assert("env" in scope.buster);
                 buster.assert.equals(typeof(scope.buster.env), "object");
-                buster.assert.equals(scope.buster.env.multicastUrl, self.client.multicast.url);
+                buster.assert.equals(scope.buster.env.multicastUrl, self.cm.multicastMiddleware.contextPath + "/");
                 done();
             }).end();
         },
@@ -104,25 +106,6 @@ buster.testCase("Client middleware", {
                 buster.assert.equals("bar", scope.buster.env.foo);
                 done();
             }).end();
-        },
-
-        "test client has messaging": function (done) {
-            // We're kind of testing the messaging middleware here, but what
-            // the hey. It's important that a client has messaging so we're
-            // adding a full integration test for that.
-            var self = this;
-            h.request({path: self.client.multicast.url, method: "POST"}, function (res, body) {
-                buster.assert.equals(201, res.statusCode);
-
-                h.request({path: self.client.multicast.url, method: "GET"}, function (res, body) {
-                    buster.assert.equals(200, res.statusCode);
-                    var data = JSON.parse(body);
-                    buster.assert.equals(1, data.length);
-                    buster.assert.equals("foo", data[0].topic);
-                    buster.assert.equals("bar", data[0].data);
-                    done();
-                }).end();
-            }).end(new Buffer('[{"topic":"foo","data":"bar"}]', "utf8"));
         },
 
         "test control_frame.html loads all scripts": function (done) {
@@ -186,21 +169,56 @@ buster.testCase("Client middleware", {
             }
         },
 
-        "test binding to session middleware": function (done) {
-            var self = this;
+        "test binding to session middleware": function () {
+            var session = {foo: "test"};
             var sessionMiddleware = Object.create(buster.eventEmitter);
             this.cm.bindToSessionMiddleware(sessionMiddleware);
 
-            var msgUrl = this.client.multicast.url;
-            sessionMiddleware.emit("session:start", {foo: "test"});
-            h.request({path: msgUrl, method: "GET"}, function (res, body) {
-                buster.assert.equals(JSON.parse(body)[0].data.foo, "test");
+            this.stub(this.cm, "startSession");
+            sessionMiddleware.emit("session:start", session);
+            buster.assert(this.cm.startSession.calledOnce);
+            buster.assert(this.cm.startSession.calledWithExactly(session));
 
-                sessionMiddleware.emit("session:end");
-                h.request({path: msgUrl, method: "GET"}, function (res, body) {
-                    done();
-                }).end();
-            }).end();
-        }
+            this.stub(this.cm, "endSession");
+            sessionMiddleware.emit("session:end");
+            buster.assert(this.cm.endSession.calledOnce);
+        },
+
+        "test binding to multicast middleware": function () {
+            var multicastMiddleware = Object.create(buster.eventEmitter);
+            var multicastClient = {};
+            this.cm.bindToMulticastMiddleware(multicastMiddleware);
+
+            buster.assert.same(this.cm.multicastMiddleware, multicastMiddleware);
+
+            this.stub(this.cm, "attachMulticastToClient");
+            multicastMiddleware.emit("client:create", multicastClient);
+            buster.assert(this.cm.attachMulticastToClient.calledOnce);
+            buster.assert(this.cm.attachMulticastToClient.calledWithExactly(multicastClient));
+        },
+
+        "test attach multicast to client": function () {
+            var multicastClient = {identifier: this.client.id};
+            var otherClient = this.cm.createClient();
+            this.stub(this.client, "attachMulticast");
+            this.stub(otherClient, "attachMulticast");
+
+
+            this.cm.attachMulticastToClient(multicastClient);
+
+            buster.assert(this.client.attachMulticast.calledOnce);
+            buster.assert(this.client.attachMulticast.calledWith(multicastClient));
+            buster.assert.isFalse(otherClient.attachMulticast.called);
+        },
+
+        "test emits session:start to client when multicast and session is present": function () {
+            var session = {};
+            var multicast = {emitToClient: sinon.spy(), clientId: 123};
+            this.client.startSession(session);
+            this.client.attachMulticast(multicast);
+
+            buster.assert(multicast.emitToClient.calledOnce);
+            buster.assert(multicast.emitToClient.calledWithExactly(123, "session:start", session));
+        },
     }
 });
