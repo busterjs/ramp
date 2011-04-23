@@ -188,6 +188,16 @@ buster.testCase("HTTP proxy", {
 
                 res.end();
             };
+        },
+
+        "should respond with 503 when backend is down": function (done) {
+            this.proxyMiddleware = buster.httpProxy.create("localhost", 2220);
+
+            request({}, function (req, res) {
+                assert.equals(res.statusCode, 503);
+
+                done();
+            }).end();
         }
     },
 
