@@ -63,6 +63,23 @@ buster.testCase("Client middleware", {
         this.cm.createClient();
     },
 
+    "test default capture URL": function (done) {
+        this.cm.on("client:create", function (req, res, client) {
+            res.end();
+            done();
+        });
+        h.request({path: this.cm.captureUrl, method: "GET"}, function(){}).end();
+    },
+
+    "test custom capture URL": function (done) {
+        this.cm.on("client:create", function (req, res, client) {
+            res.end();
+            done();
+        });
+        this.cm.captureUrl = "/";
+        h.request({path: this.cm.captureUrl, method: "GET"}, function(){}).end();
+    },
+
     "with a client": {
         setUp: function (done) {
             var self = this;
