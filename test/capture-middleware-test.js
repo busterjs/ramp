@@ -1,7 +1,7 @@
 var buster = require("buster");
 var sinon = require("sinon");
-var clientMiddleware = require("./../lib/client/client-middleware");
-var clientMiddlewareClient = require("./../lib/client/client");
+var captureMiddleware = require("./../lib/capture/capture-middleware");
+var captureMiddlewareClient = require("./../lib/capture/captured-client");
 var multicastMiddleware = require("buster-multicast").multicastMiddleware;
 
 var fs = require("fs");
@@ -11,7 +11,7 @@ var h = require("./test-helper");
 buster.testCase("Client middleware", {
     setUp: function (done) {
         var self = this;
-        this.cm = Object.create(clientMiddleware);
+        this.cm = Object.create(captureMiddleware);
         this.cm.multicastMiddleware = Object.create(multicastMiddleware);
         this.httpServer = http.createServer(function (req, res) {
             if (self.cm.respond(req, res)) return true;
@@ -29,28 +29,28 @@ buster.testCase("Client middleware", {
     },
 
     "test creating/capturing client": function (done) {
-        this.stub(clientMiddlewareClient, "startSession");
-        this.cm.on("client:create", function (req, res, client) {
+        this.stub(captureMiddlewareClient, "startSession");
+        this.cm.on("client:capture", function (req, res, client) {
             buster.assert(typeof(client), "object");
             buster.assert.isFalse(client.startSession.called);
             done();
         });
-        this.cm.createClient();
+        this.cm.captureClient();
     },
 
     "test capturing client with session in progress": function (done) {
         this.cm.startSession({});
-        this.stub(clientMiddlewareClient, "startSession");
-        this.cm.on("client:create", function (req, res, client) {
+        this.stub(captureMiddlewareClient, "startSession");
+        this.cm.on("client:capture", function (req, res, client) {
             buster.assert(client.startSession.calledOnce);
             done();
         });
-        this.cm.createClient();
+        this.cm.captureClient();
     },
 
     "test different clients gets different URLs": function (done) {
         var clients = [];
-        this.cm.on("client:create", function (req, res, client) {
+        this.cm.on("client:capture", function (req, res, client) {
             clients.push(client);
 
             if (clients.length == 2) {
@@ -59,12 +59,12 @@ buster.testCase("Client middleware", {
             }
         });
 
-        this.cm.createClient();
-        this.cm.createClient();
+        this.cm.captureClient();
+        this.cm.captureClient();
     },
 
     "test default capture URL": function (done) {
-        this.cm.on("client:create", function (req, res, client) {
+        this.cm.on("client:capture", function (req, res, client) {
             res.end();
             done();
         });
@@ -72,7 +72,7 @@ buster.testCase("Client middleware", {
     },
 
     "test custom capture URL": function (done) {
-        this.cm.on("client:create", function (req, res, client) {
+        this.cm.on("client:capture", function (req, res, client) {
             res.end();
             done();
         });
@@ -84,12 +84,12 @@ buster.testCase("Client middleware", {
         setUp: function (done) {
             var self = this;
             var onClientCreate = function (req, res, client) {
-                self.cm.removeListener("client:create", onClientCreate);
+                self.cm.removeListener("client:capture", onClientCreate);
                 self.client = client;
                 done();
             };
-            this.cm.on("client:create", onClientCreate)
-            this.cm.createClient();
+            this.cm.on("client:capture", onClientCreate)
+            this.cm.captureClient();
         },
 
         "test getting client index page": function (done) {
@@ -237,7 +237,7 @@ buster.testCase("Client middleware", {
         "test attach multicast to client": function (done) {
             var multicastClient = {identifier: this.client.id};
 
-            this.cm.on("client:create", (function (req, res, otherClient) {
+            this.cm.on("client:capture", (function (req, res, otherClient) {
                 this.stub(this.client, "attachMulticast");
                 this.stub(otherClient, "attachMulticast");
 
@@ -250,7 +250,7 @@ buster.testCase("Client middleware", {
                 done();
             }).bind(this));
 
-            this.cm.createClient();
+            this.cm.captureClient();
         },
 
         "test emits session:start to client when multicast and session is present": function () {

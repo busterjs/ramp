@@ -2,7 +2,7 @@ var buster = require("buster");
 var sinon = require("sinon");
 
 var busterServer = require("./../lib/buster-server");
-var clientMiddleware = require("./../lib/client/client-middleware");
+var captureMiddleware = require("./../lib/capture/capture-middleware");
 
 var http = require("http");
 var h = require("./test-helper");
@@ -28,13 +28,13 @@ buster.testCase("buster-server glue", {
     },
 
     "test binds client and session on first request": function (done) {
-        this.sandbox.stub(clientMiddleware, "bindToSessionMiddleware");
-        this.sandbox.stub(clientMiddleware, "bindToMulticastMiddleware");
+        this.sandbox.stub(captureMiddleware, "bindToSessionMiddleware");
+        this.sandbox.stub(captureMiddleware, "bindToMulticastMiddleware");
 
         // Performing a request to make the middlewares respond.
         h.request({path: "/doesnotexist", method: "GET"}, function (res, body) {
-            buster.assert(clientMiddleware.bindToSessionMiddleware.calledOnce);
-            buster.assert(clientMiddleware.bindToMulticastMiddleware.calledOnce);
+            buster.assert(captureMiddleware.bindToSessionMiddleware.calledOnce);
+            buster.assert(captureMiddleware.bindToMulticastMiddleware.calledOnce);
             done();
         }).end();
     },
@@ -73,13 +73,13 @@ buster.testCase("buster-server glue", {
     },
 
     "test creating client": function () {
-        var stub = this.sandbox.stub(this.server.clientMiddleware, "createClient");
-        this.server.createClient();
+        var stub = this.sandbox.stub(this.server.captureMiddleware, "captureClient");
+        this.server.captureClient();
         buster.assert(stub.calledOnce);
     },
 
     "test creating session when uninitialized also calls out to client middleware": function () {
         this.server.createSession({load:[],resources:[]});
-        buster.assert(this.server.clientMiddleware.currentSession);
+        buster.assert(this.server.captureMiddleware.currentSession);
     }
 });
