@@ -28,31 +28,51 @@ buster.testCase("Client middleware", {
         this.httpServer.close();
     },
 
-    "test creating/capturing client": function () {
+    "test creating/capturing client": function (done) {
         this.stub(clientMiddlewareClient, "startSession");
-        var client = this.cm.createClient();
-        buster.assert(typeof(client), "object");
-        buster.assert.isFalse(client.startSession.called);
+        this.cm.on("client:create", function (req, res, client) {
+            buster.assert(typeof(client), "object");
+            buster.assert.isFalse(client.startSession.called);
+            done();
+        });
+        this.cm.createClient();
     },
 
-    "test capturing client with session in progress": function () {
+    "test capturing client with session in progress": function (done) {
         this.cm.startSession({});
         this.stub(clientMiddlewareClient, "startSession");
-        var client = this.cm.createClient();
-        buster.assert(client.startSession.calledOnce);
+        this.cm.on("client:create", function (req, res, client) {
+            buster.assert(client.startSession.calledOnce);
+            done();
+        });
+        this.cm.createClient();
     },
 
-    "test different clients gets different URLs": function () {
-        var clientOne = this.cm.createClient();
-        var clientTwo = this.cm.createClient();
+    "test different clients gets different URLs": function (done) {
+        var clients = [];
+        this.cm.on("client:create", function (req, res, client) {
+            clients.push(client);
 
-        buster.assert.notEquals(clientOne.url, clientTwo.url);
+            if (clients.length == 2) {
+                buster.assert.notEquals(clients[0].url, clients[1].url);
+                done();
+            }
+        });
+
+        this.cm.createClient();
+        this.cm.createClient();
     },
 
     "with a client": {
-        setUp: function () {
+        setUp: function (done) {
             var self = this;
-            this.client = this.cm.createClient();
+            var onClientCreate = function (req, res, client) {
+                self.cm.removeListener("client:create", onClientCreate);
+                self.client = client;
+                done();
+            };
+            this.cm.on("client:create", onClientCreate)
+            this.cm.createClient();
         },
 
         "test getting client index page": function (done) {
@@ -197,18 +217,23 @@ buster.testCase("Client middleware", {
             buster.assert(this.cm.attachMulticastToClient.calledWithExactly(multicastClient));
         },
 
-        "test attach multicast to client": function () {
+        "test attach multicast to client": function (done) {
             var multicastClient = {identifier: this.client.id};
-            var otherClient = this.cm.createClient();
-            this.stub(this.client, "attachMulticast");
-            this.stub(otherClient, "attachMulticast");
+
+            this.cm.on("client:create", (function (req, res, otherClient) {
+                this.stub(this.client, "attachMulticast");
+                this.stub(otherClient, "attachMulticast");
 
 
-            this.cm.attachMulticastToClient(multicastClient);
+                this.cm.attachMulticastToClient(multicastClient);
 
-            buster.assert(this.client.attachMulticast.calledOnce);
-            buster.assert(this.client.attachMulticast.calledWith(multicastClient));
-            buster.assert.isFalse(otherClient.attachMulticast.called);
+                buster.assert(this.client.attachMulticast.calledOnce);
+                buster.assert(this.client.attachMulticast.calledWith(multicastClient));
+                buster.assert.isFalse(otherClient.attachMulticast.called);
+                done();
+            }).bind(this));
+
+            this.cm.createClient();
         },
 
         "test emits session:start to client when multicast and session is present": function () {
@@ -219,6 +244,6 @@ buster.testCase("Client middleware", {
 
             buster.assert(multicast.emitToClient.calledOnce);
             buster.assert(multicast.emitToClient.calledWithExactly(123, "session:start", session));
-        },
+        }
     }
 });
