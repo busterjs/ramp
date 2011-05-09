@@ -113,15 +113,15 @@
         },
 
         "test listen": function () {
-            var clock = this.sandbox.useFakeTimers();
+            this.sandbox.stub(buster, "nextTick");
             this.cf.listen();
 
             this.cf.multicastClient = mockMulticastClient();
 
             this.env.clientId = 123;
             this.env.multicastUrl = "/foo";
-            // Making buster.nextTick fire. By a long shot.
-            clock.tick(1000);
+
+            buster.nextTick.getCall(0).args[0]();
             assert(this.cf.multicastClient.connect.calledOnce);
             assert(this.cf.multicastClient.connect.calledWith("/foo"));
         }
