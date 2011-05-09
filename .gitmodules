@@ -43,3 +43,6 @@
 [submodule "node_modules/glob"]
 	path = node_modules/glob
 	url = https://github.com/isaacs/node-glob.git
+[submodule "node_modules/node-uuid"]
+	path = node_modules/node-uuid
+	url = git://github.com/broofa/node-uuid.git

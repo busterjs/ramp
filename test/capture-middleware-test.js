@@ -80,6 +80,25 @@ buster.testCase("Client middleware", {
         h.request({path: this.cm.captureUrl, method: "GET"}, function(){}).end();
     },
 
+    "test first client on new server gets different id": function (done) {
+        var otherCm = Object.create(captureMiddleware);
+        otherCm.multicastMiddleware = Object.create(multicastMiddleware);
+        var clients = [];
+        var captureHandler = function (req, res, client) {
+            clients.push(client);
+
+            if (clients.length == 2) {
+                buster.assert.notEquals(clients[0].id, clients[1].id);
+                done();
+            }
+        };
+
+        this.cm.on("client:capture", captureHandler)
+        this.cm.captureClient();
+        otherCm.on("client:capture", captureHandler)
+        otherCm.captureClient();
+    },
+
     "with a client": {
         setUp: function (done) {
             var self = this;
