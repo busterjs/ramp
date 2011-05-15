@@ -201,7 +201,7 @@ buster.testCase("Session middleware", {
         "test inserts script middleware scripts into root resource": function (done) {
             var self = this;
             h.request({path: this.session.resourceContextPath + "/", method: "GET"}, function (res, body) {
-                buster.assert.match(body, '<script src="' + self.session.rootPath  + require.resolve("buster-core") + '"');
+                buster.assert.match(body, '<script src="' + self.session.resourceSet.internalsContextPath  + require.resolve("buster-core") + '"');
                 done();
             }).end();
         },
@@ -210,13 +210,13 @@ buster.testCase("Session middleware", {
             var self = this;
             h.request({path: this.session.resourceContextPath + "/", method: "GET"}, function (res, body) {
                 var scriptTags = body.match(/<script.+>/g);
-                buster.assert.match(scriptTags[0], '<script src="' + self.session.rootPath  + require.resolve("buster-core") + '"');
+                buster.assert.match(scriptTags[0], '<script src="' + self.session.resourceSet.internalsContextPath  + require.resolve("buster-core") + '"');
                 done();
             }).end();
         },
 
         "test serves script middleware": function (done) {
-            h.request({path: this.session.rootPath  + require.resolve("buster-core"), method: "GET"}, function (res, body) {
+            h.request({path: this.session.resourceSet.internalsContextPath  + require.resolve("buster-core"), method: "GET"}, function (res, body) {
                 buster.assert.equals(200, res.statusCode);
                 done();
             }).end();
