@@ -133,7 +133,8 @@ buster.testCase("Session middleware", {
             var self = this;
             h.request({path: "/sessions", method: "POST"}, function (res, body) {
                 self.res = res;
-                self.session = JSON.parse(body);
+                self.sessionHttpData = JSON.parse(body);
+                self.session = self.sessionMiddleware.sessions[0];
                 done();
             }).end(this.validSessionPayload);
         },
@@ -143,18 +144,18 @@ buster.testCase("Session middleware", {
             buster.assert("location" in this.res.headers);
             buster.assert.match(this.res.headers.location, /^\/.+/);
 
-            buster.assert("rootPath" in this.session);
-            buster.assert.equals(this.res.headers.location, this.session.rootPath);
+            buster.assert("rootPath" in this.sessionHttpData);
+            buster.assert.equals(this.res.headers.location, this.sessionHttpData.rootPath);
 
-            buster.assert("resourceContextPath" in this.session);
+            buster.assert("resourceContextPath" in this.sessionHttpData);
             // resourceContextPath should be prefixed with rootPath.
-            var expectedPrefix = this.session.resourceContextPath.slice(0, this.session.rootPath.length)
-            buster.assert.equals(expectedPrefix, this.session.rootPath);
+            var expectedPrefix = this.sessionHttpData.resourceContextPath.slice(0, this.sessionHttpData.rootPath.length)
+            buster.assert.equals(expectedPrefix, this.sessionHttpData.rootPath);
 
-            buster.assert("multicastUrl" in this.session);
-            buster.assert.equals(this.session.multicastUrl, this.sessionMiddleware.multicast.url);
-            buster.assert("multicastClientId" in this.session);
-            buster.assert.equals(this.session.multicastClientId, this.sessionMiddleware.multicast.clientId);
+            buster.assert("multicastUrl" in this.sessionHttpData);
+            buster.assert.equals(this.sessionHttpData.multicastUrl, this.sessionMiddleware.multicast.url);
+            buster.assert("multicastClientId" in this.sessionHttpData);
+            buster.assert.equals(this.sessionHttpData.multicastClientId, this.sessionMiddleware.multicast.clientId);
         },
 
         "test hosts resources": function (done) {
