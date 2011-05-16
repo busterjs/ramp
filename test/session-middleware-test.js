@@ -280,6 +280,17 @@ buster.testCase("Session middleware", {
             }).end(this.validSessionPayload);
         },
 
+        "test adding resource post create": function (done) {
+            this.session.addResource("/roflmao.txt", {"content": "Roflmao!"});
+            h.request({
+                path: this.session.resourceContextPath + "/roflmao.txt",
+                method: "GET"}, function (res, body) {
+                    buster.assert.equals(res.statusCode, 200);
+                    buster.assert.equals(body, "Roflmao!");
+                    done();
+                }).end();
+        },
+
         "proxy requests": {
             setUp: function (done) {
                 this.proxyBackend = http.createServer(function (req, res) {
