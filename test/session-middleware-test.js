@@ -40,25 +40,6 @@ buster.testCase("Session middleware", {
             resources: {
                 "/foo.js": {
                     content: "var a = 5 + 5;"
-                },
-                "/foo.min.js": {
-                    content: "var a = 5 + 5;",
-                    minify: true
-                },
-                "/bar/baz.js": {
-                    content: "var b = 5 + 5; // Yes",
-                    headers: {"Content-Type": "text/custom"}
-                },
-                "/other": {
-                    backend: "http://localhost:" + h.PROXY_PORT + "/"
-                },
-                "/bundle.js": {
-                    combine: ["/foo.js", "/bar/baz.js"],
-                    headers: { "Expires": "Sun, 15 Mar 2012 22:22 37 GMT" }
-                },
-                "/bundle.min.js": {
-                    combine: ["/bundle.js"],
-                    minify: true
                 }
             }
         }), "utf8");
@@ -168,7 +149,8 @@ buster.testCase("Session middleware", {
         },
 
         "test hosts resources with custom headers": function (done) {
-            h.request({path: this.session.resourceContextPath + "/bar/baz.js", method: "GET"}, function (res, body) {
+            this.session.addResource("/baz.js", {headers: {"Content-Type": "text/custom"}});
+            h.request({path: this.session.resourceContextPath + "/baz.js", method: "GET"}, function (res, body) {
                 buster.assert.equals(200, res.statusCode);
                 buster.assert.equals("text/custom", res.headers["content-type"]);
                 done();
@@ -299,6 +281,10 @@ buster.testCase("Session middleware", {
                 });
 
                 this.proxyBackend.listen(h.PROXY_PORT, done);
+
+                this.session.addResource("/other", {
+                    backend: "http://localhost:" + h.PROXY_PORT + "/"
+                });
             },
 
             tearDown: function (done) {
@@ -320,6 +306,18 @@ buster.testCase("Session middleware", {
         },
 
         "bundles": {
+            setUp: function () {
+                this.session.addResource("/bundle.js", {
+                    combine: ["/foo.js", "/bar/baz.js"],
+                    headers: { "Expires": "Sun, 15 Mar 2012 22:22 37 GMT" }
+                });
+
+                this.session.addResource("/bar/baz.js", {
+                    content: "var b = 5 + 5; // Yes",
+                    headers: {"Content-Type": "text/custom"}
+                });
+            },
+
             "should serve combined contents with custom header": function (done) {
                 h.request({
                     path: this.session.resourceContextPath + "/bundle.js"
@@ -335,6 +333,11 @@ buster.testCase("Session middleware", {
             },
 
             "should serve combined contents minified": function (done) {
+                this.session.addResource("/bundle.min.js", {
+                    combine: ["/bundle.js"],
+                    minify: true
+                });
+
                 h.request({
                     path: this.session.resourceContextPath + "/bundle.min.js"
                 }, function (res, body) {
@@ -345,6 +348,11 @@ buster.testCase("Session middleware", {
             },
 
             "should serve single resource contents minified": function (done) {
+                this.session.addResource("/foo.min.js", {
+                    content: "var a = 5 + 5;",
+                    minify: true
+                });
+
                 h.request({
                     path: this.session.resourceContextPath + "/foo.min.js"
                 }, function (res, body) {
@@ -366,8 +374,9 @@ buster.testCase("Session middleware", {
             },
 
             "should serve javascript with reasonable mime-type and other headers": function (done) {
+
                 h.request({
-                    path: this.session.resourceContextPath + "/bundle.js"
+                    path: this.session.resourceContextPath + "/foo.js"
                 }, function (res, body) {
                     buster.assert.equals(res.headers["content-type"], "application/javascript");
                     done();
@@ -375,8 +384,9 @@ buster.testCase("Session middleware", {
             },
 
             "should not overwrite custom mime-type": function (done) {
+                this.session.addResource("/baz.js", {headers: {"Content-Type": "text/custom"}});
                 h.request({
-                    path: this.session.resourceContextPath + "/bar/baz.js"
+                    path: this.session.resourceContextPath + "/baz.js"
                 }, function (res, body) {
                     buster.assert.equals(res.headers["content-type"], "text/custom");
                     done();
