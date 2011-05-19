@@ -12,6 +12,10 @@ var fs = require("fs");
 
 
 var bs = Object.create(busterServer);
+bs.captureMiddleware.oncapture = function (req, res, client) {
+    res.writeHead(301, {"Location": client.url});
+    res.end();
+};
 var sess = bs.createSession({
     load: ["/test.js"],
     resources: {
@@ -27,13 +31,6 @@ http.createServer(function (req, res) {
     if (req.method == "GET" && req.url == "/") {
         res.writeHead(200, {"Content-Type": "text/html"});
         res.write('<form method="POST" action="/capture"><input type="submit" value="Capture"></form>');
-        res.end();
-        return;
-    }
-
-    if (req.method == "POST" && req.url == "/capture") {
-        var client = bs.createClient();
-        res.writeHead(302, {"Location": client.url});
         res.end();
         return;
     }
