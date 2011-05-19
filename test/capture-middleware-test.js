@@ -80,6 +80,16 @@ buster.testCase("Client middleware", {
         h.request({path: this.cm.captureUrl, method: "GET"}, function(){}).end();
     },
 
+    "test creating client without oncapture handler": function (done) {
+        try {
+            this.cm.captureClient();
+        } catch (e) {
+            buster.assert.match(e.message, "'oncapture' handler");
+            buster.assert.equals(this.cm.capturedClients.length, 0);
+            done();
+        }
+    },
+
     "test first client on new server gets different id": function (done) {
         var otherCm = Object.create(captureMiddleware);
         otherCm.multicastMiddleware = Object.create(multicastMiddleware);
