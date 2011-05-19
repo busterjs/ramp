@@ -30,52 +30,52 @@ buster.testCase("Client middleware", {
 
     "test creating/capturing client": function (done) {
         this.stub(captureMiddlewareClient, "startSession");
-        this.cm.on("client:capture", function (req, res, client) {
+        this.cm.oncapture =  function (req, res, client) {
             buster.assert(typeof(client), "object");
             buster.assert.isFalse(client.startSession.called);
             done();
-        });
+        };
         this.cm.captureClient();
     },
 
     "test capturing client with session in progress": function (done) {
         this.cm.startSession({});
         this.stub(captureMiddlewareClient, "startSession");
-        this.cm.on("client:capture", function (req, res, client) {
+        this.cm.oncapture = function (req, res, client) {
             buster.assert(client.startSession.calledOnce);
             done();
-        });
+        };
         this.cm.captureClient();
     },
 
     "test different clients gets different URLs": function (done) {
         var clients = [];
-        this.cm.on("client:capture", function (req, res, client) {
+        this.cm.oncapture = function (req, res, client) {
             clients.push(client);
 
             if (clients.length == 2) {
                 buster.assert.notEquals(clients[0].url, clients[1].url);
                 done();
             }
-        });
+        };
 
         this.cm.captureClient();
         this.cm.captureClient();
     },
 
     "test default capture URL": function (done) {
-        this.cm.on("client:capture", function (req, res, client) {
+        this.cm.oncapture = function (req, res, client) {
             res.end();
             done();
-        });
+        };
         h.request({path: this.cm.captureUrl, method: "GET"}, function(){}).end();
     },
 
     "test custom capture URL": function (done) {
-        this.cm.on("client:capture", function (req, res, client) {
+        this.cm.oncapture = function (req, res, client) {
             res.end();
             done();
-        });
+        };
         this.cm.captureUrl = "/";
         h.request({path: this.cm.captureUrl, method: "GET"}, function(){}).end();
     },
@@ -93,21 +93,20 @@ buster.testCase("Client middleware", {
             }
         };
 
-        this.cm.on("client:capture", captureHandler)
+        this.cm.oncapture = captureHandler;
         this.cm.captureClient();
-        otherCm.on("client:capture", captureHandler)
+        otherCm.oncapture = captureHandler;
         otherCm.captureClient();
     },
 
     "with a client": {
         setUp: function (done) {
             var self = this;
-            var onClientCreate = function (req, res, client) {
-                self.cm.removeListener("client:capture", onClientCreate);
+            this.cm.oncapture = function (req, res, client) {
+                delete self.cm.oncapture;
                 self.client = client;
                 done();
             };
-            this.cm.on("client:capture", onClientCreate)
             this.cm.captureClient();
         },
 
