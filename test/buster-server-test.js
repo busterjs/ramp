@@ -45,7 +45,7 @@ buster.testCase("buster-server glue", {
             method: "GET"
         }, function (res, body) {
             buster.assert.match(JSON.parse(body), [{
-                id: 1, url: "/sessions/messaging"
+                url: "/sessions/messaging"
             }]);
             done();
         }).end();

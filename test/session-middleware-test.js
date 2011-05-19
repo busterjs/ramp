@@ -40,25 +40,6 @@ buster.testCase("Session middleware", {
             resources: {
                 "/foo.js": {
                     content: "var a = 5 + 5;"
-                },
-                "/foo.min.js": {
-                    content: "var a = 5 + 5;",
-                    minify: true
-                },
-                "/bar/baz.js": {
-                    content: "var b = 5 + 5; // Yes",
-                    headers: {"Content-Type": "text/custom"}
-                },
-                "/other": {
-                    backend: "http://localhost:" + h.PROXY_PORT + "/"
-                },
-                "/bundle.js": {
-                    combine: ["/foo.js", "/bar/baz.js"],
-                    headers: { "Expires": "Sun, 15 Mar 2012 22:22 37 GMT" }
-                },
-                "/bundle.min.js": {
-                    combine: ["/bundle.js"],
-                    minify: true
                 }
             }
         }), "utf8");
@@ -133,7 +114,8 @@ buster.testCase("Session middleware", {
             var self = this;
             h.request({path: "/sessions", method: "POST"}, function (res, body) {
                 self.res = res;
-                self.session = JSON.parse(body);
+                self.sessionHttpData = JSON.parse(body);
+                self.session = self.sessionMiddleware.sessions[0];
                 done();
             }).end(this.validSessionPayload);
         },
@@ -143,18 +125,18 @@ buster.testCase("Session middleware", {
             buster.assert("location" in this.res.headers);
             buster.assert.match(this.res.headers.location, /^\/.+/);
 
-            buster.assert("rootPath" in this.session);
-            buster.assert.equals(this.res.headers.location, this.session.rootPath);
+            buster.assert("rootPath" in this.sessionHttpData);
+            buster.assert.equals(this.res.headers.location, this.sessionHttpData.rootPath);
 
-            buster.assert("resourceContextPath" in this.session);
+            buster.assert("resourceContextPath" in this.sessionHttpData);
             // resourceContextPath should be prefixed with rootPath.
-            var expectedPrefix = this.session.resourceContextPath.slice(0, this.session.rootPath.length)
-            buster.assert.equals(expectedPrefix, this.session.rootPath);
+            var expectedPrefix = this.sessionHttpData.resourceContextPath.slice(0, this.sessionHttpData.rootPath.length)
+            buster.assert.equals(expectedPrefix, this.sessionHttpData.rootPath);
 
-            buster.assert("multicastUrl" in this.session);
-            buster.assert.equals(this.session.multicastUrl, this.sessionMiddleware.multicast.url);
-            buster.assert("multicastClientId" in this.session);
-            buster.assert.equals(this.session.multicastClientId, this.sessionMiddleware.multicast.clientId);
+            buster.assert("multicastUrl" in this.sessionHttpData);
+            buster.assert.equals(this.sessionHttpData.multicastUrl, this.sessionMiddleware.multicast.url);
+            buster.assert("multicastClientId" in this.sessionHttpData);
+            buster.assert.equals(this.sessionHttpData.multicastClientId, this.sessionMiddleware.multicast.clientId);
         },
 
         "test hosts resources": function (done) {
@@ -167,7 +149,8 @@ buster.testCase("Session middleware", {
         },
 
         "test hosts resources with custom headers": function (done) {
-            h.request({path: this.session.resourceContextPath + "/bar/baz.js", method: "GET"}, function (res, body) {
+            this.session.addResource("/baz.js", {headers: {"Content-Type": "text/custom"}});
+            h.request({path: this.session.resourceContextPath + "/baz.js", method: "GET"}, function (res, body) {
                 buster.assert.equals(200, res.statusCode);
                 buster.assert.equals("text/custom", res.headers["content-type"]);
                 done();
@@ -200,7 +183,7 @@ buster.testCase("Session middleware", {
         "test inserts script middleware scripts into root resource": function (done) {
             var self = this;
             h.request({path: this.session.resourceContextPath + "/", method: "GET"}, function (res, body) {
-                buster.assert.match(body, '<script src="' + self.session.rootPath  + require.resolve("buster-core") + '"');
+                buster.assert.match(body, '<script src="' + self.session.resourceSet.internalsContextPath  + require.resolve("buster-core") + '"');
                 done();
             }).end();
         },
@@ -209,13 +192,13 @@ buster.testCase("Session middleware", {
             var self = this;
             h.request({path: this.session.resourceContextPath + "/", method: "GET"}, function (res, body) {
                 var scriptTags = body.match(/<script.+>/g);
-                buster.assert.match(scriptTags[0], '<script src="' + self.session.rootPath  + require.resolve("buster-core") + '"');
+                buster.assert.match(scriptTags[0], '<script src="' + self.session.resourceSet.internalsContextPath  + require.resolve("buster-core") + '"');
                 done();
             }).end();
         },
 
         "test serves script middleware": function (done) {
-            h.request({path: this.session.rootPath  + require.resolve("buster-core"), method: "GET"}, function (res, body) {
+            h.request({path: this.session.resourceSet.internalsContextPath  + require.resolve("buster-core"), method: "GET"}, function (res, body) {
                 buster.assert.equals(200, res.statusCode);
                 done();
             }).end();
@@ -279,6 +262,17 @@ buster.testCase("Session middleware", {
             }).end(this.validSessionPayload);
         },
 
+        "test adding resource post create": function (done) {
+            this.session.addResource("/roflmao.txt", {"content": "Roflmao!"});
+            h.request({
+                path: this.session.resourceContextPath + "/roflmao.txt",
+                method: "GET"}, function (res, body) {
+                    buster.assert.equals(res.statusCode, 200);
+                    buster.assert.equals(body, "Roflmao!");
+                    done();
+                }).end();
+        },
+
         "proxy requests": {
             setUp: function (done) {
                 this.proxyBackend = http.createServer(function (req, res) {
@@ -287,6 +281,10 @@ buster.testCase("Session middleware", {
                 });
 
                 this.proxyBackend.listen(h.PROXY_PORT, done);
+
+                this.session.addResource("/other", {
+                    backend: "http://localhost:" + h.PROXY_PORT + "/"
+                });
             },
 
             tearDown: function (done) {
@@ -308,6 +306,18 @@ buster.testCase("Session middleware", {
         },
 
         "bundles": {
+            setUp: function () {
+                this.session.addResource("/bundle.js", {
+                    combine: ["/foo.js", "/bar/baz.js"],
+                    headers: { "Expires": "Sun, 15 Mar 2012 22:22 37 GMT" }
+                });
+
+                this.session.addResource("/bar/baz.js", {
+                    content: "var b = 5 + 5; // Yes",
+                    headers: {"Content-Type": "text/custom"}
+                });
+            },
+
             "should serve combined contents with custom header": function (done) {
                 h.request({
                     path: this.session.resourceContextPath + "/bundle.js"
@@ -323,6 +333,11 @@ buster.testCase("Session middleware", {
             },
 
             "should serve combined contents minified": function (done) {
+                this.session.addResource("/bundle.min.js", {
+                    combine: ["/bundle.js"],
+                    minify: true
+                });
+
                 h.request({
                     path: this.session.resourceContextPath + "/bundle.min.js"
                 }, function (res, body) {
@@ -333,6 +348,11 @@ buster.testCase("Session middleware", {
             },
 
             "should serve single resource contents minified": function (done) {
+                this.session.addResource("/foo.min.js", {
+                    content: "var a = 5 + 5;",
+                    minify: true
+                });
+
                 h.request({
                     path: this.session.resourceContextPath + "/foo.min.js"
                 }, function (res, body) {
@@ -354,8 +374,9 @@ buster.testCase("Session middleware", {
             },
 
             "should serve javascript with reasonable mime-type and other headers": function (done) {
+
                 h.request({
-                    path: this.session.resourceContextPath + "/bundle.js"
+                    path: this.session.resourceContextPath + "/foo.js"
                 }, function (res, body) {
                     buster.assert.equals(res.headers["content-type"], "application/javascript");
                     done();
@@ -363,8 +384,9 @@ buster.testCase("Session middleware", {
             },
 
             "should not overwrite custom mime-type": function (done) {
+                this.session.addResource("/baz.js", {headers: {"Content-Type": "text/custom"}});
                 h.request({
-                    path: this.session.resourceContextPath + "/bar/baz.js"
+                    path: this.session.resourceContextPath + "/baz.js"
                 }, function (res, body) {
                     buster.assert.equals(res.headers["content-type"], "text/custom");
                     done();
@@ -375,7 +397,7 @@ buster.testCase("Session middleware", {
 
     "test programmatically created session is created and loaded": function (done) {
         this.sessionMiddleware.on("session:start", function (session) {
-            buster.assert(session.resources.hasOwnProperty("foo"));
+            buster.assert(session.resourceSet.resources.hasOwnProperty("foo"));
             done();
         });
 
