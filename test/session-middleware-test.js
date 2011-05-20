@@ -149,7 +149,7 @@ buster.testCase("Session middleware", {
         },
 
         "test hosts resources with custom headers": function (done) {
-            this.session.addResource("/baz.js", {headers: {"Content-Type": "text/custom"}});
+            this.session.addResource("/baz.js", {content: "", headers: {"Content-Type": "text/custom"}});
             h.request({path: this.session.resourceContextPath + "/baz.js", method: "GET"}, function (res, body) {
                 buster.assert.equals(200, res.statusCode);
                 buster.assert.equals("text/custom", res.headers["content-type"]);
@@ -384,7 +384,7 @@ buster.testCase("Session middleware", {
             },
 
             "should not overwrite custom mime-type": function (done) {
-                this.session.addResource("/baz.js", {headers: {"Content-Type": "text/custom"}});
+                this.session.addResource("/baz.js", {content: "", headers: {"Content-Type": "text/custom"}});
                 h.request({
                     path: this.session.resourceContextPath + "/baz.js"
                 }, function (res, body) {
