@@ -8,6 +8,9 @@ buster.testCase("resource-set", {
         var r = resourceSet.create({});
         buster.assert(r.load instanceof Array);
         buster.assert.equals(r.load.length, 0);
+
+        buster.assert.equals("/res", r.resourceContextPath());
+        buster.assert.equals("/_", r.internalsContextPath());
     },
 
     "test setting context path after creation": function () {
