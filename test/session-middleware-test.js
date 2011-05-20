@@ -273,6 +273,16 @@ buster.testCase("Session middleware", {
                 }).end();
         },
 
+        "test serving buffer resources": function (done) {
+            this.session.addResource("/hullo.txt", {content: new Buffer([0x50, 0x4e, 0x47])});
+            h.request({
+                path: this.session.resourceContextPath + "/hullo.txt",
+                method: "GET"}, function (res, body) {
+                    buster.assert.equals(body, "PNG");
+                    done();
+                }).end();
+        },
+
         "proxy requests": {
             setUp: function (done) {
                 this.proxyBackend = http.createServer(function (req, res) {
@@ -402,19 +412,6 @@ buster.testCase("Session middleware", {
         });
 
         this.sessionMiddleware.createSession({load:[],resources:{"foo":{}}});
-    },
-
-    "test programmatically creating session with buffer as content": function (done) {
-        var session = this.sessionMiddleware.createSession({
-            load:[],
-            resources:{"/foo.js":{content: new Buffer([0x249, 0x251]), encoding: "utf8"}}
-        });
-
-        h.request({path: session.resourceContextPath + "/foo.js", method: "GET"}, function (response, body) {
-            buster.assert.equals(response.statusCode, 200);
-            buster.assert.equals(body, "IQ");
-            done();
-        }).end();
     },
 
     "test programmatically creating session with none-string or none-buffer as content": function () {
