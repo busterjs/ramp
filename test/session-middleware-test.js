@@ -109,6 +109,18 @@ buster.testCase("Session middleware", {
         }).end();
     },
 
+    "test root resource defaults to text/html content-type": function (done) {
+        var session = this.sessionMiddleware.createSession({
+            load: [],
+            resources: {"/": {content: "hullo!"}}
+        });
+
+        h.request({path: session.resourceContextPath + "/", method: "GET"}, function (res, body) {
+            buster.assert.equals(res.headers["content-type"], "text/html");
+            done();
+        }).end();
+    },
+
     "with HTTP created session": {
         setUp: function (done) {
             var self = this;
