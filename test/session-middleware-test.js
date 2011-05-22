@@ -121,6 +121,18 @@ buster.testCase("Session middleware", {
         }).end();
     },
 
+    "test root resource as a buffer": function (done) {
+        var session = this.sessionMiddleware.createSession({
+            load: [],
+            resources: {"/": {content: new Buffer([0x3c, 0x62, 0x6f, 0x64, 0x79, 0x3e, 0x3c, 0x2f, 0x62, 0x6f, 0x64, 0x79, 0x3e])}}
+        });
+
+        h.request({path: session.resourceContextPath + "/", method: "GET"}, function (res, body) {
+            buster.assert.match(body, /^<body>/);
+            done();
+        }).end();
+    },
+
     "with HTTP created session": {
         setUp: function (done) {
             var self = this;
