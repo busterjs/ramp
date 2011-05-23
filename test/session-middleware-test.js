@@ -305,6 +305,17 @@ buster.testCase("Session middleware", {
                 }).end();
         },
 
+        "test adding new root resouce with custom content-type": function (done) {
+            var self = this;
+            this.session.addResource("/", {content: "hullo", headers: {"Content-Type": "text/wtf"}});
+            h.request({
+                path: this.session.resourceContextPath + "/",
+                method: "GET"}, function (res, body) {
+                    buster.assert.equals(res.headers["content-type"], "text/wtf");
+                    done();
+                }).end();
+        },
+
         "test serving buffer resources": function (done) {
             this.session.addResource("/hullo.txt", {content: new Buffer([0x50, 0x4e, 0x47])});
             h.request({
