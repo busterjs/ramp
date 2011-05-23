@@ -294,6 +294,17 @@ buster.testCase("Session middleware", {
                 }).end();
         },
 
+        "test adding new root resource post create": function (done) {
+            var self = this;
+            this.session.addResource("/", {content: "hullo"});
+            h.request({
+                path: this.session.resourceContextPath + "/",
+                method: "GET"}, function (res, body) {
+                    assertBodyIsRootResourceProcessed(body, self.session);
+                    done();
+                }).end();
+        },
+
         "test serving buffer resources": function (done) {
             this.session.addResource("/hullo.txt", {content: new Buffer([0x50, 0x4e, 0x47])});
             h.request({
