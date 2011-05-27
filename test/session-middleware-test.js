@@ -19,6 +19,11 @@ function waitFor(num, callback) {
     };
 }
 
+function assertBodyIsRootResourceProcessed(body, session) {
+    buster.assert.match(body, '<script src="' + session.resourceContextPath  + '/foo.js"');
+    buster.assert.match(body, '<script src="' + session.resourceSet.internalsContextPath()  + require.resolve("buster-core") + '"');
+}
+
 buster.testCase("Session middleware", {
     setUp: function (done) {
         var self = this;
@@ -196,18 +201,10 @@ buster.testCase("Session middleware", {
             }).end();
         },
 
-        "test inserts session scripts into root resource": function (done) {
+        "test inserts scripts into root resource": function (done) {
             var self = this;
             h.request({path: this.session.resourceContextPath + "/", method: "GET"}, function (res, body) {
-                buster.assert.match(body, '<script src="' + self.session.resourceContextPath  + '/foo.js"');
-                done();
-            }).end();
-        },
-
-        "test inserts script middleware scripts into root resource": function (done) {
-            var self = this;
-            h.request({path: this.session.resourceContextPath + "/", method: "GET"}, function (res, body) {
-                buster.assert.match(body, '<script src="' + self.session.resourceSet.internalsContextPath()  + require.resolve("buster-core") + '"');
+                assertBodyIsRootResourceProcessed(body, self.session);
                 done();
             }).end();
         },
@@ -293,6 +290,28 @@ buster.testCase("Session middleware", {
                 method: "GET"}, function (res, body) {
                     buster.assert.equals(res.statusCode, 200);
                     buster.assert.equals(body, "Roflmao!");
+                    done();
+                }).end();
+        },
+
+        "test adding new root resource post create": function (done) {
+            var self = this;
+            this.session.addResource("/", {content: "hullo"});
+            h.request({
+                path: this.session.resourceContextPath + "/",
+                method: "GET"}, function (res, body) {
+                    assertBodyIsRootResourceProcessed(body, self.session);
+                    done();
+                }).end();
+        },
+
+        "test adding new root resouce with custom content-type": function (done) {
+            var self = this;
+            this.session.addResource("/", {content: "hullo", headers: {"Content-Type": "text/wtf"}});
+            h.request({
+                path: this.session.resourceContextPath + "/",
+                method: "GET"}, function (res, body) {
+                    buster.assert.equals(res.headers["content-type"], "text/wtf");
                     done();
                 }).end();
         },
