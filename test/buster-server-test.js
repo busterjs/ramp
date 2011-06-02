@@ -57,5 +57,29 @@ buster.testCase("buster-server glue", {
             buster.assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
             done();
         }).end();
+    },
+
+    "test respond": function () {
+        var req = {};
+        var res = {};
+
+        this.server.capture.respond = this.spy()
+        this.server.session.respond = this.spy();
+        this.server.multicast.respond = this.spy();
+        this.server.resource.respond = this.spy();
+
+        this.server.respond(req, res);
+
+        buster.assert(this.server.capture.respond.calledOnce);
+        buster.assert(this.server.capture.respond.calledWithExactly(req, res));
+
+        buster.assert(this.server.session.respond.calledOnce);
+        buster.assert(this.server.session.respond.calledWithExactly(req, res));
+
+        buster.assert(this.server.multicast.respond.calledOnce);
+        buster.assert(this.server.multicast.respond.calledWithExactly(req, res));
+
+        buster.assert(this.server.resource.respond.calledOnce);
+        buster.assert(this.server.resource.respond.calledWithExactly(req, res));
     }
 });
