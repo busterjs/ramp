@@ -10,7 +10,7 @@ var h = require("./test-helper");
 buster.testCase("buster-server glue", {
     setUp: function (done) {
         var self = this;
-        this.server = Object.create(busterServer);
+        this.server = busterServer.create();
         this.httpServer = http.createServer(function (req, res) {
             if (!self.server.respond(req, res)) {
                 res.writeHead(h.NO_RESPONSE_STATUS_CODE);
@@ -27,9 +27,10 @@ buster.testCase("buster-server glue", {
         this.sandbox.restore();
     },
 
-    "test binds client and session on first request": function (done) {
+    "test binds client and session": function (done) {
         var self = this;
         this.sandbox.stub(captureMiddleware, "bindToSessionMiddleware");
+        this.server.setupMiddlewares();
 
         // Performing a request to make the middlewares respond.
         h.request({path: "/doesnotexist", method: "GET"}, function (res, body) {
