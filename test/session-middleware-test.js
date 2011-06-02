@@ -4,6 +4,7 @@ var vm = require("vm");
 var sinon = require("sinon");
 var busterSessionMiddleware = require("./../lib/session/session-middleware");
 var multicastMiddleware = require("buster-multicast").multicastMiddleware;
+var busterResourceMiddleware = require("./../lib/resources/resource-middleware");
 
 var h = require("./test-helper");
 
@@ -19,11 +20,6 @@ function waitFor(num, callback) {
     };
 }
 
-function assertBodyIsRootResourceProcessed(body, session) {
-    buster.assert.match(body, '<script src="' + session.resourceContextPath  + '/foo.js"');
-    buster.assert.match(body, '<script src="' + session.resourceSet.internalsContextPath()  + require.resolve("buster-core") + '"');
-}
-
 buster.testCase("Session middleware", {
     setUp: function (done) {
         var self = this;
@@ -31,6 +27,7 @@ buster.testCase("Session middleware", {
 
         this.sessionMiddleware = Object.create(busterSessionMiddleware);
         this.sessionMiddleware.multicast = this.multicastMiddleware.createClient();
+        this.sessionMiddleware.resourceMiddleware = Object.create(busterResourceMiddleware);
         this.httpServer = http.createServer(function (req, res) {
             if (self.sessionMiddleware.respond(req, res)) return true;
             if (self.multicastMiddleware.respond(req, res)) return true;
@@ -106,38 +103,6 @@ buster.testCase("Session middleware", {
         }).end('{"load":["/foo.js"],"resources":[]}');
     },
 
-    "test returns temporary work-in-progress list of known resources": function (done) {
-        h.request({path: "/resources", method: "GET"}, function (res, body) {
-            buster.assert.equals(200, res.statusCode);
-            buster.assert.equals(body, "[]");
-            done();
-        }).end();
-    },
-
-    "test root resource defaults to text/html content-type": function (done) {
-        var session = this.sessionMiddleware.createSession({
-            load: [],
-            resources: {"/": {content: "hullo!"}}
-        });
-
-        h.request({path: session.resourceContextPath + "/", method: "GET"}, function (res, body) {
-            buster.assert.equals(res.headers["content-type"], "text/html");
-            done();
-        }).end();
-    },
-
-    "test root resource as a buffer": function (done) {
-        var session = this.sessionMiddleware.createSession({
-            load: [],
-            resources: {"/": {content: new Buffer([0x3c, 0x62, 0x6f, 0x64, 0x79, 0x3e, 0x3c, 0x2f, 0x62, 0x6f, 0x64, 0x79, 0x3e])}}
-        });
-
-        h.request({path: session.resourceContextPath + "/", method: "GET"}, function (res, body) {
-            buster.assert.match(body, /^<body>/);
-            done();
-        }).end();
-    },
-
     "with HTTP created session": {
         setUp: function (done) {
             var self = this;
@@ -166,63 +131,6 @@ buster.testCase("Session middleware", {
             buster.assert.equals(this.sessionHttpData.multicastUrl, this.sessionMiddleware.multicast.url);
             buster.assert("multicastClientId" in this.sessionHttpData);
             buster.assert.equals(this.sessionHttpData.multicastClientId, this.sessionMiddleware.multicast.clientId);
-        },
-
-        "test hosts resources": function (done) {
-            h.request({path: this.session.resourceContextPath + "/foo.js", method: "GET"}, function (res, body) {
-                buster.assert.equals(200, res.statusCode);
-                buster.assert.equals("var a = 5 + 5;", body);
-                buster.assert.equals("application/javascript", res.headers["content-type"]);
-                done();
-            }).end();
-        },
-
-        "test hosts resources with custom headers": function (done) {
-            this.session.addResource("/baz.js", {content: "", headers: {"Content-Type": "text/custom"}});
-            h.request({path: this.session.resourceContextPath + "/baz.js", method: "GET"}, function (res, body) {
-                buster.assert.equals(200, res.statusCode);
-                buster.assert.equals("text/custom", res.headers["content-type"]);
-                done();
-            }).end();
-        },
-
-        "test provides default root resource": function (done) {
-            h.request({path: this.session.resourceContextPath + "/", method: "GET"}, function (res, body) {
-                buster.assert.equals(200, res.statusCode);
-                buster.assert.equals("text/html", res.headers["content-type"]);
-                done();
-            }).end();
-        },
-
-        "test does not serve none existing resources": function (done) {        
-            h.request({path: this.session.resourceContextPath + "/does/not/exist.js", method: "GET"}, function (res, body) {
-                buster.assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
-                done();
-            }).end();
-        },
-
-        "test inserts scripts into root resource": function (done) {
-            var self = this;
-            h.request({path: this.session.resourceContextPath + "/", method: "GET"}, function (res, body) {
-                assertBodyIsRootResourceProcessed(body, self.session);
-                done();
-            }).end();
-        },
-
-        "test loads script middleware scripts before resource scripts": function (done) {
-            var self = this;
-            h.request({path: this.session.resourceContextPath + "/", method: "GET"}, function (res, body) {
-                var scriptTags = body.match(/<script.+>/g);
-                buster.assert.match(scriptTags[0], '<script src="' + self.session.resourceSet.internalsContextPath()  + require.resolve("buster-core") + '"');
-                done();
-            }).end();
-        },
-
-        "test serves script middleware": function (done) {
-            h.request({path: this.session.resourceSet.internalsContextPath()  + require.resolve("buster-core"), method: "GET"}, function (res, body) {
-                buster.assert.equals(200, res.statusCode);
-                done();
-            }).end();
         },
 
         "test killing sessions": function (done) {
@@ -281,170 +189,6 @@ buster.testCase("Session middleware", {
                     done();
                 }).end();
             }).end(this.validSessionPayload);
-        },
-
-        "test adding resource post create": function (done) {
-            this.session.addResource("/roflmao.txt", {"content": "Roflmao!"});
-            h.request({
-                path: this.session.resourceContextPath + "/roflmao.txt",
-                method: "GET"}, function (res, body) {
-                    buster.assert.equals(res.statusCode, 200);
-                    buster.assert.equals(body, "Roflmao!");
-                    done();
-                }).end();
-        },
-
-        "test adding new root resource post create": function (done) {
-            var self = this;
-            this.session.addResource("/", {content: "hullo"});
-            h.request({
-                path: this.session.resourceContextPath + "/",
-                method: "GET"}, function (res, body) {
-                    assertBodyIsRootResourceProcessed(body, self.session);
-                    done();
-                }).end();
-        },
-
-        "test adding new root resouce with custom content-type": function (done) {
-            var self = this;
-            this.session.addResource("/", {content: "hullo", headers: {"Content-Type": "text/wtf"}});
-            h.request({
-                path: this.session.resourceContextPath + "/",
-                method: "GET"}, function (res, body) {
-                    buster.assert.equals(res.headers["content-type"], "text/wtf");
-                    done();
-                }).end();
-        },
-
-        "test serving buffer resources": function (done) {
-            this.session.addResource("/hullo.txt", {content: new Buffer([0x50, 0x4e, 0x47])});
-            h.request({
-                path: this.session.resourceContextPath + "/hullo.txt",
-                method: "GET"}, function (res, body) {
-                    buster.assert.equals(body, "PNG");
-                    done();
-                }).end();
-        },
-
-        "proxy requests": {
-            setUp: function (done) {
-                this.proxyBackend = http.createServer(function (req, res) {
-                    res.writeHead(200, { "X-Buster-Backend": "Yes" });
-                    res.end("PROXY: " + req.url);
-                });
-
-                this.proxyBackend.listen(h.PROXY_PORT, done);
-
-                this.session.addResource("/other", {
-                    backend: "http://localhost:" + h.PROXY_PORT + "/"
-                });
-            },
-
-            tearDown: function (done) {
-                this.proxyBackend.on("close", done);
-                this.proxyBackend.close();
-            },
-
-            "should proxy requests to /other": function (done) {
-                h.request({
-                    path: this.session.resourceContextPath + "/other/file.js",
-                    method: "GET"
-                }, function (res, body) {
-                    buster.assert.equals(200, res.statusCode);
-                    buster.assert.equals(body, "PROXY: /other/file.js");
-                    buster.assert.equals(res.headers["x-buster-backend"], "Yes");
-                    done();
-                }).end();
-            }
-        },
-
-        "bundles": {
-            setUp: function () {
-                this.session.addResource("/bundle.js", {
-                    combine: ["/foo.js", "/bar/baz.js"],
-                    headers: { "Expires": "Sun, 15 Mar 2012 22:22 37 GMT" }
-                });
-
-                this.session.addResource("/bar/baz.js", {
-                    content: "var b = 5 + 5; // Yes",
-                    headers: {"Content-Type": "text/custom"}
-                });
-            },
-
-            "should serve combined contents with custom header": function (done) {
-                h.request({
-                    path: this.session.resourceContextPath + "/bundle.js"
-                }, function (res, body) {
-                    buster.assert.equals(res.statusCode, 200);
-                    buster.assert.equals(body, "var a = 5 + 5;\nvar b = 5 + 5; // Yes\n");
-                    buster.assert.match(res.headers, {
-                        "expires": "Sun, 15 Mar 2012 22:22 37 GMT"
-                    });
-
-                    done();
-                }).end();
-            },
-
-            "should serve combined contents minified": function (done) {
-                this.session.addResource("/bundle.min.js", {
-                    combine: ["/bundle.js"],
-                    minify: true
-                });
-
-                h.request({
-                    path: this.session.resourceContextPath + "/bundle.min.js"
-                }, function (res, body) {
-                    buster.assert.equals(res.statusCode, 200);
-                    buster.assert.equals(body, "var a=10,b=10");
-                    done();
-                }).end();
-            },
-
-            "should serve single resource contents minified": function (done) {
-                this.session.addResource("/foo.min.js", {
-                    content: "var a = 5 + 5;",
-                    minify: true
-                });
-
-                h.request({
-                    path: this.session.resourceContextPath + "/foo.min.js"
-                }, function (res, body) {
-                    buster.assert.equals(res.statusCode, 200);
-                    buster.assert.equals(body, "var a=10");
-                    done();
-                }).end();
-            }
-        },
-
-        "mime types": {
-            "should serve javascript with reasonable mime-type": function (done) {
-                h.request({
-                    path: this.session.resourceContextPath + "/foo.js"
-                }, function (res, body) {
-                    buster.assert.equals(res.headers["content-type"], "application/javascript");
-                    done();
-                }).end();
-            },
-
-            "should serve javascript with reasonable mime-type and other headers": function (done) {
-
-                h.request({
-                    path: this.session.resourceContextPath + "/foo.js"
-                }, function (res, body) {
-                    buster.assert.equals(res.headers["content-type"], "application/javascript");
-                    done();
-                }).end();
-            },
-
-            "should not overwrite custom mime-type": function (done) {
-                this.session.addResource("/baz.js", {content: "", headers: {"Content-Type": "text/custom"}});
-                h.request({
-                    path: this.session.resourceContextPath + "/baz.js"
-                }, function (res, body) {
-                    buster.assert.equals(res.headers["content-type"], "text/custom");
-                    done();
-                }).end();
-            }
         }
     },
 
