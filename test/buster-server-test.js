@@ -35,7 +35,7 @@ buster.testCase("buster-server glue", {
         // Performing a request to make the middlewares respond.
         h.request({path: "/doesnotexist", method: "GET"}, function (res, body) {
             buster.assert(captureMiddleware.bindToSessionMiddleware.calledOnce);
-            buster.assert.same(self.server.multicastMiddleware, self.server.captureMiddleware.multicastMiddleware);
+            buster.assert.same(self.server.multicast, self.server.capture.multicastMiddleware);
             done();
         }).end();
     },
@@ -57,30 +57,5 @@ buster.testCase("buster-server glue", {
             buster.assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
             done();
         }).end();
-    },
-
-    "test creating session": function () {
-        var stub = this.sandbox.stub(this.server.sessionMiddleware, "createSession");
-        this.server.createSession("foo");
-        buster.assert(stub.calledOnce);
-        buster.assert(stub.calledWithExactly("foo"));
-    },
-
-    "test destroying session": function () {
-        var stub = this.sandbox.stub(this.server.sessionMiddleware, "destroySession");
-        this.server.destroySession("foo");
-        buster.assert(stub.calledOnce);
-        buster.assert(stub.calledWithExactly("foo"));
-    },
-
-    "test creating client": function () {
-        var stub = this.sandbox.stub(this.server.captureMiddleware, "captureClient");
-        this.server.captureClient();
-        buster.assert(stub.calledOnce);
-    },
-
-    "test creating session when uninitialized also calls out to client middleware": function () {
-        this.server.createSession({load:[],resources:[]});
-        buster.assert(this.server.captureMiddleware.currentSession);
     }
 });
