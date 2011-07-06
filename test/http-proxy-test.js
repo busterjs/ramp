@@ -75,6 +75,7 @@ buster.testCase("HTTP proxy", {
             request().end();
 
             this.onBackendRequest = function (req, res) {
+                assert(true);
                 done();
             };
         },
@@ -135,6 +136,7 @@ buster.testCase("HTTP proxy", {
     "responses": {
         "should send response": function (done) {
             request({}, function () {
+                assert(true);
                 done();
             }).end();
 

@@ -1,3 +1,24 @@
 {
-    "main": "./lib/buster-server"
+    "name": "buster-server",
+    "version": "0.1.0",
+    "description": "Buster server",
+    "homepage": "http://busterjs.org/buster-server",
+    "contributors": [{
+        "name": "August Lilleaas",
+        "email": "august.lilleaas@gmail.com",
+        "url": "http://augustl.com"
+    }, {
+        "name": "Christian Johansen",
+        "email": "christian@cjohansen.no",
+        "url": "http://cjohansen.no"
+    }],
+    "main": "./lib/buster-server",
+    "repository": {
+        "type": "git",
+        "url": "git://gitorious.org/buster/buster-server.git"
+    },
+    "dependencies": {
+        "buster-core": "~0.2",
+        "buster-promise": "~0.2"
+    }
 }

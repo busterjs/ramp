@@ -1,12 +1,13 @@
 var buster = require("buster");
+var assert = buster.assert;
 var http = require("http");
 var h = require("./test-helper");
 
 var resourceMiddleware = require("./../lib/resources/resource-middleware");
 
 function assertBodyIsRootResourceProcessed(body, resourceSet) {
-    buster.assert.match(body, '<script src="' + resourceSet.resourceContextPath()  + '/foo.js"');
-    buster.assert.match(body, '<script src="' + resourceSet.internalsContextPath()  + require.resolve("buster-core") + '"');
+    assert.match(body, '<script src="' + resourceSet.resourceContextPath()  + '/foo.js"');
+    assert.match(body, '<script src="' + resourceSet.internalsContextPath()  + require.resolve("buster-core") + '"');
 }
 
 buster.testCase("Resource middleware", {
@@ -29,8 +30,8 @@ buster.testCase("Resource middleware", {
 
     "test returns temporary work-in-progress list of known resources": function (done) {
         h.request({path: "/resources", method: "GET"}, function (res, body) {
-            buster.assert.equals(200, res.statusCode);
-            buster.assert.equals(body, "[]");
+            assert.equals(200, res.statusCode);
+            assert.equals(body, "[]");
             done();
         }).end();
     },
@@ -42,7 +43,7 @@ buster.testCase("Resource middleware", {
         });
 
         h.request({path: rs.resourceContextPath() + "/", method: "GET"}, function (res, body) {
-            buster.assert.equals(res.headers["content-type"], "text/html");
+            assert.equals(res.headers["content-type"], "text/html");
             done();
         }).end();
     },
@@ -54,7 +55,7 @@ buster.testCase("Resource middleware", {
         });
 
         h.request({path: rs.resourceContextPath() + "/", method: "GET"}, function (res, body) {
-            buster.assert.match(body, /^<body>/);
+            assert.match(body, /^<body>/);
             done();
         }).end();
     },
@@ -75,7 +76,7 @@ buster.testCase("Resource middleware", {
             var self = this;
             h.request({path: this.rs.resourceContextPath() + "/", method: "GET"}, function (res, body) {
                 var scriptTags = body.match(/<script.+>/g);
-                buster.assert.match(scriptTags[0], '<script src="' + self.rs.internalsContextPath()  + require.resolve("buster-core") + '"');
+                assert.match(scriptTags[0], '<script src="' + self.rs.internalsContextPath()  + require.resolve("buster-core") + '"');
                 done();
             }).end();
         },
@@ -86,8 +87,8 @@ buster.testCase("Resource middleware", {
             h.request({
                 path: this.rs.resourceContextPath() + "/roflmao.txt",
                 method: "GET"}, function (res, body) {
-                    buster.assert.equals(res.statusCode, 200);
-                    buster.assert.equals(body, "Roflmao!");
+                    assert.equals(res.statusCode, 200);
+                    assert.equals(body, "Roflmao!");
                     done();
                 }).end();
         },
@@ -109,7 +110,7 @@ buster.testCase("Resource middleware", {
             h.request({
                 path: this.rs.resourceContextPath() + "/",
                 method: "GET"}, function (res, body) {
-                    buster.assert.equals(res.headers["content-type"], "text/wtf");
+                    assert.equals(res.headers["content-type"], "text/wtf");
                     done();
                 }).end();
         },
@@ -119,16 +120,16 @@ buster.testCase("Resource middleware", {
             h.request({
                 path: this.rs.resourceContextPath() + "/hullo.txt",
                 method: "GET"}, function (res, body) {
-                    buster.assert.equals(body, "PNG");
+                    assert.equals(body, "PNG");
                     done();
                 }).end();
         },
 
         "test hosts resources": function (done) {
             h.request({path: this.rs.resourceContextPath() + "/foo.js", method: "GET"}, function (res, body) {
-                buster.assert.equals(200, res.statusCode);
-                buster.assert.equals("var a = 5 + 5;", body);
-                buster.assert.equals("application/javascript", res.headers["content-type"]);
+                assert.equals(200, res.statusCode);
+                assert.equals("var a = 5 + 5;", body);
+                assert.equals("application/javascript", res.headers["content-type"]);
                 done();
             }).end();
         },
@@ -136,23 +137,23 @@ buster.testCase("Resource middleware", {
         "test hosts resources with custom headers": function (done) {
             this.rs.addResource("/baz.js", {content: "", headers: {"Content-Type": "text/custom"}});
             h.request({path: this.rs.resourceContextPath() + "/baz.js", method: "GET"}, function (res, body) {
-                buster.assert.equals(200, res.statusCode);
-                buster.assert.equals("text/custom", res.headers["content-type"]);
+                assert.equals(200, res.statusCode);
+                assert.equals("text/custom", res.headers["content-type"]);
                 done();
             }).end();
         },
 
         "test provides default root resource": function (done) {
             h.request({path: this.rs.resourceContextPath() + "/", method: "GET"}, function (res, body) {
-                buster.assert.equals(200, res.statusCode);
-                buster.assert.equals("text/html", res.headers["content-type"]);
+                assert.equals(200, res.statusCode);
+                assert.equals("text/html", res.headers["content-type"]);
                 done();
             }).end();
         },
 
         "test does not serve none existing resources": function (done) {        
             h.request({path: this.rs.resourceContextPath() + "/does/not/exist.js", method: "GET"}, function (res, body) {
-                buster.assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
+                assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
                 done();
             }).end();
         },
@@ -167,7 +168,7 @@ buster.testCase("Resource middleware", {
 
         "test serves script middleware": function (done) {
             h.request({path: this.rs.internalsContextPath()  + require.resolve("buster-core"), method: "GET"}, function (res, body) {
-                buster.assert.equals(200, res.statusCode);
+                assert.equals(200, res.statusCode);
                 done();
             }).end();
         },
@@ -177,7 +178,7 @@ buster.testCase("Resource middleware", {
                 h.request({
                     path: this.rs.resourceContextPath() + "/foo.js"
                 }, function (res, body) {
-                    buster.assert.equals(res.headers["content-type"], "application/javascript");
+                    assert.equals(res.headers["content-type"], "application/javascript");
                     done();
                 }).end();
             },
@@ -186,7 +187,7 @@ buster.testCase("Resource middleware", {
                 h.request({
                     path: this.rs.resourceContextPath() + "/foo.js"
                 }, function (res, body) {
-                    buster.assert.equals(res.headers["content-type"], "application/javascript");
+                    assert.equals(res.headers["content-type"], "application/javascript");
                     done();
                 }).end();
             },
@@ -196,7 +197,7 @@ buster.testCase("Resource middleware", {
                 h.request({
                     path: this.rs.resourceContextPath() + "/baz.js"
                 }, function (res, body) {
-                    buster.assert.equals(res.headers["content-type"], "text/custom");
+                    assert.equals(res.headers["content-type"], "text/custom");
                     done();
                 }).end();
             }
@@ -220,9 +221,9 @@ buster.testCase("Resource middleware", {
                 h.request({
                     path: this.rs.resourceContextPath() + "/bundle.js"
                 }, function (res, body) {
-                    buster.assert.equals(res.statusCode, 200);
-                    buster.assert.equals(body, "var a = 5 + 5;\nvar b = 5 + 5; // Yes\n");
-                    buster.assert.match(res.headers, {
+                    assert.equals(res.statusCode, 200);
+                    assert.equals(body, "var a = 5 + 5;\nvar b = 5 + 5; // Yes\n");
+                    assert.match(res.headers, {
                         "expires": "Sun, 15 Mar 2012 22:22 37 GMT"
                     });
 
@@ -239,8 +240,8 @@ buster.testCase("Resource middleware", {
                 h.request({
                     path: this.rs.resourceContextPath() + "/bundle.min.js"
                 }, function (res, body) {
-                    buster.assert.equals(res.statusCode, 200);
-                    buster.assert.equals(body, "var a=10,b=10");
+                    assert.equals(res.statusCode, 200);
+                    assert.equals(body, "var a=10,b=10");
                     done();
                 }).end();
             },
@@ -254,8 +255,8 @@ buster.testCase("Resource middleware", {
                 h.request({
                     path: this.rs.resourceContextPath() + "/foo.min.js"
                 }, function (res, body) {
-                    buster.assert.equals(res.statusCode, 200);
-                    buster.assert.equals(body, "var a=10");
+                    assert.equals(res.statusCode, 200);
+                    assert.equals(body, "var a=10");
                     done();
                 }).end();
             }
@@ -285,9 +286,9 @@ buster.testCase("Resource middleware", {
                     path: this.rs.resourceContextPath() + "/other/file.js",
                     method: "GET"
                 }, function (res, body) {
-                    buster.assert.equals(200, res.statusCode);
-                    buster.assert.equals(body, "PROXY: /other/file.js");
-                    buster.assert.equals(res.headers["x-buster-backend"], "Yes");
+                    assert.equals(200, res.statusCode);
+                    assert.equals(body, "PROXY: /other/file.js");
+                    assert.equals(res.headers["x-buster-backend"], "Yes");
                     done();
                 }).end();
             }

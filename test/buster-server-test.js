@@ -1,6 +1,5 @@
 var buster = require("buster");
-var sinon = require("sinon");
-
+var assert = buster.assert;
 var busterServer = require("./../lib/buster-server");
 var captureMiddleware = require("./../lib/capture/capture-middleware");
 
@@ -18,24 +17,22 @@ buster.testCase("buster-server glue", {
             }
         });
         this.httpServer.listen(h.SERVER_PORT, done);
-        this.sandbox = sinon.sandbox.create();
     },
 
     tearDown: function (done) {
         this.httpServer.on("close", done);
         this.httpServer.close();
-        this.sandbox.restore();
     },
 
     "test binds client and session": function (done) {
         var self = this;
-        this.sandbox.stub(captureMiddleware, "bindToSessionMiddleware");
+        this.stub(captureMiddleware, "bindToSessionMiddleware");
         this.server.setupMiddlewares();
 
         // Performing a request to make the middlewares respond.
         h.request({path: "/doesnotexist", method: "GET"}, function (res, body) {
-            buster.assert(captureMiddleware.bindToSessionMiddleware.calledOnce);
-            buster.assert.same(self.server.multicast, self.server.capture.multicastMiddleware);
+            assert(captureMiddleware.bindToSessionMiddleware.calledOnce);
+            assert.same(self.server.multicast, self.server.capture.multicastMiddleware);
             done();
         }).end();
     },
@@ -45,7 +42,7 @@ buster.testCase("buster-server glue", {
             path: "/sessions/messaging/clients",
             method: "GET"
         }, function (res, body) {
-            buster.assert.match(JSON.parse(body), [{
+            assert.match(JSON.parse(body), [{
                 url: "/sessions/messaging"
             }]);
             done();
@@ -54,7 +51,7 @@ buster.testCase("buster-server glue", {
 
     "test unknown URL": function (done) {
         h.request({path: "/doesnotexist", method: "GET"}, function (res, body) {
-            buster.assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
+            assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
             done();
         }).end();
     },
@@ -70,16 +67,16 @@ buster.testCase("buster-server glue", {
 
         this.server.respond(req, res);
 
-        buster.assert(this.server.capture.respond.calledOnce);
-        buster.assert(this.server.capture.respond.calledWithExactly(req, res));
+        assert(this.server.capture.respond.calledOnce);
+        assert(this.server.capture.respond.calledWithExactly(req, res));
 
-        buster.assert(this.server.session.respond.calledOnce);
-        buster.assert(this.server.session.respond.calledWithExactly(req, res));
+        assert(this.server.session.respond.calledOnce);
+        assert(this.server.session.respond.calledWithExactly(req, res));
 
-        buster.assert(this.server.multicast.respond.calledOnce);
-        buster.assert(this.server.multicast.respond.calledWithExactly(req, res));
+        assert(this.server.multicast.respond.calledOnce);
+        assert(this.server.multicast.respond.calledWithExactly(req, res));
 
-        buster.assert(this.server.resource.respond.calledOnce);
-        buster.assert(this.server.resource.respond.calledWithExactly(req, res));
+        assert(this.server.resource.respond.calledOnce);
+        assert(this.server.resource.respond.calledWithExactly(req, res));
     }
 });

@@ -1,7 +1,7 @@
 var buster = require("buster");
+var assert = buster.assert;
 var http = require("http");
 var vm = require("vm");
-var sinon = require("sinon");
 var busterSessionMiddleware = require("./../lib/session/session-middleware");
 var multicastMiddleware = require("buster-multicast").multicastMiddleware;
 var busterResourceMiddleware = require("./../lib/resources/resource-middleware");
@@ -53,12 +53,12 @@ buster.testCase("Session middleware", {
     },
 
     "test emits event with session info when creating session": function (done) {
-        var sessionStart = sinon.spy();
+        var sessionStart = this.spy();
         this.sessionMiddleware.on("session:start", sessionStart);
         h.request({path: "/sessions", method: "POST"}, function (res, body) {
-            buster.assert(sessionStart.calledOnce);
+            assert(sessionStart.calledOnce);
             var sessionInfo = sessionStart.getCall(0).args[0];
-            buster.assert.equals("object", typeof(sessionInfo));
+            assert.equals("object", typeof(sessionInfo));
             done();
         }).end(this.validSessionPayload);
     },
@@ -66,9 +66,9 @@ buster.testCase("Session middleware", {
     "test posting malformed data": function (done) {
         var self = this;
         h.request({path: "/sessions", method: "POST"}, function (res, body) {
-            buster.assert.equals(500, res.statusCode);
-            buster.assert.match(body, /invalid JSON/i);
-            buster.assert.equals(0, self.sessionMiddleware.sessions.length);
+            assert.equals(500, res.statusCode);
+            assert.match(body, /invalid JSON/i);
+            assert.equals(0, self.sessionMiddleware.sessions.length);
             done();
         }).end("{not json}!");
     },
@@ -76,9 +76,9 @@ buster.testCase("Session middleware", {
     "test posting data without resources": function (done) {
         var self = this;
         h.request({path: "/sessions", method: "POST"}, function (res, body) {
-            buster.assert.equals(500, res.statusCode);
-            buster.assert.match(body, /missing.+resources/i);
-            buster.assert.equals(0, self.sessionMiddleware.sessions.length);
+            assert.equals(500, res.statusCode);
+            assert.match(body, /missing.+resources/i);
+            assert.equals(0, self.sessionMiddleware.sessions.length);
             done();
         }).end('{"load":[]}');
     },
@@ -86,9 +86,9 @@ buster.testCase("Session middleware", {
     "test posting data without load": function (done) {
         var self = this;
         h.request({path: "/sessions", method: "POST"}, function (res, body) {
-            buster.assert.equals(500, res.statusCode);
-            buster.assert.match(body, /missing.+load/i);
-            buster.assert.equals(0, self.sessionMiddleware.sessions.length);
+            assert.equals(500, res.statusCode);
+            assert.match(body, /missing.+load/i);
+            assert.equals(0, self.sessionMiddleware.sessions.length);
             done();
         }).end('{"resources":[]}');
     },
@@ -96,9 +96,9 @@ buster.testCase("Session middleware", {
     "test posting data with load entry not represented in resources": function (done) {
         var self = this;
         h.request({path: "/sessions", method: "POST"}, function (res, body) {
-            buster.assert.equals(500, res.statusCode);
-            buster.assert.match(body, /load.+\/foo\.js.+resources/i);
-            buster.assert.equals(0, self.sessionMiddleware.sessions.length);
+            assert.equals(500, res.statusCode);
+            assert.match(body, /load.+\/foo\.js.+resources/i);
+            assert.equals(0, self.sessionMiddleware.sessions.length);
             done();
         }).end('{"load":["/foo.js"],"resources":[]}');
     },
@@ -115,36 +115,36 @@ buster.testCase("Session middleware", {
         },
 
         "test creating session": function () {
-            buster.assert.equals(201, this.res.statusCode);
-            buster.assert("location" in this.res.headers);
-            buster.assert.match(this.res.headers.location, /^\/.+/);
+            assert.equals(201, this.res.statusCode);
+            assert("location" in this.res.headers);
+            assert.match(this.res.headers.location, /^\/.+/);
 
-            buster.assert("rootPath" in this.sessionHttpData);
-            buster.assert.equals(this.res.headers.location, this.sessionHttpData.rootPath);
+            assert("rootPath" in this.sessionHttpData);
+            assert.equals(this.res.headers.location, this.sessionHttpData.rootPath);
 
-            buster.assert("resourceContextPath" in this.sessionHttpData);
+            assert("resourceContextPath" in this.sessionHttpData);
             // resourceContextPath should be prefixed with rootPath.
             var expectedPrefix = this.sessionHttpData.resourceContextPath.slice(0, this.sessionHttpData.rootPath.length)
-            buster.assert.equals(expectedPrefix, this.sessionHttpData.rootPath);
+            assert.equals(expectedPrefix, this.sessionHttpData.rootPath);
 
-            buster.assert("multicastUrl" in this.sessionHttpData);
-            buster.assert.equals(this.sessionHttpData.multicastUrl, this.sessionMiddleware.multicast.url);
-            buster.assert("multicastClientId" in this.sessionHttpData);
-            buster.assert.equals(this.sessionHttpData.multicastClientId, this.sessionMiddleware.multicast.clientId);
+            assert("multicastUrl" in this.sessionHttpData);
+            assert.equals(this.sessionHttpData.multicastUrl, this.sessionMiddleware.multicast.url);
+            assert("multicastClientId" in this.sessionHttpData);
+            assert.equals(this.sessionHttpData.multicastClientId, this.sessionMiddleware.multicast.clientId);
         },
 
         "test killing sessions": function (done) {
             var self = this;
-            var sessionEnd = sinon.spy();
+            var sessionEnd = this.spy();
             this.sessionMiddleware.on("session:end", sessionEnd);
             h.request({path: this.session.rootPath, method: "DELETE"}, function (res, body) {
-                buster.assert.equals(200, res.statusCode);
-                buster.assert(sessionEnd.calledOnce);
+                assert.equals(200, res.statusCode);
+                assert(sessionEnd.calledOnce);
 
                 h.request({path: self.session.resourceSet.resourceContextPath() + "/foo.js", method: "GET"}, function (res, body) {
-                    buster.assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
+                    assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
                     h.request({path: self.session.rootPath, method: "GET"}, function (res, body) {
-                        buster.assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
+                        assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
                         done();
                     }).end();
                 }).end();
@@ -153,7 +153,7 @@ buster.testCase("Session middleware", {
 
         "test creating session with other session in progress": function (done) {
             h.request({path: "/sessions", method: "POST"}, function (res, body) {
-                buster.assert.equals(202, res.statusCode);
+                assert.equals(202, res.statusCode);
                 done();
             }).end(new Buffer(JSON.stringify({
                 load: [],
@@ -163,29 +163,29 @@ buster.testCase("Session middleware", {
 
         "test killing first session with second session created": function (done) {
             var self = this;
-            var sessionStart = sinon.spy();
+            var sessionStart = this.spy();
             this.sessionMiddleware.on("session:start", sessionStart);
             h.request({path: "/sessions", method: "POST"}, function (res, body) {
                 var newSession = JSON.parse(body);
                 h.request({path: self.session.rootPath, method: "DELETE"}, function (res, body) {
-                    buster.assert(sessionStart.calledOnce);
+                    assert(sessionStart.calledOnce);
                     var sessionInfo = sessionStart.getCall(0).args[0];
-                    buster.assert.equals(newSession.rootPath, sessionInfo.rootPath);
+                    assert.equals(newSession.rootPath, sessionInfo.rootPath);
                     done();
                 }).end();
             }).end(this.validSessionPayload);
         },
 
         "test killing session that isn't current does nothing but deleting the session": function (done) {
-            var sessionStart = sinon.spy();
+            var sessionStart = this.spy();
             this.sessionMiddleware.on("session:start", sessionStart);
-            var sessionEnd = sinon.spy();
+            var sessionEnd = this.spy();
             this.sessionMiddleware.on("session:end", sessionEnd);
 
             h.request({path: "/sessions", method: "POST"}, function (res, body) {
                 h.request({path: JSON.parse(body).rootPath, method: "DELETE"}, function () {
-                    buster.assert.isFalse(sessionStart.called);
-                    buster.assert.isFalse(sessionEnd.called);
+                    assert.isFalse(sessionStart.called);
+                    assert.isFalse(sessionEnd.called);
                     done();
                 }).end();
             }).end(this.validSessionPayload);
@@ -194,7 +194,7 @@ buster.testCase("Session middleware", {
 
     "test programmatically created session is created and loaded": function (done) {
         this.sessionMiddleware.on("session:start", function (session) {
-            buster.assert(session.resourceSet.resources.hasOwnProperty("foo"));
+            assert(session.resourceSet.resources.hasOwnProperty("foo"));
             done();
         });
 
@@ -204,18 +204,18 @@ buster.testCase("Session middleware", {
     "test programmatically creating session with none-string or none-buffer as content": function () {
         var self = this;
 
-        buster.assert.exception(function () {
+        assert.exception(function () {
             self.sessionMiddleware.createSession({load:[],resources:{"/foo.js":{content: 123}}});
         });
 
-        buster.assert.exception(function () {
+        assert.exception(function () {
             self.sessionMiddleware.createSession({load:[],resources:{"/foo.js":{content: {}}}});
         });
     },
 
     "test programmatically created session throws on validation error": function () {
         var self = this;
-        buster.assert.exception(function () {
+        assert.exception(function () {
             self.sessionMiddleware.createSession({});
         });
     },
@@ -225,7 +225,7 @@ buster.testCase("Session middleware", {
         this.sessionMiddleware.destroySession(session.id);
 
         h.request({path: session.resourceSet.resourceContextPath() + "/", method: "GET"}, function (res, body) {
-            buster.assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
+            assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
             done();
         }).end();
     },
@@ -233,7 +233,7 @@ buster.testCase("Session middleware", {
     "test destroying session in queue with HTTP": function (done) {
         var self = this;
 
-        var spy = sinon.spy.create();
+        var spy = this.spy();
         this.sessionMiddleware.on("session:end", spy);
 
         this.sessionMiddleware.createSession({load:[],resources:[]});
@@ -242,15 +242,15 @@ buster.testCase("Session middleware", {
 
         h.request({path: session.rootPath, method: "DELETE"}, function (res, body) {
             // Callback is only called when current session ends.
-            buster.assert.equals(0, spy.callCount);
+            assert.equals(0, spy.callCount);
 
-            buster.assert.equals(2, self.sessionMiddleware.sessions.length);
+            assert.equals(2, self.sessionMiddleware.sessions.length);
 
             var sessionInList = false;
             for (var i = 0, ii = self.sessionMiddleware.sessions.length; i < ii; i++) {
                 if (self.sessionMiddleware.sessions[i] == session) sessionInList = true;
             }
-            buster.assert.isFalse(sessionInList);
+            assert.isFalse(sessionInList);
 
             done();
         }).end();
@@ -263,26 +263,26 @@ buster.testCase("Session middleware", {
 
         this.sessionMiddleware.destroySession(session.id);
 
-        buster.assert.equals(2, this.sessionMiddleware.sessions.length);
+        assert.equals(2, this.sessionMiddleware.sessions.length);
 
         var sessionInList = false;
         for (var i = 0, ii = this.sessionMiddleware.sessions.length; i < ii; i++) {
             if (this.sessionMiddleware.sessions[i] == session) sessionInList = true;
         }
-        buster.assert.isFalse(sessionInList);
+        assert.isFalse(sessionInList);
     },
 
     "test has messaging": function (done) {
         var self = this;
         h.request({path: this.sessionMiddleware.multicast.url, method: "POST"}, function (res, body) {
-            buster.assert.equals(201, res.statusCode);
+            assert.equals(201, res.statusCode);
 
             h.request({path: self.sessionMiddleware.multicast.url, method: "GET"}, function (res, body) {
-                buster.assert.equals(200, res.statusCode);
+                assert.equals(200, res.statusCode);
                 var data = JSON.parse(body);
-                buster.assert.equals(1, data.length);
-                buster.assert.equals("foo", data[0].topic);
-                buster.assert.equals("bar", data[0].data);
+                assert.equals(1, data.length);
+                assert.equals("foo", data[0].topic);
+                assert.equals("bar", data[0].data);
                 done();
             }).end();
         }).end(new Buffer('[{"topic":"foo","data":"bar"}]', "utf8"));
