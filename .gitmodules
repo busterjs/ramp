@@ -28,3 +28,15 @@
 [submodule "node_modules/buster-promise"]
 	path = node_modules/buster-promise
 	url = git://gitorious.org/buster/buster-promise.git
+[submodule "node_modules/buster-terminal"]
+	path = node_modules/buster-terminal
+	url = git@gitorious.org:buster/buster-terminal.git
+[submodule "node_modules/buster-test"]
+	path = node_modules/buster-test
+	url = git://gitorious.org/buster/buster-test.git
+[submodule "node_modules/buster-evented-logger"]
+	path = node_modules/buster-evented-logger
+	url = git://gitorious.org/buster/buster-evented-logger.git
+[submodule "node_modules/sinon-buster"]
+	path = node_modules/sinon-buster
+	url = git://gitorious.org/buster/sinon-buster.git
