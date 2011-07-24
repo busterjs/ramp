@@ -1,6 +1,7 @@
 var buster = require("buster");
 var assert = buster.assert;
 var http = require("http");
+var fs = require("fs");
 var h = require("./test-helper");
 
 var resourceMiddleware = require("./../lib/resources/resource-middleware");
@@ -197,6 +198,27 @@ buster.testCase("Resource middleware", {
             h.request({path: this.rs.resourceContextPath() + "/test", method: "GET"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 500);
                 // TODO: test with actual exception and specify what 'body' should be.
+                done();
+            }).end();
+        },
+
+        "test adding file by path": function (done) {
+            this.rs.addFile(__filename);
+
+            h.request({path: this.rs.resourceContextPath() + __filename, method: "GET"}, function (res, body) {
+                buster.assert.equals(res.statusCode, 200);
+                buster.assert.equals(body, fs.readFileSync(__filename));
+                done();
+            }).end();
+        },
+
+        "test adding file by path with missing file": function (done) {
+            var filename = "/tmp/i-sure-hope-this-file-does-not-exist" + new Date().getTime().toString();
+            this.rs.addFile(filename);
+
+            h.request({path: this.rs.resourceContextPath() + filename, method: "GET"}, function (res, body) {
+                buster.assert.equals(res.statusCode, 500);
+                // TODO: specify what 'body' should be.
                 done();
             }).end();
         },
