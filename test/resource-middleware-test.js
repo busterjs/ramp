@@ -173,6 +173,34 @@ buster.testCase("Resource middleware", {
             }).end();
         },
 
+        "test content is function": function (done) {
+            this.rs.addResource("/test", {
+                content: function (promise) {
+                    promise.resolve("Test");
+                }
+            });
+
+            h.request({path: this.rs.resourceContextPath() + "/test", method: "GET"}, function (res, body) {
+                buster.assert.equals(res.statusCode, 200);
+                buster.assert.equals(body, "Test");
+                done();
+            }).end();
+        },
+
+        "test content is function with failure": function (done) {
+            this.rs.addResource("/test", {
+                content: function (promise) {
+                    promise.reject("something");
+                }
+            });
+
+            h.request({path: this.rs.resourceContextPath() + "/test", method: "GET"}, function (res, body) {
+                buster.assert.equals(res.statusCode, 500);
+                // TODO: test with actual exception and specify what 'body' should be.
+                done();
+            }).end();
+        },
+
         "mime types": {
             "should serve javascript with reasonable mime-type": function (done) {
                 h.request({
