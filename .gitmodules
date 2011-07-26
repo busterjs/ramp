@@ -30,7 +30,7 @@
 	url = git://gitorious.org/buster/buster-promise.git
 [submodule "node_modules/buster-terminal"]
 	path = node_modules/buster-terminal
-	url = git@gitorious.org:buster/buster-terminal.git
+	url = git://gitorious.org/buster/buster-terminal.git
 [submodule "node_modules/buster-test"]
 	path = node_modules/buster-test
 	url = git://gitorious.org/buster/buster-test.git
