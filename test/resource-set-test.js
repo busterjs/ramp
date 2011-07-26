@@ -11,7 +11,6 @@ buster.testCase("resource-set", {
         assert.equals(r.load.length, 0);
 
         assert.equals("/res", r.resourceContextPath());
-        assert.equals("/_", r.internalsContextPath());
     },
 
     "test setting context path after creation": function () {
@@ -19,6 +18,5 @@ buster.testCase("resource-set", {
         r.contextPath = "/foo";
 
         assert.equals("/foo/res", r.resourceContextPath());
-        assert.equals("/foo/_", r.internalsContextPath());
     }
 });

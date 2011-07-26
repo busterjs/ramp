@@ -8,7 +8,6 @@ var resourceMiddleware = require("./../lib/resources/resource-middleware");
 
 function assertBodyIsRootResourceProcessed(body, resourceSet) {
     assert.match(body, '<script src="' + resourceSet.resourceContextPath()  + '/foo.js"');
-    assert.match(body, '<script src="' + resourceSet.internalsContextPath()  + require.resolve("buster-core") + '"');
 }
 
 buster.testCase("Resource middleware", {
@@ -71,15 +70,6 @@ buster.testCase("Resource middleware", {
                     }
                 }
             });
-        },
-
-        "test loads script middleware scripts before resource scripts": function (done) {
-            var self = this;
-            h.request({path: this.rs.resourceContextPath() + "/", method: "GET"}, function (res, body) {
-                var scriptTags = body.match(/<script.+>/g);
-                assert.match(scriptTags[0], '<script src="' + self.rs.internalsContextPath()  + require.resolve("buster-core") + '"');
-                done();
-            }).end();
         },
 
         "test adding resource post create": function (done) {
@@ -163,13 +153,6 @@ buster.testCase("Resource middleware", {
             var self = this;
             h.request({path: this.rs.resourceContextPath() + "/", method: "GET"}, function (res, body) {
                 assertBodyIsRootResourceProcessed(body, self.rs);
-                done();
-            }).end();
-        },
-
-        "test serves script middleware": function (done) {
-            h.request({path: this.rs.internalsContextPath()  + require.resolve("buster-core"), method: "GET"}, function (res, body) {
-                assert.equals(200, res.statusCode);
                 done();
             }).end();
         },

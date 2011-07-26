@@ -31,6 +31,7 @@ buster.testCase("Session middleware", {
         this.httpServer = http.createServer(function (req, res) {
             if (self.sessionMiddleware.respond(req, res)) return true;
             if (self.multicastMiddleware.respond(req, res)) return true;
+            if (self.sessionMiddleware.resourceMiddleware.respond(req, res)) return true;
 
             res.writeHead(h.NO_RESPONSE_STATUS_CODE);
             res.end();
@@ -189,7 +190,25 @@ buster.testCase("Session middleware", {
                     done();
                 }).end();
             }).end(this.validSessionPayload);
-        }
+        },
+
+
+        "test loads script middleware scripts before resource scripts": function (done) {
+            var self = this;
+            h.request({path: this.session.resourceSet.resourceContextPath() + "/", method: "GET"}, function (res, body) {
+                buster.assert.equals(res.statusCode, 200);
+                var scriptTags = body.match(/<script.+>/g);
+                assert.match(scriptTags[0], '<script src="' + self.session.resourceSet.resourceContextPath()  + require.resolve("buster-core") + '"');
+                done();
+            }).end();
+        },
+
+        "test serves script middleware": function (done) {
+            h.request({path: this.session.resourceSet.resourceContextPath()  + require.resolve("buster-core"), method: "GET"}, function (res, body) {
+                assert.equals(200, res.statusCode);
+                done();
+            }).end();
+        },
     },
 
     "test programmatically created session is created and loaded": function (done) {
