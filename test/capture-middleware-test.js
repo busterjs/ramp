@@ -4,6 +4,7 @@ var refute = buster.refute;
 var captureMiddleware = require("./../lib/capture/capture-middleware");
 var captureMiddlewareClient = require("./../lib/capture/captured-client");
 var multicastMiddleware = require("buster-multicast").multicastMiddleware;
+var resourceMiddleware = require("./../lib/resources/resource-middleware");
 var busterServer = require("./../lib/buster-server");
 
 var fs = require("fs");
@@ -98,6 +99,7 @@ buster.testCase("Client middleware", {
     "test first client on new server gets different id": function (done) {
         var otherCm = Object.create(captureMiddleware);
         otherCm.multicastMiddleware = Object.create(multicastMiddleware);
+        otherCm.resourceMiddleware = Object.create(resourceMiddleware);
         var clients = [];
         var captureHandler = function (req, res, client) {
             clients.push(client);
@@ -142,7 +144,7 @@ buster.testCase("Client middleware", {
             var self = this;
             h.request({path: this.client.url + "/env.js"}, function (res, body) {
                 assert.equals(res.statusCode, 200);
-                assert.equals(res.headers["content-type"], "text/javascript");
+                assert.equals(res.headers["content-type"], "application/javascript");
 
                 // Clean scope
                 var scope = {};
@@ -169,7 +171,7 @@ buster.testCase("Client middleware", {
 
             h.request({path: this.client.url + "/env.js"}, function (res, body) {
                 assert.equals(res.statusCode, 200);
-                assert.equals(res.headers["content-type"], "text/javascript");
+                assert.equals(res.headers["content-type"], "application/javascript");
 
                 var scope = {};
                 require("vm").runInNewContext(body, scope);
@@ -180,10 +182,10 @@ buster.testCase("Client middleware", {
 
         "test control_frame.html loads all scripts": function (done) {
             var self = this;
-            this.client.scriptServingMiddleware._scripts = [
-                {path: "/foo.js", read:function(){}},
-                {path: "/bar.js", read:function(){}},
-                {path: "/baz/maz.js", read:function(){}}
+            this.client.resourceSet.load = [
+                "/foo.js",
+                "/bar.js",
+                "/baz/maz.js"
             ];
 
             h.request({path: this.client.url + "/control_frame.html"}, function (res, body) {
@@ -198,16 +200,10 @@ buster.testCase("Client middleware", {
 
         "test client serves all scripts": function (done) {
             var self = this;
-            this.client.scriptServingMiddleware._scripts = [
-                {
-                    path: "/foo.js",
-                    read: function (done) { done("doing it"); }
-                },
-                {
-                    path: "/bar/baz.js",
-                    read: function (done) { done("buster yo"); }
-                }
-            ];
+
+            this.client.resourceSet.load = ["/foo.js", "/bar/baz.js"];
+            this.client.resourceSet.addResource("/foo.js", {content:"doing it"});
+            this.client.resourceSet.addResource("/bar/baz.js", {content:"buster yo"});
 
             h.request({path: this.client.url + "/foo.js", method: "GET"}, function (res, body) {
                 assert.equals(200, res.statusCode);
@@ -225,17 +221,17 @@ buster.testCase("Client middleware", {
             var self = this;
             var numResponses = 0;
             var handler = function (res, script) {
-                assert.equals(200, res.statusCode, "Built-in script '" + script.path + "' failed to load");
+                assert.equals(200, res.statusCode, "Built-in script '" + script + "' failed to load");
                 numResponses++;
-                if (numResponses == self.client.scriptServingMiddleware.scripts.length) done();
+                if (numResponses == self.client.resourceSet.load.length) done();
             }
 
-            for (var i = 0, ii = this.client.scriptServingMiddleware.scripts.length; i < ii; i++) {
+            for (var i = 0, ii = this.client.resourceSet.load.length; i < ii; i++) {
                 (function (script) {
-                    h.request({path: self.client.url + script.path, method: "GET"}, function (res, body) {
+                    h.request({path: self.client.url + script, method: "GET"}, function (res, body) {
                         handler(res, script);
                     }).end();
-                }(this.client.scriptServingMiddleware.scripts[i]));
+                }(this.client.resourceSet.load[i]));
             }
         },
 
