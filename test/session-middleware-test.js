@@ -2,9 +2,7 @@ var buster = require("buster");
 var assert = buster.assert;
 var http = require("http");
 var vm = require("vm");
-var busterSessionMiddleware = require("./../lib/session/session-middleware");
-var multicastMiddleware = require("buster-multicast").multicastMiddleware;
-var busterResourceMiddleware = require("./../lib/resources/resource-middleware");
+var busterServer = require("./../lib/buster-server");
 
 var h = require("./test-helper");
 
@@ -23,15 +21,10 @@ function waitFor(num, callback) {
 buster.testCase("Session middleware", {
     setUp: function (done) {
         var self = this;
-        this.multicastMiddleware = Object.create(multicastMiddleware);
-
-        this.sessionMiddleware = Object.create(busterSessionMiddleware);
-        this.sessionMiddleware.multicast = this.multicastMiddleware.createClient();
-        this.sessionMiddleware.resourceMiddleware = Object.create(busterResourceMiddleware);
+        this.busterServer = busterServer.create();
+        this.sessionMiddleware = this.busterServer.session;
         this.httpServer = http.createServer(function (req, res) {
-            if (self.sessionMiddleware.respond(req, res)) return true;
-            if (self.multicastMiddleware.respond(req, res)) return true;
-            if (self.sessionMiddleware.resourceMiddleware.respond(req, res)) return true;
+            if (self.busterServer.respond(req, res)) return true;
 
             res.writeHead(h.NO_RESPONSE_STATUS_CODE);
             res.end();
