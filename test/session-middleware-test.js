@@ -135,7 +135,7 @@ buster.testCase("Session middleware", {
                 assert.equals(200, res.statusCode);
                 assert(sessionEnd.calledOnce);
 
-                h.request({path: self.session.resourceSet.resourceContextPath() + "/foo.js", method: "GET"}, function (res, body) {
+                h.request({path: self.session.resourceSet.contextPath + "/foo.js", method: "GET"}, function (res, body) {
                     assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
                     h.request({path: self.session.rootPath, method: "GET"}, function (res, body) {
                         assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
@@ -188,16 +188,16 @@ buster.testCase("Session middleware", {
 
         "test loads script middleware scripts before resource scripts": function (done) {
             var self = this;
-            h.request({path: this.session.resourceSet.resourceContextPath() + "/", method: "GET"}, function (res, body) {
+            h.request({path: this.session.resourceSet.contextPath + "/", method: "GET"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 200);
                 var scriptTags = body.match(/<script.+>/g);
-                assert.match(scriptTags[0], '<script src="' + self.session.resourceSet.resourceContextPath()  + require.resolve("buster-core") + '"');
+                assert.match(scriptTags[0], '<script src="' + self.session.resourceSet.contextPath  + require.resolve("buster-core") + '"');
                 done();
             }).end();
         },
 
         "test serves script middleware": function (done) {
-            h.request({path: this.session.resourceSet.resourceContextPath()  + require.resolve("buster-core"), method: "GET"}, function (res, body) {
+            h.request({path: this.session.resourceSet.contextPath  + require.resolve("buster-core"), method: "GET"}, function (res, body) {
                 assert.equals(200, res.statusCode);
                 done();
             }).end();
@@ -236,7 +236,7 @@ buster.testCase("Session middleware", {
         var session = this.sessionMiddleware.createSession({load:[],resources:[]});
         this.sessionMiddleware.destroySession(session.id);
 
-        h.request({path: session.resourceSet.resourceContextPath() + "/", method: "GET"}, function (res, body) {
+        h.request({path: session.resourceSet.contextPath + "/", method: "GET"}, function (res, body) {
             assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
             done();
         }).end();

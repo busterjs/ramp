@@ -7,7 +7,7 @@ var h = require("./test-helper");
 var resourceMiddleware = require("./../lib/resources/resource-middleware");
 
 function assertBodyIsRootResourceProcessed(body, resourceSet) {
-    assert.match(body, '<script src="' + resourceSet.resourceContextPath()  + '/foo.js"');
+    assert.match(body, '<script src="' + resourceSet.contextPath  + '/foo.js"');
 }
 
 buster.testCase("Resource middleware", {
@@ -42,7 +42,7 @@ buster.testCase("Resource middleware", {
             resources: {"/": {content: "hullo!"}}
         });
 
-        h.request({path: rs.resourceContextPath() + "/", method: "GET"}, function (res, body) {
+        h.request({path: rs.contextPath + "/", method: "GET"}, function (res, body) {
             assert.equals(res.headers["content-type"], "text/html");
             done();
         }).end();
@@ -54,7 +54,7 @@ buster.testCase("Resource middleware", {
             resources: {"/": {content: new Buffer([0x3c, 0x62, 0x6f, 0x64, 0x79, 0x3e, 0x3c, 0x2f, 0x62, 0x6f, 0x64, 0x79, 0x3e])}}
         });
 
-        h.request({path: rs.resourceContextPath() + "/", method: "GET"}, function (res, body) {
+        h.request({path: rs.contextPath + "/", method: "GET"}, function (res, body) {
             assert.match(body, /^<body>/);
             done();
         }).end();
@@ -76,7 +76,7 @@ buster.testCase("Resource middleware", {
             this.rs.addResource("/roflmao.txt", {"content": "Roflmao!"});
 
             h.request({
-                path: this.rs.resourceContextPath() + "/roflmao.txt",
+                path: this.rs.contextPath + "/roflmao.txt",
                 method: "GET"}, function (res, body) {
                     assert.equals(res.statusCode, 200);
                     assert.equals(body, "Roflmao!");
@@ -88,7 +88,7 @@ buster.testCase("Resource middleware", {
             var self = this;
             this.rs.addResource("/", {content: "hullo"});
             h.request({
-                path: this.rs.resourceContextPath() + "/",
+                path: this.rs.contextPath + "/",
                 method: "GET"}, function (res, body) {
                     assertBodyIsRootResourceProcessed(body, self.rs);
                     done();
@@ -99,7 +99,7 @@ buster.testCase("Resource middleware", {
             var self = this;
             this.rs.addResource("/", {content: "hullo", headers: {"Content-Type": "text/wtf"}});
             h.request({
-                path: this.rs.resourceContextPath() + "/",
+                path: this.rs.contextPath + "/",
                 method: "GET"}, function (res, body) {
                     assert.equals(res.headers["content-type"], "text/wtf");
                     done();
@@ -109,7 +109,7 @@ buster.testCase("Resource middleware", {
         "test serving buffer resources": function (done) {
             this.rs.addResource("/hullo.txt", {content: new Buffer([0x50, 0x4e, 0x47])});
             h.request({
-                path: this.rs.resourceContextPath() + "/hullo.txt",
+                path: this.rs.contextPath + "/hullo.txt",
                 method: "GET"}, function (res, body) {
                     assert.equals(body, "PNG");
                     done();
@@ -117,7 +117,7 @@ buster.testCase("Resource middleware", {
         },
 
         "test hosts resources": function (done) {
-            h.request({path: this.rs.resourceContextPath() + "/foo.js", method: "GET"}, function (res, body) {
+            h.request({path: this.rs.contextPath + "/foo.js", method: "GET"}, function (res, body) {
                 assert.equals(200, res.statusCode);
                 assert.equals("var a = 5 + 5;", body);
                 assert.equals("application/javascript", res.headers["content-type"]);
@@ -127,7 +127,7 @@ buster.testCase("Resource middleware", {
 
         "test hosts resources with custom headers": function (done) {
             this.rs.addResource("/baz.js", {content: "", headers: {"Content-Type": "text/custom"}});
-            h.request({path: this.rs.resourceContextPath() + "/baz.js", method: "GET"}, function (res, body) {
+            h.request({path: this.rs.contextPath + "/baz.js", method: "GET"}, function (res, body) {
                 assert.equals(200, res.statusCode);
                 assert.equals("text/custom", res.headers["content-type"]);
                 done();
@@ -135,7 +135,7 @@ buster.testCase("Resource middleware", {
         },
 
         "test provides default root resource": function (done) {
-            h.request({path: this.rs.resourceContextPath() + "/", method: "GET"}, function (res, body) {
+            h.request({path: this.rs.contextPath + "/", method: "GET"}, function (res, body) {
                 assert.equals(200, res.statusCode);
                 assert.equals("text/html", res.headers["content-type"]);
                 done();
@@ -143,7 +143,7 @@ buster.testCase("Resource middleware", {
         },
 
         "test does not serve none existing resources": function (done) {        
-            h.request({path: this.rs.resourceContextPath() + "/does/not/exist.js", method: "GET"}, function (res, body) {
+            h.request({path: this.rs.contextPath + "/does/not/exist.js", method: "GET"}, function (res, body) {
                 assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
                 done();
             }).end();
@@ -151,7 +151,7 @@ buster.testCase("Resource middleware", {
 
         "test inserts scripts into root resource": function (done) {
             var self = this;
-            h.request({path: this.rs.resourceContextPath() + "/", method: "GET"}, function (res, body) {
+            h.request({path: this.rs.contextPath + "/", method: "GET"}, function (res, body) {
                 assertBodyIsRootResourceProcessed(body, self.rs);
                 done();
             }).end();
@@ -164,7 +164,7 @@ buster.testCase("Resource middleware", {
                 }
             });
 
-            h.request({path: this.rs.resourceContextPath() + "/test", method: "GET"}, function (res, body) {
+            h.request({path: this.rs.contextPath + "/test", method: "GET"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 200);
                 buster.assert.equals(body, "Test");
                 done();
@@ -178,7 +178,7 @@ buster.testCase("Resource middleware", {
                 }
             });
 
-            h.request({path: this.rs.resourceContextPath() + "/test", method: "GET"}, function (res, body) {
+            h.request({path: this.rs.contextPath + "/test", method: "GET"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 500);
                 // TODO: test with actual exception and specify what 'body' should be.
                 done();
@@ -188,7 +188,7 @@ buster.testCase("Resource middleware", {
         "test adding file by path": function (done) {
             this.rs.addFile(__filename);
 
-            h.request({path: this.rs.resourceContextPath() + __filename, method: "GET"}, function (res, body) {
+            h.request({path: this.rs.contextPath + __filename, method: "GET"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 200);
                 buster.assert.equals(body, fs.readFileSync(__filename));
                 done();
@@ -199,7 +199,7 @@ buster.testCase("Resource middleware", {
             var filename = "/tmp/i-sure-hope-this-file-does-not-exist" + new Date().getTime().toString();
             this.rs.addFile(filename);
 
-            h.request({path: this.rs.resourceContextPath() + filename, method: "GET"}, function (res, body) {
+            h.request({path: this.rs.contextPath + filename, method: "GET"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 500);
                 // TODO: specify what 'body' should be.
                 done();
@@ -209,7 +209,7 @@ buster.testCase("Resource middleware", {
         "mime types": {
             "should serve javascript with reasonable mime-type": function (done) {
                 h.request({
-                    path: this.rs.resourceContextPath() + "/foo.js"
+                    path: this.rs.contextPath + "/foo.js"
                 }, function (res, body) {
                     assert.equals(res.headers["content-type"], "application/javascript");
                     done();
@@ -218,7 +218,7 @@ buster.testCase("Resource middleware", {
 
             "should serve javascript with reasonable mime-type and other headers": function (done) {
                 h.request({
-                    path: this.rs.resourceContextPath() + "/foo.js"
+                    path: this.rs.contextPath + "/foo.js"
                 }, function (res, body) {
                     assert.equals(res.headers["content-type"], "application/javascript");
                     done();
@@ -228,7 +228,7 @@ buster.testCase("Resource middleware", {
             "should not overwrite custom mime-type": function (done) {
                 this.rs.addResource("/baz.js", {content: "", headers: {"Content-Type": "text/custom"}});
                 h.request({
-                    path: this.rs.resourceContextPath() + "/baz.js"
+                    path: this.rs.contextPath + "/baz.js"
                 }, function (res, body) {
                     assert.equals(res.headers["content-type"], "text/custom");
                     done();
@@ -252,7 +252,7 @@ buster.testCase("Resource middleware", {
 
             "should serve combined contents with custom header": function (done) {
                 h.request({
-                    path: this.rs.resourceContextPath() + "/bundle.js"
+                    path: this.rs.contextPath + "/bundle.js"
                 }, function (res, body) {
                     assert.equals(res.statusCode, 200);
                     assert.equals(body, "var a = 5 + 5;\nvar b = 5 + 5; // Yes\n");
@@ -271,7 +271,7 @@ buster.testCase("Resource middleware", {
                 });
 
                 h.request({
-                    path: this.rs.resourceContextPath() + "/bundle.min.js"
+                    path: this.rs.contextPath + "/bundle.min.js"
                 }, function (res, body) {
                     assert.equals(res.statusCode, 200);
                     assert.equals(body, "var a=10,b=10");
@@ -286,7 +286,7 @@ buster.testCase("Resource middleware", {
                 });
 
                 h.request({
-                    path: this.rs.resourceContextPath() + "/foo.min.js"
+                    path: this.rs.contextPath + "/foo.min.js"
                 }, function (res, body) {
                     assert.equals(res.statusCode, 200);
                     assert.equals(body, "var a=10");
@@ -316,7 +316,7 @@ buster.testCase("Resource middleware", {
 
             "should proxy requests to /other": function (done) {
                 h.request({
-                    path: this.rs.resourceContextPath() + "/other/file.js",
+                    path: this.rs.contextPath + "/other/file.js",
                     method: "GET"
                 }, function (res, body) {
                     assert.equals(200, res.statusCode);
