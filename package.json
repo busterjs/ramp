@@ -18,7 +18,13 @@
         "url": "git://gitorious.org/buster/buster-server.git"
     },
     "dependencies": {
-        "buster-core": "~0.2",
-        "buster-promise": "~0.2"
+        "buster-core": "*",
+        "buster-promise": "*",
+        "buster-multicast": "*",
+        "ejs": "~0.4",
+        "glob": "~2",
+        "mime": "~1",
+        "node-uuid": "~1",
+        "uglify-js": "~1"
     }
 }
