@@ -28,14 +28,6 @@ buster.testCase("Resource middleware", {
         this.httpServer.close();
     },
 
-    "test returns temporary work-in-progress list of known resources": function (done) {
-        h.request({path: "/resources", method: "GET"}, function (res, body) {
-            assert.equals(200, res.statusCode);
-            assert.equals(body, "[]");
-            done();
-        }).end();
-    },
-
     "test root resource defaults to text/html content-type": function (done) {
         var rs = this.rm.createResourceSet({
             load: [],
@@ -202,6 +194,30 @@ buster.testCase("Resource middleware", {
             h.request({path: this.rs.contextPath + filename, method: "GET"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 500);
                 // TODO: specify what 'body' should be.
+                done();
+            }).end();
+        },
+
+        "test getting cached resources with nothing cached": function (done) {
+            h.request({path: "/resources", method: "GET"}, function (res, body) {
+                buster.assert.equals(res.statusCode, 200);
+                buster.assert.equals(JSON.parse(body), []);
+                done();
+            }).end();
+        },
+
+        "test getting cached resources with resource cached": function (done) {
+            this.rs.addResource("/test.js", {
+                content: "",
+                etag: "123abc"
+            });
+
+            h.request({path: "/resources", method: "GET"}, function (res, body) {
+                buster.assert.equals(res.statusCode, 200);
+                var actual = JSON.parse(body);
+                buster.assert(actual instanceof Array);
+                buster.assert.equals(actual.length, 1);
+                buster.assert.equals(actual[0], {path: "/test.js", etag: "123abc"});
                 done();
             }).end();
         },
