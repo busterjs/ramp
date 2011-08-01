@@ -298,5 +298,19 @@ buster.testCase("Session middleware", {
                 done();
             }).end();
         }).end(new Buffer('[{"topic":"foo","data":"bar"}]', "utf8"));
+    },
+
+    "test creating session with exception from resource system": function (done) {
+        var payload = JSON.parse(this.validSessionPayload.toString("utf8"));
+        payload.resources["/testtest.js"] = "an etag that does not exist";
+
+
+        h.request({path: "/sessions", method: "POST"}, function (res, body) {
+            buster.assert.equals(res.statusCode, 403);
+            buster.assert.match(body, "/testtest.js");
+            buster.assert.match(body, "an etag that does not exist");
+            buster.assert.match(body, "not found");
+            done();
+        }).end(JSON.stringify(payload));
     }
 });

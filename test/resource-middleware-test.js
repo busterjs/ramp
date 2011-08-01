@@ -244,6 +244,23 @@ buster.testCase("Resource middleware", {
             }).end();
         },
 
+        "test creating new resource with none existing etag": function (done) {
+            var self = this;
+            try {
+                self.rm.createResourceSet({
+                    contextPath: "/rs2",
+                    resources: {
+                        "/test.js": "123abc"
+                    }
+                });
+            } catch (e) {
+                buster.assert.match(e.message, "/test.js");
+                buster.assert.match(e.message, "123abc");
+                buster.assert.match(e.message, "not found");
+                done();
+            }
+        },
+
         "mime types": {
             "should serve javascript with reasonable mime-type": function (done) {
                 h.request({
