@@ -222,6 +222,28 @@ buster.testCase("Resource middleware", {
             }).end();
         },
 
+        "test re-using cached resource when creating new resource set": function (done) {
+            this.rs.addResource("/test.js", {
+                content: "Hello, World!",
+                headers: {"X-Foo": "666"},
+                etag: "123abc"
+            });
+
+            var rs2 = this.rm.createResourceSet({
+                contextPath: "/rs2",
+                resources: {
+                    "/test.js": "123abc"
+                }
+            });
+
+            h.request({path: rs2.contextPath + "/test.js", method: "GET"}, function (res, body) {
+                buster.assert.equals(res.statusCode, 200);
+                buster.assert.equals(body, "Hello, World!");
+                buster.assert.equals(res.headers["x-foo"], 666);
+                done();
+            }).end();
+        },
+
         "mime types": {
             "should serve javascript with reasonable mime-type": function (done) {
                 h.request({
