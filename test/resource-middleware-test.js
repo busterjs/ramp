@@ -374,6 +374,45 @@ buster.testCase("Resource middleware", {
             }).end();
         },
 
+        "test periodically resetting cached resources": function (done) {
+            this.rm.cacheInvalidationTimeout = 3600000;
+            this.rm.cacheInvalidationAge = 1800000;
+
+            var clock = this.useFakeTimers();
+            this.rm.startCacheInvalidationTimeout();
+
+            var rs = this.rm.createResourceSet({
+                resources: {
+                    "/test.js": {
+                        content: "Yep yep",
+                        etag: "123abc"
+                    }
+                }
+            });
+            this.rm.removeResourceSet(rs);
+
+            clock.tick(1800000);
+
+            var rs = this.rm.createResourceSet({
+                resources: {
+                    "/test.js": {
+                        content: "Good stuff",
+                        etag: "321cba"
+                    }
+                }
+            });
+            this.rm.removeResourceSet(rs);
+
+            clock.tick(1800000);
+
+            h.request({path: "/resources", method: "GET"}, function (res, body) {
+                buster.assert.equals(res.statusCode, 200);
+                var actual = JSON.parse(body);
+                buster.assert.equals(actual, {"/test.js":["321cba"]});
+                done();
+            }).end();
+        },
+
         "mime types": {
             "should serve javascript with reasonable mime-type": function (done) {
                 h.request({
