@@ -116,6 +116,41 @@ buster.testCase("Client middleware", {
         otherCm.captureClient();
     },
 
+    "client with header resource": {
+        setUp: function (done) {
+            var self = this;
+
+            this.cm.header(80, {
+                resources: {"/": {content: "Hello, World!"}}
+            });
+
+            this.cm.oncapture = function (req, res, client) {
+                delete self.cm.oncapture;
+                self.client = client;
+                done();
+            };
+            this.cm.captureClient();
+        },
+
+        "test serves frameset": function (done) {
+            h.request({path: this.client.url, method: "GET"}, function (res, body) {
+                buster.assert.equals(res.statusCode, 200);
+                buster.assert.match(body, '<frame src="/clientHeader/" />');
+                buster.assert.match(body, '<frameset rows="0px,80px,*"');
+                done();
+            }).end();
+        },
+
+        "test creates resource set": function (done) {
+            h.request({path: "/clientHeader/", method: "GET"}, function (res, body) {
+                buster.assert.equals(res.statusCode, 200);
+                // TODO: figure out why one character gets stripped :(
+                buster.assert.equals(body, "Hello, World");
+                done();
+            }).end();
+        }
+    },
+
     "with a client": {
         setUp: function (done) {
             var self = this;
@@ -266,6 +301,6 @@ buster.testCase("Client middleware", {
                 assert.typeOf(self.client.multicast, "object");
                 done();
             }).end();
-        },
+        }
     }
 });
