@@ -329,6 +329,28 @@ buster.testCase("Resource middleware", {
             }).end();
         },
 
+        "test garbage collecting deletes resources for removed resource sets": function (done) {
+            var rs = this.rm.createResourceSet({
+                contextPath: "/myrs",
+                resources: {
+                    "/myfile.js": {
+                        content: "Hi there.",
+                        etag: "123abc"
+                    }
+                }
+            });
+            this.rm.removeResourceSet(rs);
+
+            h.request({path: "/resources", method: "DELETE"}, function (res, body) {
+                buster.assert.equals(res.statusCode, 200);
+
+                h.request({path: rs.contextPath + "/myfile.js", method: "GET"}, function (res, body) {
+                    buster.assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
+                    done();
+                }).end();
+            }).end();
+        },
+
         "mime types": {
             "should serve javascript with reasonable mime-type": function (done) {
                 h.request({
