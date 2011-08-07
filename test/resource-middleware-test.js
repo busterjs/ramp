@@ -283,7 +283,7 @@ buster.testCase("Resource middleware", {
             }).end();
         },
 
-        "test getting cached resource for destroyed resource set": function (done) {
+        "test re-using cached resource for destroyed resource set": function (done) {
             var rs = this.rm.createResourceSet({
                 resources: {
                     "/myfile.js": {
@@ -300,6 +300,31 @@ buster.testCase("Resource middleware", {
                 var actual = JSON.parse(body);
                 buster.assert.equals(actual.length, 1);
                 buster.assert.equals(actual[0], {path: "/myfile.js", etag: "123abc"});
+                done();
+            }).end();
+        },
+
+        "test creating new resource with etag for resource in deleted resource set": function (done) {
+            var rs = this.rm.createResourceSet({
+                resources: {
+                    "/myfile.js": {
+                        content: "Hi there.",
+                        etag: "123abc"
+                    }
+                }
+            });
+            this.rm.removeResourceSet(rs);
+
+            var rs2 = this.rm.createResourceSet({
+                contextPath: "/rs2",
+                resources: {
+                    "/myfile.js": "123abc"
+                }
+            });
+
+            h.request({path: rs2.contextPath + "/myfile.js", method: "GET"}, function (res, body) {
+                buster.assert.equals(res.statusCode, 200);
+                buster.assert.equals(body, "Hi there.");
                 done();
             }).end();
         },
