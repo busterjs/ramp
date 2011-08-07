@@ -201,7 +201,7 @@ buster.testCase("Resource middleware", {
         "test getting cached resources with nothing cached": function (done) {
             h.request({path: "/resources", method: "GET"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 200);
-                buster.assert.equals(JSON.parse(body), []);
+                buster.assert.equals(JSON.parse(body), {});
                 done();
             }).end();
         },
@@ -215,9 +215,8 @@ buster.testCase("Resource middleware", {
             h.request({path: "/resources", method: "GET"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 200);
                 var actual = JSON.parse(body);
-                buster.assert(actual instanceof Array);
-                buster.assert.equals(actual.length, 1);
-                buster.assert.equals(actual[0], {path: "/test.js", etag: "123abc"});
+                buster.assert.equals(Object.keys(actual).length, 1);
+                buster.assert.equals(actual["/test.js"], ["123abc"]);
                 done();
             }).end();
         },
@@ -298,8 +297,8 @@ buster.testCase("Resource middleware", {
             h.request({path: "/resources", method: "GET"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 200);
                 var actual = JSON.parse(body);
-                buster.assert.equals(actual.length, 1);
-                buster.assert.equals(actual[0], {path: "/myfile.js", etag: "123abc"});
+                buster.assert.equals(Object.keys(actual).length, 1);
+                buster.assert.equals(actual["/myfile.js"], ["123abc"]);
                 done();
             }).end();
         },
