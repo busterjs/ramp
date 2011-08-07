@@ -283,6 +283,27 @@ buster.testCase("Resource middleware", {
             }).end();
         },
 
+        "test getting cached resource for destroyed resource set": function (done) {
+            var rs = this.rm.createResourceSet({
+                resources: {
+                    "/myfile.js": {
+                        content: "Hi there.",
+                        etag: "123abc"
+                    }
+                }
+            });
+
+            this.rm.removeResourceSet(rs);
+
+            h.request({path: "/resources", method: "GET"}, function (res, body) {
+                buster.assert.equals(res.statusCode, 200);
+                var actual = JSON.parse(body);
+                buster.assert.equals(actual.length, 1);
+                buster.assert.equals(actual[0], {path: "/myfile.js", etag: "123abc"});
+                done();
+            }).end();
+        },
+
         "mime types": {
             "should serve javascript with reasonable mime-type": function (done) {
                 h.request({
