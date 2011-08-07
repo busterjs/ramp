@@ -328,6 +328,30 @@ buster.testCase("Resource middleware", {
             }).end();
         },
 
+        "test multiple caches for the same path": function (done) {
+            this.rs.addResource("/test.js", {
+                content: "Hello, World!",
+                etag: "123abc"
+            });
+
+            var rs2 = this.rm.createResourceSet({
+                resources: {
+                    "/test.js": {
+                        content: "Hello again, World.",
+                        etag: "321cba"
+                    }
+                }
+            });
+
+            h.request({path: "/resources", method: "GET"}, function (res, body) {
+                buster.assert.equals(res.statusCode, 200);
+                var actual = JSON.parse(body);
+                buster.assert.match(actual["/test.js"], ["123abc", "321cba"]);
+                buster.assert.equals(actual["/test.js"].length, 2);
+                done();
+            }).end();
+        },
+
         "test garbage collecting deletes resources for removed resource sets": function (done) {
             var rs = this.rm.createResourceSet({
                 contextPath: "/myrs",
