@@ -413,6 +413,15 @@ buster.testCase("Resource middleware", {
             }).end();
         },
 
+        "test cache invalidation timeout reschedules": function () {
+            var clock = this.useFakeTimers();
+            this.spy(this.rm, "startCacheInvalidationTimeout");
+            this.rm.startCacheInvalidationTimeout();
+            clock.tick(3600000 * 4);
+            
+            buster.assert.equals(this.rm.startCacheInvalidationTimeout.callCount, 5);
+        },
+
         "mime types": {
             "should serve javascript with reasonable mime-type": function (done) {
                 h.request({
