@@ -1,13 +1,14 @@
 {
     "name": "buster-server",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "Buster server",
-    "homepage": "http://busterjs.org/buster-server",
-    "contributors": [{
+    "homepage": "http://busterjs.org/docs/buster-server",
+    "author": {
         "name": "August Lilleaas",
         "email": "august.lilleaas@gmail.com",
         "url": "http://augustl.com"
-    }, {
+    },
+    "contributors": [{
         "name": "Christian Johansen",
         "email": "christian@cjohansen.no",
         "url": "http://cjohansen.no"
@@ -18,9 +19,9 @@
         "url": "git://gitorious.org/buster/buster-server.git"
     },
     "dependencies": {
-        "buster-core": "*",
-        "buster-promise": "*",
-        "buster-multicast": "*",
+        "buster-core": "~>0.3",
+        "buster-promise": "~>0.3",
+        "buster-multicast": "~>0.1",
         "ejs": "~0.4",
         "glob": "~2",
         "mime": "~1",
