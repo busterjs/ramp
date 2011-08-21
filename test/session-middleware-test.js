@@ -210,7 +210,7 @@ buster.testCase("Session middleware", {
             done();
         });
 
-        this.sessionMiddleware.createSession({load:[],resources:{"foo":{content:""}}});
+        this.sessionMiddleware.createSession({load:[],resources:{"foo":{}}});
     },
 
     "test programmatically creating session with none-string or none-buffer as content": function () {
