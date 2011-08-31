@@ -302,7 +302,7 @@ buster.testCase("Session middleware", {
 
     "test creating session with exception from resource system": function (done) {
         var payload = JSON.parse(this.validSessionPayload.toString("utf8"));
-        payload.resources["/testtest.js"] = "an etag that does not exist";
+        payload.resources["/testtest.js"] = {etag: "an etag that does not exist"};
 
 
         h.request({path: "/sessions", method: "POST"}, function (res, body) {

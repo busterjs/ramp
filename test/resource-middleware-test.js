@@ -231,7 +231,7 @@ buster.testCase("Resource middleware", {
             var rs2 = this.rm.createResourceSet({
                 contextPath: "/rs2",
                 resources: {
-                    "/test.js": "123abc"
+                    "/test.js": {etag: "123abc"}
                 }
             });
 
@@ -249,7 +249,7 @@ buster.testCase("Resource middleware", {
                 self.rm.createResourceSet({
                     contextPath: "/rs2",
                     resources: {
-                        "/test.js": "123abc"
+                        "/test.js": {etag: "123abc"}
                     }
                 });
             } catch (e) {
@@ -317,7 +317,7 @@ buster.testCase("Resource middleware", {
             var rs2 = this.rm.createResourceSet({
                 contextPath: "/rs2",
                 resources: {
-                    "/myfile.js": "123abc"
+                    "/myfile.js": {etag: "123abc"}
                 }
             });
 
