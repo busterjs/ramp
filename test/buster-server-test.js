@@ -10,14 +10,12 @@ buster.testCase("buster-server glue", {
     "responding on existing server": {
         setUp: function (done) {
             var self = this;
-            this.server = busterServer.create();
             this.httpServer = http.createServer(function (req, res) {
-                if (!self.server.respond(req, res)) {
-                    res.writeHead(h.NO_RESPONSE_STATUS_CODE);
-                    res.end();
-                }
+                res.writeHead(h.NO_RESPONSE_STATUS_CODE);
+                res.end();
             });
             this.httpServer.listen(h.SERVER_PORT, done);
+            this.server = busterServer.create(this.httpServer);
         },
 
         tearDown: function (done) {
@@ -35,7 +33,6 @@ buster.testCase("buster-server glue", {
 
     "attaching to existing server": {
         setUp: function (done) {
-            this.server = busterServer.create();
             this.httpServer = http.createServer(function (req, res) {
                 res.writeHead(h.NO_RESPONSE_STATUS_CODE);
                 res.end();
@@ -49,7 +46,7 @@ buster.testCase("buster-server glue", {
         },
 
         "keeps listener created when creating server": function (done) {
-            this.server.attach(this.httpServer);
+            this.server = busterServer.create(this.httpServer);
             var spy = this.spy(this.server, "respond");
             h.request({path: "/doesnotexist", method: "GET"}, function (res, body) {
                 assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
@@ -59,18 +56,18 @@ buster.testCase("buster-server glue", {
         },
 
         "keeps listener added after creating server and before attaching": function (done) {
-            var spy = this.spy(this.server, "respond");
             this.httpServer.addListener("request", function (req, res) {
                 assert(spy.calledOnce);
                 done();
             });
-            this.server.attach(this.httpServer);
+            this.server = busterServer.create(this.httpServer);
+            var spy = this.spy(this.server, "respond");
 
             h.request({path: "/doesnotexist", method: "GET"}, function (res, body) {}).end();
         },
 
         "keeps listener added after creating server and after attaching": function (done) {
-            this.server.attach(this.httpServer);
+            this.server = busterServer.create(this.httpServer);
             var spy = this.spy(this.server, "respond");
             this.httpServer.addListener("request", function (req, res) {
                 assert(spy.calledOnce);

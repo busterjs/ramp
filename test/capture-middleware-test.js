@@ -3,7 +3,6 @@ var assert = buster.assert;
 var refute = buster.refute;
 var captureMiddleware = require("./../lib/capture/capture-middleware");
 var captureMiddlewareClient = require("./../lib/capture/captured-client");
-var multicastMiddleware = require("buster-multicast").multicastMiddleware;
 var resourceMiddleware = require("./../lib/resources/resource-middleware");
 var busterServer = require("./../lib/buster-server");
 
@@ -14,20 +13,24 @@ var h = require("./test-helper");
 buster.testCase("Client middleware", {
     setUp: function (done) {
         var self = this;
-        this.busterServer = busterServer.create();
-        this.cm = this.busterServer.capture;
         this.httpServer = http.createServer(function (req, res) {
-            if (self.busterServer.respond(req, res)) return;
-
             res.writeHead(h.NO_RESPONSE_STATUS_CODE);
             res.end();
         });
+
         this.httpServer.listen(h.SERVER_PORT, done);
+
+        this.busterServer = busterServer.create(self.httpServer);
+        this.cm = this.busterServer.capture;
     },
 
     tearDown: function (done) {
         this.httpServer.on("close", done);
         this.httpServer.close();
+        // TODO: is this the correct API? Also, we probably want to
+        // listen to a callback so the test doens't complete until it's
+        // _actually_ disconnected.
+        this.busterServer.bayeux.disconnect();
     },
 
     "test creating/capturing client": function (done) {
@@ -98,8 +101,9 @@ buster.testCase("Client middleware", {
 
     "test first client on new server gets different id": function (done) {
         var otherCm = Object.create(captureMiddleware);
-        otherCm.multicastMiddleware = Object.create(multicastMiddleware);
+        otherCm.server = this.busterServer;
         otherCm.resourceMiddleware = Object.create(resourceMiddleware);
+
         var clients = [];
         var captureHandler = function (req, res, client) {
             clients.push(client);
@@ -187,7 +191,7 @@ buster.testCase("Client middleware", {
                 assert("buster" in scope);
                 assert("env" in scope.buster);
                 assert.equals(typeof(scope.buster.env), "object");
-                assert.equals(scope.buster.env.multicastUrl, self.client.url + "/createMulticast");
+                assert.equals(scope.buster.env.bayeuxUrl, "http://0.0.0.0:" + h.SERVER_PORT + "/sessions/messaging");
                 assert.equals(self.client.id, scope.buster.env.clientId);
 
                 // Scope where buster is already defined
@@ -196,7 +200,7 @@ buster.testCase("Client middleware", {
                 assert("buster" in scope);
                 assert("env" in scope.buster);
                 assert.equals(typeof(scope.buster.env), "object");
-                assert.equals(scope.buster.env.multicastUrl, self.client.url + "/createMulticast");
+                assert.equals(scope.buster.env.bayeuxUrl, "http://0.0.0.0:" + h.SERVER_PORT + "/sessions/messaging");
                 done();
             }).end();
         },
@@ -285,22 +289,23 @@ buster.testCase("Client middleware", {
             assert(this.cm.endSession.calledOnce);
         },
 
-        "test emits session:start to client when multicast and session is present": function () {
-            var session = {};
-            var multicast = {emitToClient: this.spy(), clientId: 123};
-            this.client.startSession(session);
-            this.client.attachMulticast(multicast);
+        "test publishes /session/start when session is present and is ready": function (done) {
+            this.busterServer.bayeux.subscribe("/" + this.client.id + "/session/start", function () {
+                assert(true);
+                done();
+            });
 
-            assert(multicast.emitToClient.calledOnce);
-            assert(multicast.emitToClient.calledWithExactly(123, "session:start", session));
+            this.client.startSession({foo: "bar"});
+            this.client.ready();
         },
 
-        "test responds to multicast middleware client creation": function (done) {
-            var self = this;
-            h.request({path: this.client.createMulticastUrl, method: "POST"}, function (res, body) {
-                assert.typeOf(self.client.multicast, "object");
+        "test ready event broadcasts session": function (done) {
+            this.client.ready = function () {
+                assert(true);
                 done();
-            }).end();
+            };
+
+            this.busterServer.bayeux.publish("/" + this.client.id + "/ready", 1);
         }
     }
 });
