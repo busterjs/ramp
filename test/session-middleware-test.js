@@ -21,15 +21,13 @@ function waitFor(num, callback) {
 buster.testCase("Session middleware", {
     setUp: function (done) {
         var self = this;
-        this.busterServer = busterServer.create();
-        this.sessionMiddleware = this.busterServer.session;
         this.httpServer = http.createServer(function (req, res) {
-            if (self.busterServer.respond(req, res)) return true;
-
             res.writeHead(h.NO_RESPONSE_STATUS_CODE);
             res.end();
         });
         this.httpServer.listen(h.SERVER_PORT, done);
+        this.busterServer = busterServer.create(this.httpServer);
+        this.sessionMiddleware = this.busterServer.session;
 
         this.validSessionPayload = new Buffer(JSON.stringify({
             load: ["/foo.js"],
@@ -44,6 +42,10 @@ buster.testCase("Session middleware", {
     tearDown: function (done) {
         this.httpServer.on("close", done);
         this.httpServer.close();
+        // TODO: is this the correct API? Also, we probably want to
+        // listen to a callback so the test doens't complete until it's
+        // _actually_ disconnected.
+        this.busterServer.bayeux.disconnect();
     },
 
     "test emits event with session info when creating session": function (done) {
@@ -120,11 +122,6 @@ buster.testCase("Session middleware", {
             // resourceContextPath should be prefixed with rootPath.
             var expectedPrefix = this.sessionHttpData.resourceContextPath.slice(0, this.sessionHttpData.rootPath.length)
             assert.equals(expectedPrefix, this.sessionHttpData.rootPath);
-
-            assert("multicastUrl" in this.sessionHttpData);
-            assert.equals(this.sessionHttpData.multicastUrl, this.sessionMiddleware.multicast.url);
-            assert("multicastClientId" in this.sessionHttpData);
-            assert.equals(this.sessionHttpData.multicastClientId, this.sessionMiddleware.multicast.clientId);
         },
 
         "test killing sessions": function (done) {
@@ -282,22 +279,6 @@ buster.testCase("Session middleware", {
             if (this.sessionMiddleware.sessions[i] == session) sessionInList = true;
         }
         assert.isFalse(sessionInList);
-    },
-
-    "test has messaging": function (done) {
-        var self = this;
-        h.request({path: this.sessionMiddleware.multicast.url, method: "POST"}, function (res, body) {
-            assert.equals(201, res.statusCode);
-
-            h.request({path: self.sessionMiddleware.multicast.url, method: "GET"}, function (res, body) {
-                assert.equals(200, res.statusCode);
-                var data = JSON.parse(body);
-                assert.equals(1, data.length);
-                assert.equals("foo", data[0].topic);
-                assert.equals("bar", data[0].data);
-                done();
-            }).end();
-        }).end(new Buffer('[{"topic":"foo","data":"bar"}]', "utf8"));
     },
 
     "test creating session with exception from resource system": function (done) {
