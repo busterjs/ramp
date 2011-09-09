@@ -25,8 +25,6 @@
         "faye": "~0.6",
         "ejs": "~0.4",
         "glob": "~2",
-        "mime": "~1",
-        "node-uuid": "~1",
-        "uglify-js": "~1"
+        "node-uuid": "~1"
     }
 }
