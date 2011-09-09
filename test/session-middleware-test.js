@@ -3,6 +3,7 @@ var assert = buster.assert;
 var http = require("http");
 var vm = require("vm");
 var busterServer = require("./../lib/buster-server");
+var sessionMiddlewareSession = require("./../lib/session/session")
 
 var h = require("./test-helper");
 
@@ -69,34 +70,17 @@ buster.testCase("Session middleware", {
         }).end("{not json}!");
     },
 
-    "test posting data without resources": function (done) {
+    "test posting with validation error": function (done) {
         var self = this;
-        h.request({path: "/sessions", method: "POST"}, function (res, body) {
-            assert.equals(500, res.statusCode);
-            assert.match(body, /missing.+resources/i);
-            assert.equals(0, self.sessionMiddleware.sessions.length);
-            done();
-        }).end('{"load":[]}');
-    },
+        this.stub(sessionMiddlewareSession, "validate");
+        sessionMiddlewareSession.validate.returns("An error.");
 
-    "test posting data without load": function (done) {
-        var self = this;
         h.request({path: "/sessions", method: "POST"}, function (res, body) {
             assert.equals(500, res.statusCode);
-            assert.match(body, /missing.+load/i);
+            assert.match(body, "An error.");
             assert.equals(0, self.sessionMiddleware.sessions.length);
             done();
-        }).end('{"resources":[]}');
-    },
-
-    "test posting data with load entry not represented in resources": function (done) {
-        var self = this;
-        h.request({path: "/sessions", method: "POST"}, function (res, body) {
-            assert.equals(500, res.statusCode);
-            assert.match(body, /load.+\/foo\.js.+resources/i);
-            assert.equals(0, self.sessionMiddleware.sessions.length);
-            done();
-        }).end('{"load":["/foo.js"],"resources":[]}');
+        }).end("{}");
     },
 
     "with HTTP created session": {
@@ -207,7 +191,7 @@ buster.testCase("Session middleware", {
             done();
         });
 
-        this.sessionMiddleware.createSession({load:[],resources:{"foo":{}}});
+        this.sessionMiddleware.createSession({load:[],resources:{"foo":{content:""}}});
     },
 
     "test programmatically creating session with none-string or none-buffer as content": function () {
@@ -225,7 +209,7 @@ buster.testCase("Session middleware", {
     "test programmatically created session throws on validation error": function () {
         var self = this;
         assert.exception(function () {
-            self.sessionMiddleware.createSession({});
+            self.sessionMiddleware.createSession();
         });
     },
 
