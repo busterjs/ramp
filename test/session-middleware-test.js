@@ -106,6 +106,9 @@ buster.testCase("Session middleware", {
             // resourceContextPath should be prefixed with rootPath.
             var expectedPrefix = this.sessionHttpData.resourceContextPath.slice(0, this.sessionHttpData.rootPath.length)
             assert.equals(expectedPrefix, this.sessionHttpData.rootPath);
+
+            assert("bayeuxClientUrl" in this.sessionHttpData);
+            assert.equals(this.sessionHttpData.bayeuxClientUrl, this.busterServer.bayeuxClientUrl);
         },
 
         "test killing sessions": function (done) {
