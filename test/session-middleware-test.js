@@ -108,6 +108,7 @@ buster.testCase("Session middleware", {
             assert.equals(expectedPrefix, this.sessionHttpData.rootPath);
 
             assert("bayeuxClientUrl" in this.sessionHttpData);
+            assert("id" in this.sessionHttpData);
             assert.equals(this.sessionHttpData.bayeuxClientUrl, this.busterServer.bayeuxClientUrl);
         },
 
