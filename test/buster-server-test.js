@@ -7,7 +7,7 @@ var http = require("http");
 var h = require("./test-helper");
 
 buster.testCase("buster-server glue", {
-    "responding on existing server": {
+    "attached to server": {
         setUp: function (done) {
             var self = this;
             this.httpServer = http.createServer(function (req, res) {
@@ -28,6 +28,44 @@ buster.testCase("buster-server glue", {
                 assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
                 done();
             }).end();
+        },
+
+        "proxying API methods": {
+            "capture URL": function () {
+                this.server.captureUrl = "/foo";
+                assert.equals(this.server.capture.captureUrl, "/foo");
+                assert.equals(this.server.captureUrl, "/foo");
+
+                // Setting it this way is not a supported API, but testing it just in case.
+                this.server.capture.captureUrl = "/bar";
+                assert.equals(this.server.capture.captureUrl, "/bar");
+                assert.equals(this.server.captureUrl, "/bar");
+            },
+
+            "oncapture": function () {
+                this.server.oncapture = function () {};
+                assert.same(this.server.capture.oncapture, this.server.oncapture);
+
+                // Setting it this way is not a supported API, but testing it just in case.
+                this.server.capture.oncapture = function () {};
+                assert.same(this.server.capture.oncapture, this.server.oncapture);
+            },
+
+            "createSesson": function () {
+                this.stub(this.server.session, "createSession");
+                this.server.session.createSession.returns("test");
+                assert.equals(this.server.createSession("foo", "bar"), "test");
+                assert(this.server.session.createSession.calledOnce);
+                assert(this.server.session.createSession.calledWithExactly("foo", "bar"));
+            },
+
+            "destroySession": function () {
+                this.stub(this.server.session, "destroySession");
+                this.server.session.destroySession.returns("test");
+                assert.equals(this.server.destroySession("foo", "bar"), "test");
+                assert(this.server.session.destroySession.calledOnce);
+                assert(this.server.session.destroySession.calledWithExactly("foo", "bar"));
+            }
         }
     },
 
