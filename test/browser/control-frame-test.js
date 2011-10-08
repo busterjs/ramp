@@ -14,8 +14,8 @@
         return result;
     }
 
-    function mockMulticastClient() {
-        return {on: sinon.spy(), connect: sinon.spy()};
+    function mockFaye() {
+        return {subscribe: sinon.spy(), publish: sinon.spy()};
     }
 
     TestCase("Buster server control frame", {
@@ -35,43 +35,41 @@
             buster.env = this.originalEnv;
         },
 
-        "test creating multicast client": function () {
-            var instance = mockMulticastClient();
-            this.cf.createMulticastClientInstance = function () { return instance; };
-            this.cf.createMulticastClient();
-            assertSame(instance, this.cf.multicastClient);
+        "test listening creates bayeux client and publishes ready": function () {
+            this.sandbox.stub(this.cf, "createBayeuxClient");
+            this.cf.createBayeuxClient.returns(mockFaye());
+
+            this.env.clientId = "123abc";
+            this.cf.listen();
+            assertTrue(this.cf.bayeuxClient.publish.calledOnce);
+            assertTrue(this.cf.bayeuxClient.publish.calledWithExactly("/123abc/ready", {}));
         },
 
-        "test creating multicast client instance": function () {
-            this.cf.createMulticastClientInstance();
-        },
+        "test creating bayeux client subscribes to start and end": function () {
+            this.sandbox.stub(Faye, "Client");
+            Faye.Client.returns(mockFaye());
+            Faye.Client.calledWithNew();
 
-        "test binding to multicast client": function () {
-            var instance = mockMulticastClient();
-            this.cf.createMulticastClientInstance = function () { return instance; };
-            this.cf.createMulticastClient();
+            this.env.clientId = "123abc";
+            var bc = this.cf.createBayeuxClient();
 
-            assert(instance.on.calledTwice);
-            assert(instance.on.calledWith("session:start"));
-            assert(instance.on.calledWith("session:end"));
-
-            var event = {};
-
+            assertTrue(bc.subscribe.calledWith("/123abc/session/start"));
             this.sandbox.stub(this.cf, "sessionStart");
-            instance.on.getCall(0).args[1](event);
-            assert(this.cf.sessionStart.calledOnce);
-            assert(this.cf.sessionStart.calledWithExactly(event));
+            bc.subscribe.getCall(0).args[1]("yay");
+            assertTrue(this.cf.sessionStart.calledOnce);
+            assertTrue(this.cf.sessionStart.calledWithExactly("yay"));
 
+            assertTrue(bc.subscribe.calledWith("/123abc/session/end"));
             this.sandbox.stub(this.cf, "sessionEnd");
-            instance.on.getCall(1).args[1](event);
-            assert(this.cf.sessionEnd.calledOnce);
-            assert(this.cf.sessionEnd.calledWithExactly(event));
+            bc.subscribe.getCall(1).args[1]("yay");
+            assertTrue(this.cf.sessionEnd.calledOnce);
+            assertTrue(this.cf.sessionEnd.calledWithExactly("yay"));
         },
 
         "test sessionStart": function () {
             var clock = this.sandbox.useFakeTimers();
             this.cf.crossFrame = mockCrossFrame();
-            this.cf.sessionStart({data: {resourceContextPath: "/foo"}});
+            this.cf.sessionStart({resourceContextPath: "/foo"});
             assertEquals("/foo/", this.cf.crossFrame().frame().src);
 
             assertEquals(typeof(buster.clientReady), "function");
@@ -96,10 +94,10 @@
             // When this functino is called, buster is already defined on the
             // cross frame window object.
             this.cf.crossFrame._window.buster = {};
-            this.cf.multicastClient = {};
+            this.cf.bayeuxClient = {};
             this.cf.exposeBusterObject();            
 
-            assertSame(this.cf.crossFrame().window().buster.multicastClient, this.cf.multicastClient);
+            assertSame(this.cf.crossFrame().window().buster.bayeuxClient, this.cf.bayeuxClient);
         },
 
         "test crossFrame": function () {
@@ -110,20 +108,6 @@
         "test crossFrame reuses the same object": function () {
             assertSame(this.cf.crossFrame(), this.cf.crossFrame());
             assertSame(this.cf.crossFrame(), this.cf.crossFrame());
-        },
-
-        "test listen": function () {
-            this.sandbox.stub(buster, "nextTick");
-            this.cf.listen();
-
-            this.cf.multicastClient = mockMulticastClient();
-
-            this.env.clientId = 123;
-            this.env.multicastUrl = "/foo";
-
-            buster.nextTick.getCall(0).args[0]();
-            assert(this.cf.multicastClient.connect.calledOnce);
-            assert(this.cf.multicastClient.connect.calledWith("/foo"));
         }
     });
 
