@@ -3,6 +3,7 @@ var assert = buster.assert;
 var http = require("http");
 var vm = require("vm");
 var busterServer = require("./../lib/buster-server");
+var sessionMiddlewareSession = require("./../lib/session/session")
 
 var h = require("./test-helper");
 
@@ -21,15 +22,14 @@ function waitFor(num, callback) {
 buster.testCase("Session middleware", {
     setUp: function (done) {
         var self = this;
-        this.busterServer = busterServer.create();
-        this.sessionMiddleware = this.busterServer.session;
         this.httpServer = http.createServer(function (req, res) {
-            if (self.busterServer.respond(req, res)) return true;
-
             res.writeHead(h.NO_RESPONSE_STATUS_CODE);
             res.end();
         });
         this.httpServer.listen(h.SERVER_PORT, done);
+        this.busterServer = busterServer.create();
+        this.busterServer.attach(this.httpServer);
+        this.sessionMiddleware = this.busterServer.session;
 
         this.validSessionPayload = new Buffer(JSON.stringify({
             load: ["/foo.js"],
@@ -67,34 +67,17 @@ buster.testCase("Session middleware", {
         }).end("{not json}!");
     },
 
-    "test posting data without resources": function (done) {
+    "test posting with validation error": function (done) {
         var self = this;
-        h.request({path: "/sessions", method: "POST"}, function (res, body) {
-            assert.equals(500, res.statusCode);
-            assert.match(body, /missing.+resources/i);
-            assert.equals(0, self.sessionMiddleware.sessions.length);
-            done();
-        }).end('{"load":[]}');
-    },
+        this.stub(sessionMiddlewareSession, "validate");
+        sessionMiddlewareSession.validate.returns("An error.");
 
-    "test posting data without load": function (done) {
-        var self = this;
         h.request({path: "/sessions", method: "POST"}, function (res, body) {
             assert.equals(500, res.statusCode);
-            assert.match(body, /missing.+load/i);
+            assert.match(body, "An error.");
             assert.equals(0, self.sessionMiddleware.sessions.length);
             done();
-        }).end('{"resources":[]}');
-    },
-
-    "test posting data with load entry not represented in resources": function (done) {
-        var self = this;
-        h.request({path: "/sessions", method: "POST"}, function (res, body) {
-            assert.equals(500, res.statusCode);
-            assert.match(body, /load.+\/foo\.js.+resources/i);
-            assert.equals(0, self.sessionMiddleware.sessions.length);
-            done();
-        }).end('{"load":["/foo.js"],"resources":[]}');
+        }).end("{}");
     },
 
     "with HTTP created session": {
@@ -121,10 +104,9 @@ buster.testCase("Session middleware", {
             var expectedPrefix = this.sessionHttpData.resourceContextPath.slice(0, this.sessionHttpData.rootPath.length)
             assert.equals(expectedPrefix, this.sessionHttpData.rootPath);
 
-            assert("multicastUrl" in this.sessionHttpData);
-            assert.equals(this.sessionHttpData.multicastUrl, this.sessionMiddleware.multicast.url);
-            assert("multicastClientId" in this.sessionHttpData);
-            assert.equals(this.sessionHttpData.multicastClientId, this.sessionMiddleware.multicast.clientId);
+            assert("bayeuxClientUrl" in this.sessionHttpData);
+            assert("id" in this.sessionHttpData);
+            assert.equals(this.sessionHttpData.bayeuxClientUrl, this.busterServer.bayeuxClientUrl);
         },
 
         "test killing sessions": function (done) {
@@ -210,7 +192,7 @@ buster.testCase("Session middleware", {
             done();
         });
 
-        this.sessionMiddleware.createSession({load:[],resources:{"foo":{}}});
+        this.sessionMiddleware.createSession({load:[],resources:{"foo":{content:""}}});
     },
 
     "test programmatically creating session with none-string or none-buffer as content": function () {
@@ -228,7 +210,7 @@ buster.testCase("Session middleware", {
     "test programmatically created session throws on validation error": function () {
         var self = this;
         assert.exception(function () {
-            self.sessionMiddleware.createSession({});
+            self.sessionMiddleware.createSession();
         });
     },
 
@@ -282,22 +264,6 @@ buster.testCase("Session middleware", {
             if (this.sessionMiddleware.sessions[i] == session) sessionInList = true;
         }
         assert.isFalse(sessionInList);
-    },
-
-    "test has messaging": function (done) {
-        var self = this;
-        h.request({path: this.sessionMiddleware.multicast.url, method: "POST"}, function (res, body) {
-            assert.equals(201, res.statusCode);
-
-            h.request({path: self.sessionMiddleware.multicast.url, method: "GET"}, function (res, body) {
-                assert.equals(200, res.statusCode);
-                var data = JSON.parse(body);
-                assert.equals(1, data.length);
-                assert.equals("foo", data[0].topic);
-                assert.equals("bar", data[0].data);
-                done();
-            }).end();
-        }).end(new Buffer('[{"topic":"foo","data":"bar"}]', "utf8"));
     },
 
     "test creating session with exception from resource system": function (done) {
