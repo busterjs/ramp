@@ -20,7 +20,8 @@ buster.testCase("Client middleware", {
 
         this.httpServer.listen(h.SERVER_PORT, done);
 
-        this.busterServer = busterServer.create(self.httpServer);
+        this.busterServer = busterServer.create();
+        this.busterServer.attach(this.httpServer);
         this.cm = this.busterServer.capture;
     },
 

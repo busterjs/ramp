@@ -27,7 +27,8 @@ buster.testCase("Session middleware", {
             res.end();
         });
         this.httpServer.listen(h.SERVER_PORT, done);
-        this.busterServer = busterServer.create(this.httpServer);
+        this.busterServer = busterServer.create();
+        this.busterServer.attach(this.httpServer);
         this.sessionMiddleware = this.busterServer.session;
 
         this.validSessionPayload = new Buffer(JSON.stringify({
