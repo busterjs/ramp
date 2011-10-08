@@ -144,8 +144,7 @@ buster.testCase("Client middleware", {
         "test creates resource set": function (done) {
             h.request({path: "/clientHeader/", method: "GET"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 200);
-                // TODO: figure out why one character gets stripped :(
-                buster.assert.equals(body, "Hello, World");
+                buster.assert.equals(body, "Hello, World!");
                 done();
             }).end();
         }
