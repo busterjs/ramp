@@ -80,8 +80,8 @@ buster.testCase("Client middleware", {
             done();
         };
 
-        this.cm.captureUrl = "/";
-        h.request({ path: this.cm.captureUrl, method: "GET" }, function () {}).end();
+        this.cm.captureUrl = "/foo";
+        h.request({ path: "/foo", method: "GET" }, function () {}).end();
         assert(true);
     },
 
