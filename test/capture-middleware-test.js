@@ -27,10 +27,6 @@ buster.testCase("Client middleware", {
     tearDown: function (done) {
         this.httpServer.on("close", done);
         this.httpServer.close();
-        // TODO: is this the correct API? Also, we probably want to
-        // listen to a callback so the test doens't complete until it's
-        // _actually_ disconnected.
-        this.busterServer.bayeux.disconnect();
     },
 
     "test creating/capturing client": function (done) {
