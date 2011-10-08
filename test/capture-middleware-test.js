@@ -161,18 +161,33 @@ buster.testCase("Client middleware", {
             this.cm.captureClient();
         },
 
-        "test getting client index page": function (done) {
-            var self = this;
-            h.request({path: this.client.url}, function (res, body) {
-                assert.equals(res.statusCode, 200);
-                assert.equals(res.headers["content-type"], "text/html");
-                assert.match(body, "<frameset");
-                assert.match(body, /\<frame .*src=..+control_frame\.html./);
-                assert.equals(body.match(/\<frame/g).length - 1, 2);
-                assert.match(body, self.client.url + "/control_frame.html");
-                done();
-            }).end();
-        },
+        "index page": {
+            setUp: function (done) {
+                var self = this;
+                h.request({path: this.client.url}, function (res, body) {
+                    self.res = res;
+                    self.body = body;
+                    done();
+                }).end();
+            },
+
+            "should be served as text/html": function () {
+                assert.equals(this.res.statusCode, 200);
+                assert.equals(this.res.headers["content-type"], "text/html");
+            },
+
+            "should serve frameset": function () {
+                assert.match(this.body, "<frameset");
+            },
+
+            "should serve control frame": function () {
+                assert.match(this.body, '<frame src="' + this.client.url + '/control_frame.html" id="control_frame" />');
+            },
+
+            "should serve session frame with no session loaded": function () {
+                assert.match(this.body, '<frame id="client_frame" />');
+            },
+        }
 
         "test serves env.js": function (done) {
             var self = this;
