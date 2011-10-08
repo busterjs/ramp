@@ -300,12 +300,12 @@ buster.testCase("Client middleware", {
         },
 
         "test publishes /session/start when session is present and is ready": function (done) {
-            this.busterServer.bayeux.subscribe("/" + this.client.id + "/session/start", function () {
-                assert(true);
+            this.busterServer.bayeux.subscribe("/" + this.client.id + "/session/start", function (sess) {
+                assert.equals(sess, {foo: "bar"});
                 done();
             });
 
-            this.client.startSession({foo: "bar"});
+            this.client.startSession({toJSON: function () { return {foo: "bar"}}});
             this.client.ready();
         },
 
