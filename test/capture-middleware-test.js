@@ -187,7 +187,7 @@ buster.testCase("Client middleware", {
             "should serve session frame with no session loaded": function () {
                 assert.match(this.body, '<frame id="client_frame" />');
             },
-        }
+        },
 
         "test serves env.js": function (done) {
             var self = this;
