@@ -90,14 +90,17 @@
         },
 
         "test exposeBusterObject": function () {
+            this.sandbox.stub(Faye, "Client");
+            Faye.Client.returns(mockFaye());
+            Faye.Client.calledWithNew();
             this.cf.crossFrame = mockCrossFrame();
-            // When this functino is called, buster is already defined on the
-            // cross frame window object.
             this.cf.crossFrame._window.buster = {};
-            this.cf.bayeuxClient = {};
-            this.cf.exposeBusterObject();            
+            this.cf.exposeBusterObject({bayeuxClientUrl: "http://foo/messaging"});
 
-            assertSame(this.cf.crossFrame().window().buster.bayeuxClient, this.cf.bayeuxClient);
+            var busterObject = this.cf.crossFrame().window().buster;
+            var bayeuxClient = busterObject.bayeuxClient;
+            assertTrue(Faye.Client.calledOnce);
+            assertTrue(Faye.Client.calledWithExactly("http://foo/messaging"));
         },
 
         "test crossFrame": function () {
