@@ -57,6 +57,14 @@ buster.testCase("buster-server glue", {
                 assert.same(this.server.capture.oncapture, this.server.oncapture);
             },
 
+            "header": function () {
+                this.stub(this.server.capture, "header");
+                this.server.capture.header.returns("test");
+                assert.equals(this.server.header("foo", "bar"), "test");
+                assert(this.server.capture.header.calledOnce);
+                assert(this.server.capture.header.calledWithExactly("foo", "bar"));
+            },
+
             "createSesson": function () {
                 this.stub(this.server.session, "createSession");
                 this.server.session.createSession.returns("test");

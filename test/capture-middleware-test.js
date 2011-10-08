@@ -27,10 +27,6 @@ buster.testCase("Client middleware", {
     tearDown: function (done) {
         this.httpServer.on("close", done);
         this.httpServer.close();
-        // TODO: is this the correct API? Also, we probably want to
-        // listen to a callback so the test doens't complete until it's
-        // _actually_ disconnected.
-        this.busterServer.bayeux.disconnect();
     },
 
     "test creating/capturing client": function (done) {
@@ -84,8 +80,8 @@ buster.testCase("Client middleware", {
             done();
         };
 
-        this.cm.captureUrl = "/";
-        h.request({ path: this.cm.captureUrl, method: "GET" }, function () {}).end();
+        this.cm.captureUrl = "/foo";
+        h.request({ path: "/foo", method: "GET" }, function () {}).end();
         assert(true);
     },
 
@@ -148,8 +144,7 @@ buster.testCase("Client middleware", {
         "test creates resource set": function (done) {
             h.request({path: "/clientHeader/", method: "GET"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 200);
-                // TODO: figure out why one character gets stripped :(
-                buster.assert.equals(body, "Hello, World");
+                buster.assert.equals(body, "Hello, World!");
                 done();
             }).end();
         }
@@ -166,17 +161,32 @@ buster.testCase("Client middleware", {
             this.cm.captureClient();
         },
 
-        "test getting client index page": function (done) {
-            var self = this;
-            h.request({path: this.client.url}, function (res, body) {
-                assert.equals(res.statusCode, 200);
-                assert.equals(res.headers["content-type"], "text/html");
-                assert.match(body, "<frameset");
-                assert.match(body, /\<frame .*src=..+control_frame\.html./);
-                assert.equals(body.match(/\<frame/g).length - 1, 2);
-                assert.match(body, self.client.url + "/control_frame.html");
-                done();
-            }).end();
+        "index page": {
+            setUp: function (done) {
+                var self = this;
+                h.request({path: this.client.url}, function (res, body) {
+                    self.res = res;
+                    self.body = body;
+                    done();
+                }).end();
+            },
+
+            "should be served as text/html": function () {
+                assert.equals(this.res.statusCode, 200);
+                assert.equals(this.res.headers["content-type"], "text/html");
+            },
+
+            "should serve frameset": function () {
+                assert.match(this.body, "<frameset");
+            },
+
+            "should serve control frame": function () {
+                assert.match(this.body, '<frame src="' + this.client.url + '/control_frame.html" id="control_frame" />');
+            },
+
+            "should serve session frame with no session loaded": function () {
+                assert.match(this.body, '<frame id="client_frame" />');
+            },
         },
 
         "test serves env.js": function (done) {
@@ -290,12 +300,12 @@ buster.testCase("Client middleware", {
         },
 
         "test publishes /session/start when session is present and is ready": function (done) {
-            this.busterServer.bayeux.subscribe("/" + this.client.id + "/session/start", function () {
-                assert(true);
+            this.busterServer.bayeux.subscribe("/" + this.client.id + "/session/start", function (sess) {
+                assert.equals(sess, {foo: "bar"});
                 done();
             });
 
-            this.client.startSession({foo: "bar"});
+            this.client.startSession({toJSON: function () { return {foo: "bar"}}});
             this.client.ready();
         },
 
