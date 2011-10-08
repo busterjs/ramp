@@ -1,20 +1,26 @@
 var buster = require("buster");
 var assert = buster.assert;
+var refute = buster.refute;
 var busterServer = require("./../lib/buster-server");
 var captureMiddleware = require("./../lib/capture/capture-middleware");
-
+var faye = require("faye");
 var http = require("http");
 var h = require("./test-helper");
+
+function createServer(done) {
+    var httpServer = http.createServer(function (req, res) {
+        res.writeHead(h.NO_RESPONSE_STATUS_CODE);
+        res.end();
+    });
+
+    httpServer.listen(h.SERVER_PORT, done);
+    return httpServer;
+}
 
 buster.testCase("buster-server glue", {
     "attached to server": {
         setUp: function (done) {
-            var self = this;
-            this.httpServer = http.createServer(function (req, res) {
-                res.writeHead(h.NO_RESPONSE_STATUS_CODE);
-                res.end();
-            });
-            this.httpServer.listen(h.SERVER_PORT, done);
+            this.httpServer = createServer(done);
             this.server = busterServer.create(this.httpServer);
         },
 
@@ -71,11 +77,7 @@ buster.testCase("buster-server glue", {
 
     "attaching to existing server": {
         setUp: function (done) {
-            this.httpServer = http.createServer(function (req, res) {
-                res.writeHead(h.NO_RESPONSE_STATUS_CODE);
-                res.end();
-            });
-            this.httpServer.listen(h.SERVER_PORT, done);
+            this.httpServer = createServer(done);
         },
 
         tearDown: function (done) {
@@ -86,6 +88,7 @@ buster.testCase("buster-server glue", {
         "keeps listener created when creating server": function (done) {
             this.server = busterServer.create(this.httpServer);
             var spy = this.spy(this.server, "respond");
+
             h.request({path: "/doesnotexist", method: "GET"}, function (res, body) {
                 assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
                 assert(spy.calledOnce);
@@ -113,6 +116,46 @@ buster.testCase("buster-server glue", {
             });
 
             h.request({path: "/doesnotexist", method: "GET"}, function (res, body) {}).end();
+        }
+    },
+
+    "without an http server": {
+        setUp: function (done) {
+            this.httpServer = createServer(done);
+            this.middleware = busterServer.create();
+        },
+
+        tearDown: function (done) {
+            this.httpServer.on("close", done);
+            this.httpServer.close();
+        },
+
+        "should manually attach": function (done) {
+            this.middleware.attach(this.httpServer);
+
+            h.request({ path: "/resources", method: "GET" }, function (res, body) {
+                assert.equals(200, res.statusCode);
+                done();
+            }).end();
+        },
+
+        "should manually attach messaging client": function (done) {
+            this.middleware.attach(this.httpServer);
+            var url = "http://localhost:" + h.SERVER_PORT + "/sessions/messaging";
+            var client = new faye.Client(url);
+
+            var subscription = client.subscribe("/ping", function (message) {
+                assert.equals(message, "Hello world");
+
+                // Meh...
+                subscription.cancel();
+                client.disconnect();
+                setTimeout(done, 5);
+            });
+
+            subscription.callback(function () {
+                client.publish("/ping", "Hello world");
+            });
         }
     }
 });
