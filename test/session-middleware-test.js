@@ -295,6 +295,16 @@ buster.testCase("Session middleware", {
         var session = this.sessionMiddleware.createSession({});
         var faye = new Faye.Client(session.bayeuxClientUrl);
         assertNotSharedFayeClients(faye, this.busterServer.bayeux, done);
+    },
+
+    "test sessions has publish and subscribe": function (done) {
+        var session = this.sessionMiddleware.createSession({});
+        session.subscribe("/foo", function (e) {
+            assert.equals(e, "test");
+            done();
+        }).callback(function () {
+            session.publish("/foo", "test");
+        });
     }
 });
 
