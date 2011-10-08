@@ -2,6 +2,7 @@ var buster = require("buster");
 var assert = buster.assert;
 var http = require("http");
 var vm = require("vm");
+var faye = require("faye");
 var busterServer = require("./../lib/buster-server");
 var sessionMiddlewareSession = require("./../lib/session/session")
 
@@ -106,7 +107,7 @@ buster.testCase("Session middleware", {
 
             assert("bayeuxClientUrl" in this.sessionHttpData);
             assert("id" in this.sessionHttpData);
-            assert.equals(this.sessionHttpData.bayeuxClientUrl, this.busterServer.bayeuxClientUrl);
+            assert.equals(this.sessionHttpData.bayeuxClientUrl, this.busterServer.address + this.sessionHttpData.rootPath + "/messaging");
         },
 
         "test killing sessions": function (done) {
@@ -278,5 +279,49 @@ buster.testCase("Session middleware", {
             buster.assert.match(body, "not found");
             done();
         }).end(JSON.stringify(payload));
+    },
+
+    "test session does not share messaging with other session": function (done) {
+        var sessionA = this.sessionMiddleware.createSession({});
+        var sessionB = this.sessionMiddleware.createSession({});
+
+        var fayeA = new Faye.Client(sessionA.bayeuxClientUrl);
+        var fayeB = new Faye.Client(sessionB.bayeuxClientUrl);
+
+        assertNotSharedFayeClients(fayeA, fayeB, done);
+    },
+
+    "test session does not  share messaging with server": function (done) {
+        var session = this.sessionMiddleware.createSession({});
+        var faye = new Faye.Client(session.bayeuxClientUrl);
+        assertNotSharedFayeClients(faye, this.busterServer.bayeux, done);
     }
 });
+
+function assertNotSharedFayeClients(fayeA, fayeB, done) {
+    var timesCalled = 0;
+    var resultHandler = function () {
+        if (++timesCalled == 2) {
+            // TODO: The process doesn't die properly. Why not?
+            fayeA.disconnect();
+            fayeB.disconnect();
+            done();
+        }
+    }
+
+    fayeA.subscribe("/foo", function (x) {
+        assert.equals(x, "a");
+        resultHandler()
+    }).callback(function () {
+        fayeA.publish("/foo", "a");
+        fayeA.publish("/bar", "a");
+    });
+
+    fayeB.subscribe("/bar", function (x) {
+        assert.equals(x, "b");
+        resultHandler()
+    }).callback(function () {
+        fayeB.publish("/foo", "b");
+        fayeB.publish("/bar", "b");
+    });
+}
