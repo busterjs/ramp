@@ -90,26 +90,22 @@
         },
 
         "test exposeBusterObject": function () {
-            this.sandbox.stub(Faye, "Client");
             var bayeuxClient = mockFaye();
-            Faye.Client.returns(bayeuxClient);
-            Faye.Client.calledWithNew();
+            var mcp = "/foo";
+            this.cf.bayeuxClient = bayeuxClient;
             this.cf.crossFrame = mockCrossFrame();
             this.cf.crossFrame._window.buster = {};
-            this.cf.exposeBusterObject({bayeuxClientUrl: "http://foo/messaging"});
-
+            this.cf.exposeBusterObject({messagingContextPath: mcp});
             var busterObject = this.cf.crossFrame().window().buster;
-            assertTrue(Faye.Client.calledOnce);
-            assertTrue(Faye.Client.calledWithExactly("http://foo/messaging"));
 
             var listener = function(){};
             busterObject.subscribe("/foo", listener);
             assert(bayeuxClient.subscribe.calledOnce);
-            assert(bayeuxClient.subscribe.calledWithExactly("/foo", listener));
+            assert(bayeuxClient.subscribe.calledWithExactly(mcp + "/foo", listener));
 
             busterObject.publish("/foo", "bar");
             assert(bayeuxClient.publish.calledOnce);
-            assert(bayeuxClient.publish.calledWithExactly("/foo", "bar"));
+            assert(bayeuxClient.publish.calledWithExactly(mcp + "/foo", "bar"));
         },
 
         "test crossFrame": function () {

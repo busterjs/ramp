@@ -105,9 +105,9 @@ buster.testCase("Session middleware", {
             var expectedPrefix = this.sessionHttpData.resourceContextPath.slice(0, this.sessionHttpData.rootPath.length)
             assert.equals(expectedPrefix, this.sessionHttpData.rootPath);
 
-            assert("bayeuxClientUrl" in this.sessionHttpData);
+            assert("messagingContextPath" in this.sessionHttpData);
             assert("id" in this.sessionHttpData);
-            assert.equals(this.sessionHttpData.bayeuxClientUrl, this.busterServer.address + this.sessionHttpData.rootPath + "/messaging");
+            assert.equals(this.sessionHttpData.messagingContextPath, this.sessionHttpData.rootPath);
         },
 
         "test killing sessions": function (done) {
@@ -284,17 +284,12 @@ buster.testCase("Session middleware", {
     "test session does not share messaging with other session": function (done) {
         var sessionA = this.sessionMiddleware.createSession({});
         var sessionB = this.sessionMiddleware.createSession({});
-
-        var fayeA = new Faye.Client(sessionA.bayeuxClientUrl);
-        var fayeB = new Faye.Client(sessionB.bayeuxClientUrl);
-
-        assertNotSharedFayeClients(fayeA, fayeB, done);
+        assertBayeuxSeparation(sessionA, sessionB, done);
     },
 
     "test session does not  share messaging with server": function (done) {
         var session = this.sessionMiddleware.createSession({});
-        var faye = new Faye.Client(session.bayeuxClientUrl);
-        assertNotSharedFayeClients(faye, this.busterServer.bayeux, done);
+        assertBayeuxSeparation(session, this.busterServer.bayeux, done);
     },
 
     "test sessions has publish and subscribe": function (done) {
@@ -307,6 +302,30 @@ buster.testCase("Session middleware", {
         });
     }
 });
+
+// Takes two objects with 'publish' and 'subscribe' methods and tests
+// that messages to the one are not visible to the other.
+function assertBayeuxSeparation(a, b, done) {
+    var timesCalled = 0;
+    function onMessage() {
+        ++timesCalled;
+        if (timesCalled == 2) done();
+    }
+
+    a.subscribe("/foo", function (msg) {
+        assert.equals(msg, "a");
+        onMessage();
+    });
+    a.publish("/foo", "a");
+    a.publish("/bar", "a");
+
+    b.subscribe("/bar", function (msg) {
+        assert.equals(msg, "b");
+        onMessage();
+    });
+    b.publish("/foo", "b");
+    b.publish("/bar", "b");
+}
 
 function assertNotSharedFayeClients(fayeA, fayeB, done) {
     var timesCalled = 0;
