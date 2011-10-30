@@ -15,7 +15,7 @@
     }
 
     function mockFaye() {
-        return {subscribe: sinon.spy(), publish: sinon.spy()};
+        return {subscribe: sinon.stub(), publish: sinon.stub()};
     }
 
     TestCase("Buster server control frame", {
@@ -99,11 +99,13 @@
             var busterObject = this.cf.crossFrame().window().buster;
 
             var listener = function(){};
-            busterObject.subscribe("/foo", listener);
+            bayeuxClient.subscribe.returns("hooligan");
+            assertEquals(busterObject.subscribe("/foo", listener), "hooligan");
             assert(bayeuxClient.subscribe.calledOnce);
             assert(bayeuxClient.subscribe.calledWithExactly(mcp + "/foo", listener));
 
-            busterObject.publish("/foo", "bar");
+            bayeuxClient.publish.returns("blabla");
+            assertEquals(busterObject.publish("/foo", "bar"), "blabla");
             assert(bayeuxClient.publish.calledOnce);
             assert(bayeuxClient.publish.calledWithExactly(mcp + "/foo", "bar"));
         },

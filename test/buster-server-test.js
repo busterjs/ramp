@@ -80,6 +80,29 @@ buster.testCase("buster-server glue", {
                 assert.equals(this.server.destroySession("foo", "bar"), "test");
                 assert(this.server.session.destroySession.calledOnce);
                 assert(this.server.session.destroySession.calledWithExactly("foo", "bar"));
+            },
+
+            "has default logger": function () {
+                assert.equals(typeof this.server.logger.error, "function");
+                assert.equals(typeof this.server.logger.warn, "function");
+                assert.equals(typeof this.server.logger.log, "function");
+                assert.equals(typeof this.server.logger.info, "function");
+                assert.equals(typeof this.server.logger.debug, "function");
+            },
+
+            "assigns logger to middlewares": function () {
+                assert.same(this.server.logger, this.server.resource.logger);
+                assert.same(this.server.logger, this.server.session.logger);
+                assert.same(this.server.logger, this.server.capture.logger);
+            },
+
+            "setting new logger": function () {
+                var theLogger = {};
+                this.server.logger = theLogger;
+                assert.same(this.server.logger, theLogger);
+                assert.same(this.server.resource.logger, theLogger);
+                assert.same(this.server.session.logger, theLogger);
+                assert.same(this.server.capture.logger, theLogger);
             }
         }
     },

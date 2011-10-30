@@ -4,7 +4,7 @@ var http = require("http");
 var fs = require("fs");
 var h = require("./test-helper");
 
-var resourceMiddleware = require("./../lib/resources/resource-middleware");
+var busterServer = require("./../lib/buster-server");
 
 function assertBodyIsRootResourceProcessed(body, resourceSet) {
     assert.match(body, '<script src="' + resourceSet.contextPath  + '/foo.js"');
@@ -13,7 +13,6 @@ function assertBodyIsRootResourceProcessed(body, resourceSet) {
 buster.testCase("Resource middleware", {
     setUp: function (done) {
         var self = this;
-        this.rm = Object.create(resourceMiddleware);
 
         this.httpServer = http.createServer(function (req, res) {
             if (self.rm.respond(req, res)) return true;
@@ -21,6 +20,10 @@ buster.testCase("Resource middleware", {
             res.end();
         });
         this.httpServer.listen(h.SERVER_PORT, done);
+
+        this.busterServer = busterServer.create();
+        this.busterServer.attach(this.httpServer);
+        this.rm = this.busterServer.resource;
     },
 
     tearDown: function (done) {
