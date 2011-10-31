@@ -105,9 +105,9 @@ buster.testCase("Session middleware", {
             var expectedPrefix = this.sessionHttpData.resourceContextPath.slice(0, this.sessionHttpData.rootPath.length)
             assert.equals(expectedPrefix, this.sessionHttpData.rootPath);
 
-            assert("messagingContextPath" in this.sessionHttpData);
+            assert("bayeuxClientUrl" in this.sessionHttpData);
             assert("id" in this.sessionHttpData);
-            assert.equals(this.sessionHttpData.messagingContextPath, this.sessionHttpData.rootPath);
+            assert.equals(this.sessionHttpData.bayeuxClientUrl, this.busterServer.address + this.sessionHttpData.rootPath + "/messaging");
         },
 
         "test killing sessions": function (done) {
