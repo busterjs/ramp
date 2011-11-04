@@ -39,14 +39,16 @@ buster.testCase("buster-server glue", {
 
         "proxying API methods": {
             "capture URL": function () {
+                this.server.address = "http://test:1234";
                 this.server.captureUrl = "/foo";
+
                 assert.equals(this.server.capture.captureUrl, "/foo");
-                assert.equals(this.server.captureUrl, "/foo");
+                assert.equals(this.server.captureUrl, "http://test:1234/foo");
 
                 // Setting it this way is not a supported API, but testing it just in case.
                 this.server.capture.captureUrl = "/bar";
                 assert.equals(this.server.capture.captureUrl, "/bar");
-                assert.equals(this.server.captureUrl, "/bar");
+                assert.equals(this.server.captureUrl, "http://test:1234/bar");
             },
 
             "oncapture": function () {
