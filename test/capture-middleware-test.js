@@ -71,7 +71,7 @@ buster.testCase("Client middleware", {
             done();
         };
 
-        h.request({ path: this.cm.captureUrl, method: "GET" }, function () {}).end();
+        h.request({ path: this.cm.capturePath, method: "GET" }, function () {}).end();
         assert(true);
     },
 
@@ -81,7 +81,7 @@ buster.testCase("Client middleware", {
             done();
         };
 
-        this.cm.captureUrl = "/foo";
+        this.cm.capturePath = "/foo";
         h.request({ path: "/foo", method: "GET" }, function () {}).end();
         assert(true);
     },

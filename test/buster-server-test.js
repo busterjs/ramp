@@ -37,18 +37,23 @@ buster.testCase("buster-server glue", {
             }).end();
         },
 
+        "test captureUrl includes path and address": function () {
+            this.server.capturePath = "/foo";
+            this.server.address = "http://foo:1234";
+            assert.equals(this.server.captureUrl, "http://foo:1234/foo");
+        },
+
         "proxying API methods": {
             "capture URL": function () {
-                this.server.address = "http://test:1234";
-                this.server.captureUrl = "/foo";
+                this.server.capturePath = "/foo";
 
-                assert.equals(this.server.capture.captureUrl, "/foo");
-                assert.equals(this.server.captureUrl, "http://test:1234/foo");
+                assert.equals(this.server.capture.capturePath, "/foo");
+                assert.equals(this.server.capturePath, "/foo");
 
                 // Setting it this way is not a supported API, but testing it just in case.
-                this.server.capture.captureUrl = "/bar";
-                assert.equals(this.server.capture.captureUrl, "/bar");
-                assert.equals(this.server.captureUrl, "http://test:1234/bar");
+                this.server.capture.capturePath = "/bar";
+                assert.equals(this.server.capture.capturePath, "/bar");
+                assert.equals(this.server.capturePath, "/bar");
             },
 
             "oncapture": function () {
