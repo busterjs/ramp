@@ -321,15 +321,16 @@ buster.testCase("Client middleware", {
             });
 
             this.client.startSession({toJSON: function () { return {foo: "bar"}}});
-            this.client.ready();
+            this.client.bayeuxClient.publish("/" + this.client.id + "/ready", {});
         },
 
         "test ready event broadcasts session": function (done) {
-            this.client.ready = function () {
+            this.busterServer.bayeux.subscribe("/" + this.client.id + "/session/start", function (sess) {
                 assert(true);
                 done();
-            };
+            });
 
+            this.client.currentSession = {toJSON: function () { return {foo: "bar"}}};
             this.busterServer.bayeux.publish("/" + this.client.id + "/ready", 1);
         }
     }
