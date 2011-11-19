@@ -190,30 +190,44 @@ buster.testCase("Client middleware", {
             },
         },
 
-        "test serves env.js": function (done) {
-            var self = this;
-            h.request({path: this.client.url + "/env.js"}, function (res, body) {
-                assert.equals(res.statusCode, 200);
-                assert.equals(res.headers["content-type"], "application/javascript");
+        "serving env.js": {
+            setUp: function (done) {
+                var self = this;
+                h.request({path: this.client.url + "/env.js"}, function (res, body) {
+                    self.res = res;
+                    self.body = body;
 
-                // Clean scope
+                    done();
+                }).end();
+            },
+
+            "test responds with 200 OK": function () {
+                assert.equals(this.res.statusCode, 200);
+            },
+
+            "test serves with correct content-type": function () {
+                assert.equals(this.res.headers["content-type"], "application/javascript");
+            },
+
+            "test in clean scope": function () {
                 var scope = {};
-                require("vm").runInNewContext(body, scope);
-                assert("buster" in scope);
-                assert("env" in scope.buster);
-                assert.equals(typeof(scope.buster.env), "object");
-                assert.equals(scope.buster.env.bayeuxUrl, "http://0.0.0.0:" + h.SERVER_PORT + "/sessions/messaging");
-                assert.equals(self.client.id, scope.buster.env.clientId);
+                require("vm").runInNewContext(this.body, scope);
 
-                // Scope where buster is already defined
-                var scope = {buster: {}};
-                require("vm").runInNewContext(body, scope);
                 assert("buster" in scope);
                 assert("env" in scope.buster);
                 assert.equals(typeof(scope.buster.env), "object");
                 assert.equals(scope.buster.env.bayeuxUrl, "http://0.0.0.0:" + h.SERVER_PORT + "/sessions/messaging");
-                done();
-            }).end();
+                assert.equals(this.client.id, scope.buster.env.clientId);
+            },
+
+            "test in scope where buster is already defined": function () {
+                var scope = {buster: {}};
+                require("vm").runInNewContext(this.body, scope);
+                assert("buster" in scope);
+                assert("env" in scope.buster);
+                assert.equals(typeof(scope.buster.env), "object");
+                assert.equals(scope.buster.env.bayeuxUrl, "http://0.0.0.0:" + h.SERVER_PORT + "/sessions/messaging");
+            }
         },
 
         "test setting custom env variables": function (done) {
