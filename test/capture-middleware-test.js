@@ -193,7 +193,7 @@ buster.testCase("Client middleware", {
         "serving env.js": {
             setUp: function (done) {
                 var self = this;
-                h.request({path: this.client.url + "/env.js", headers: {host: "foo.local:1234"}}, function (res, body) {
+                h.request({path: this.client.url + "/env.js"}, function (res, body) {
                     self.res = res;
                     self.body = body;
 
@@ -216,7 +216,7 @@ buster.testCase("Client middleware", {
                 assert("buster" in scope);
                 assert("env" in scope.buster);
                 assert.equals(typeof(scope.buster.env), "object");
-                assert.equals(scope.buster.env.bayeuxUrl, "http://foo.local:1234/sessions/messaging");
+                assert.equals(scope.buster.env.bayeuxPath, "/sessions/messaging");
                 assert.equals(this.client.id, scope.buster.env.clientId);
             },
 
@@ -226,7 +226,7 @@ buster.testCase("Client middleware", {
                 assert("buster" in scope);
                 assert("env" in scope.buster);
                 assert.equals(typeof(scope.buster.env), "object");
-                assert.equals(scope.buster.env.bayeuxUrl, "http://foo.local:1234/sessions/messaging");
+                assert.equals(scope.buster.env.bayeuxPath, "/sessions/messaging");
             }
         },
 
