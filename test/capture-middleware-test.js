@@ -35,9 +35,11 @@ buster.testCase("Client middleware", {
         this.cm.oncapture =  function (req, res, client) {
             assert(typeof(client), "object");
             assert.isFalse(client.startSession.called);
+            res.end();
             done();
         };
-        this.cm.captureClient();
+
+        h.request({path: this.cm.capturePath, method: "GET"}, function () {}).end();
     },
 
     "test capturing client with session in progress": function (done) {
@@ -45,15 +47,17 @@ buster.testCase("Client middleware", {
         this.stub(captureMiddlewareClient, "startSession");
         this.cm.oncapture = function (req, res, client) {
             assert(client.startSession.calledOnce);
+            res.end();
             done();
         };
-        this.cm.captureClient();
+        h.request({path: this.cm.capturePath, method: "GET"}, function () {}).end();
     },
 
     "test different clients gets different URLs": function (done) {
         var clients = [];
         this.cm.oncapture = function (req, res, client) {
             clients.push(client);
+            res.end();
 
             if (clients.length == 2) {
                 refute.equals(clients[0].url, clients[1].url);
@@ -61,8 +65,8 @@ buster.testCase("Client middleware", {
             }
         };
 
-        this.cm.captureClient();
-        this.cm.captureClient();
+        h.request({path: this.cm.capturePath, method: "GET"}, function () {}).end();
+        h.request({path: this.cm.capturePath, method: "GET"}, function () {}).end();
     },
 
     "test default capture URL": function (done) {
@@ -87,13 +91,14 @@ buster.testCase("Client middleware", {
     },
 
     "test creating client without oncapture handler": function (done) {
-        try {
-            this.cm.captureClient();
-        } catch (e) {
-            assert.match(e.message, "'oncapture' handler");
-            assert.equals(this.cm.capturedClients.length, 0);
-            done();
-        }
+        var self = this;
+
+        h.request({path: this.cm.capturePath, method: "GET"}, function (res, body) {
+            assert.equals(res.statusCode, 500);
+            assert.match(body, "'oncapture' handler");
+            assert.equals(self.cm.capturedClients.length, 0);
+            done()
+        }).end();
     },
 
     "test first client on new server gets different id": function (done) {
@@ -104,6 +109,7 @@ buster.testCase("Client middleware", {
         var clients = [];
         var captureHandler = function (req, res, client) {
             clients.push(client);
+            res.end();
 
             if (clients.length == 2) {
                 refute.equals(clients[0].id, clients[1].id);
@@ -112,9 +118,10 @@ buster.testCase("Client middleware", {
         };
 
         this.cm.oncapture = captureHandler;
-        this.cm.captureClient();
+        h.request({path: this.cm.capturePath, method: "GET"}, function () {}).end();
+
         otherCm.oncapture = captureHandler;
-        otherCm.captureClient();
+        h.request({path: otherCm.capturePath, method: "GET"}, function () {}).end();
     },
 
     "client with header resource": {
@@ -128,9 +135,12 @@ buster.testCase("Client middleware", {
             this.cm.oncapture = function (req, res, client) {
                 delete self.cm.oncapture;
                 self.client = client;
+                res.end();
                 done();
             };
-            this.cm.captureClient();
+
+            h.request({path: this.cm.capturePath, method: "GET"}, function () {
+            }).end();
         },
 
         "test serves frameset": function (done) {
@@ -157,9 +167,12 @@ buster.testCase("Client middleware", {
             this.cm.oncapture = function (req, res, client) {
                 delete self.cm.oncapture;
                 self.client = client;
+                res.end();
                 done();
             };
-            this.cm.captureClient();
+
+            h.request({path: this.cm.capturePath, method: "GET"}, function () {
+            }).end();
         },
 
         "index page": {
