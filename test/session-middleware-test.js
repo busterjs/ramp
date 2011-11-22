@@ -300,6 +300,16 @@ buster.testCase("Session middleware", {
         }).callback(function () {
             session.publish("/foo", "test");
         });
+    },
+
+    "test session defaults to being resumable": function () {
+        var session = this.sessionMiddleware.createSession({});
+        buster.assert(session.joinable);
+    },
+
+    "test setting session to none-joinable": function () {
+        var session = this.sessionMiddleware.createSession({joinable: false});
+        buster.refute(session.joinable);
     }
 });
 
