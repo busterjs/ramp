@@ -53,6 +53,26 @@ buster.testCase("Client middleware", {
         h.request({path: this.cm.capturePath, method: "GET"}, function () {}).end();
     },
 
+    "test capturing client with none-joinable session in progress": function (done) {
+        var self = this;
+        this.stub(captureMiddlewareClient, "startSession");
+
+        this.cm.oncapture = function (req, res, client) {
+            res.end();
+        };
+
+        h.request({path: this.cm.capturePath, method: "GET"}, function () {
+            // Start the session as soon as the first client is captured
+            self.cm.startSession({joinable: false});
+
+            // TODO: test that the 2nd client is the one that isn't started.
+            h.request({path: self.cm.capturePath, method: "GET"}, function () {
+                assert(captureMiddlewareClient.startSession.calledOnce);
+                done();
+            }).end();
+        }).end();
+    },
+
     "test different clients gets different URLs": function (done) {
         var clients = [];
         this.cm.oncapture = function (req, res, client) {
