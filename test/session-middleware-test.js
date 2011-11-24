@@ -33,10 +33,12 @@ buster.testCase("Session middleware", {
         this.sessionMiddleware = this.busterServer.session;
 
         this.validSessionPayload = new Buffer(JSON.stringify({
-            load: ["/foo.js"],
-            resources: {
-                "/foo.js": {
-                    content: "var a = 5 + 5;"
+            resourceSet: {
+                load: ["/foo.js"],
+                resources: {
+                    "/foo.js": {
+                        content: "var a = 5 + 5;"
+                    }
                 }
             }
         }), "utf8");
@@ -133,8 +135,10 @@ buster.testCase("Session middleware", {
                 assert.equals(202, res.statusCode);
                 done();
             }).end(new Buffer(JSON.stringify({
-                load: [],
-                resources: {"/foo.js": {content: "5 + 5;"}}
+                resourceSet: {
+                    load: [],
+                    resources: {"/foo.js": {content: "5 + 5;"}}
+                }
             }), "utf8"));
         },
 
@@ -193,18 +197,31 @@ buster.testCase("Session middleware", {
             done();
         });
 
-        this.sessionMiddleware.createSession({load:[],resources:{"foo":{content:""}}});
+        this.sessionMiddleware.createSession({
+            resourceSet: {
+                load: [],
+                resources: {"foo":{content:""}}
+            }
+        });
     },
 
     "test programmatically creating session with none-string or none-buffer as content": function () {
         var self = this;
 
         assert.exception(function () {
-            self.sessionMiddleware.createSession({load:[],resources:{"/foo.js":{content: 123}}});
+            self.sessionMiddleware.createSession({
+                resourceSet: {
+                    load:[],resources:{"/foo.js":{content: 123}}
+                }
+            });
         });
 
         assert.exception(function () {
-            self.sessionMiddleware.createSession({load:[],resources:{"/foo.js":{content: {}}}});
+            self.sessionMiddleware.createSession({
+                resourceSet: {
+                    load:[],resources:{"/foo.js":{content: {}}}
+                }
+            });
         });
     },
 
@@ -269,8 +286,7 @@ buster.testCase("Session middleware", {
 
     "test creating session with exception from resource system": function (done) {
         var payload = JSON.parse(this.validSessionPayload.toString("utf8"));
-        payload.resources["/testtest.js"] = {etag: "an etag that does not exist"};
-
+        payload.resourceSet.resources["/testtest.js"] = {etag: "an etag that does not exist"};
 
         h.request({path: "/sessions", method: "POST"}, function (res, body) {
             buster.assert.equals(res.statusCode, 403);
