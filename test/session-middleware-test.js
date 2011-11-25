@@ -1,5 +1,6 @@
 var buster = require("buster");
 var assert = buster.assert;
+var refute = buster.refute;
 var http = require("http");
 var vm = require("vm");
 var faye = require("faye");
@@ -165,8 +166,8 @@ buster.testCase("Session middleware", {
 
             h.request({path: "/sessions", method: "POST"}, function (res, body) {
                 h.request({path: JSON.parse(body).rootPath, method: "DELETE"}, function () {
-                    assert.isFalse(sessionStart.called);
-                    assert.isFalse(sessionEnd.called);
+                    refute(sessionStart.called);
+                    refute(sessionEnd.called);
                     done();
                 }).end();
             }).end(this.validSessionPayload);
@@ -262,7 +263,7 @@ buster.testCase("Session middleware", {
             for (var i = 0, ii = self.sessionMiddleware.sessions.length; i < ii; i++) {
                 if (self.sessionMiddleware.sessions[i] == session) sessionInList = true;
             }
-            assert.isFalse(sessionInList);
+            refute(sessionInList);
 
             done();
         }).end();
@@ -281,7 +282,7 @@ buster.testCase("Session middleware", {
         for (var i = 0, ii = this.sessionMiddleware.sessions.length; i < ii; i++) {
             if (this.sessionMiddleware.sessions[i] == session) sessionInList = true;
         }
-        assert.isFalse(sessionInList);
+        refute(sessionInList);
     },
 
     "test creating session with exception from resource system": function (done) {

@@ -34,7 +34,7 @@ buster.testCase("Client middleware", {
         this.stub(captureMiddlewareClient, "startSession");
         this.cm.oncapture =  function (req, res, client) {
             assert(typeof(client), "object");
-            assert.isFalse(client.startSession.called);
+            refute(client.startSession.called);
             res.end();
             done();
         };
