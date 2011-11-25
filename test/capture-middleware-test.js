@@ -334,8 +334,7 @@ buster.testCase("Client middleware", {
 
         "test binding to session middleware": function () {
             var session = {foo: "test"};
-            var sessionMiddleware = Object.create(buster.eventEmitter);
-            this.cm.bindToSessionMiddleware(sessionMiddleware);
+            var sessionMiddleware = this.busterServer.session;
 
             this.stub(this.cm, "startSession");
             sessionMiddleware.emit("session:start", session);
