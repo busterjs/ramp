@@ -37,12 +37,6 @@ buster.testCase("buster-server glue", {
             }).end();
         },
 
-        "test captureUrl includes path and address": function () {
-            this.server.capturePath = "/foo";
-            this.server.address = "http://foo:1234";
-            assert.equals(this.server.captureUrl, "http://foo:1234/foo");
-        },
-
         "proxying API methods": {
             "capture URL": function () {
                 this.server.capturePath = "/foo";
