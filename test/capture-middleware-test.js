@@ -353,7 +353,7 @@ buster.testCase("Client middleware", {
             });
 
             this.client.startSession({toJSON: function () { return {foo: "bar"}}});
-            this.client.bayeuxClient.publish("/" + this.client.id + "/ready", {});
+            this.client.bayeuxClient.publish("/" + this.client.id + "/ready", "abc123");
         },
 
         "test ready event broadcasts session": function (done) {
@@ -363,7 +363,7 @@ buster.testCase("Client middleware", {
             });
 
             this.client.currentSession = {toJSON: function () { return {foo: "bar"}}};
-            this.busterServer.bayeux.publish("/" + this.client.id + "/ready", 1);
+            this.busterServer.bayeux.publish("/" + this.client.id + "/ready", "abc123");
         }
     }
 });
