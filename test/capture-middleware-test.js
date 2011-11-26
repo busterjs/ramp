@@ -365,5 +365,55 @@ buster.testCase("Client middleware", {
             this.client.currentSession = {toJSON: function () { return {foo: "bar"}}};
             this.busterServer.bayeux.publish("/" + this.client.id + "/ready", "abc123");
         }
+    },
+
+    "with multiple clients": {
+        setUp: function (done) {
+            var self = this;
+            var i = 0;
+
+            this.cm.oncapture = function (req, res, client) {
+                switch (++i) {
+                case 1:
+                    self.clientA = client;
+                    break;
+                case 2:
+                    self.clientB = client;
+                    break;
+                case 3:
+                    self.clientC = client;
+                    done()
+                    break;
+                }
+
+                res.end();
+            };
+
+            h.request({path: this.cm.capturePath, method: "GET"}, function () {}).end();
+            h.request({path: this.cm.capturePath, method: "GET"}, function () {}).end();
+            h.request({path: this.cm.capturePath, method: "GET"}, function () {}).end();
+        },
+
+        "test destroying one client": function () {
+            this.stub(this.clientB, "destroy");
+            this.cm.destroyClient(this.clientB);
+
+            assert.equals(this.cm.capturedClients.length, 2);
+            assert.equals(this.cm.capturedClients.indexOf(this.clientB), -1);
+            assert(this.clientB.destroy.calledOnce);
+        },
+
+        "test destroying client by bayeux client id": function () {
+            this.stub(this.clientB, "destroy");
+            this.clientA.bayeuxClientId = "123abc";
+            this.clientB.bayeuxClientId = "456abc";
+            this.clientC.bayeuxClientId = "123def";
+
+            this.cm.destroyClientByBayeuxClientId("456abc");
+
+            assert.equals(this.cm.capturedClients.length, 2);
+            assert.equals(this.cm.capturedClients.indexOf(this.clientB), -1);
+            assert(this.clientB.destroy.calledOnce);
+        }
     }
 });
