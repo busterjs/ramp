@@ -195,6 +195,21 @@ buster.testCase("Client middleware", {
             }).end();
         },
 
+        "should remove client resource set when destroying": function (done) {
+            var self = this;
+            h.request({path: this.client.url + "/env.js"}, function (res, body) {
+                assert.equals(res.statusCode, 200);
+
+                self.cm.destroyClient(self.client);
+
+                h.request({path: self.client.url  + "/env.js"}, function (res, body) {
+                    assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
+                    done();
+                }).end();
+            }).end();
+
+        },
+
         "index page": {
             setUp: function (done) {
                 var self = this;
