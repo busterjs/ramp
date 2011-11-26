@@ -115,6 +115,8 @@ buster.testCase("Session middleware", {
             assert("bayeuxClientPath" in response.session);
             assert("id" in response.session);
             assert.equals(response.session.bayeuxClientPath, response.session.rootPath + "/messaging");
+
+            assert("clients" in response);
         },
 
         "test killing sessions": function (done) {

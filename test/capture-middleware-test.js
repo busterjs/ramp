@@ -429,6 +429,21 @@ buster.testCase("Client middleware", {
             assert.equals(this.cm.capturedClients.length, 2);
             assert.equals(this.cm.capturedClients.indexOf(this.clientB), -1);
             assert(this.clientB.destroy.calledOnce);
+        },
+
+        "test creating session lists clients": function (done) {
+            var self = this;
+            h.request({path: "/sessions", method: "POST"}, function (res, body) {
+                var response = JSON.parse(body);
+
+                assert.match(response.clients, [
+                    {id: self.clientA.id}, {id: self.clientB.id}, {id: self.clientC.id}
+                ]);
+                
+                done();
+            }).end(new Buffer(JSON.stringify({
+                resourceSet: {load: [],resources: {}}
+            }), "utf8"));
         }
     }
 });
