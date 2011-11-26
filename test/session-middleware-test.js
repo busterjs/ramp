@@ -89,7 +89,7 @@ buster.testCase("Session middleware", {
             var self = this;
             h.request({path: "/sessions", method: "POST"}, function (res, body) {
                 self.res = res;
-                self.sessionHttpData = JSON.parse(body);
+                self.body = body;
                 self.session = self.sessionMiddleware.sessions[0];
                 done();
             }).end(this.validSessionPayload);
@@ -100,17 +100,21 @@ buster.testCase("Session middleware", {
             assert("location" in this.res.headers);
             assert.match(this.res.headers.location, /^\/.+/);
 
-            assert("rootPath" in this.sessionHttpData);
-            assert.equals(this.res.headers.location, this.sessionHttpData.rootPath);
+            var response = JSON.parse(this.body);
 
-            assert("resourceContextPath" in this.sessionHttpData);
+            assert("session" in response);
+
+            assert("rootPath" in response.session);
+            assert.equals(this.res.headers.location, response.session.rootPath);
+
+            assert("resourceContextPath" in response.session);
             // resourceContextPath should be prefixed with rootPath.
-            var expectedPrefix = this.sessionHttpData.resourceContextPath.slice(0, this.sessionHttpData.rootPath.length)
-            assert.equals(expectedPrefix, this.sessionHttpData.rootPath);
+            var expectedPrefix = response.session.resourceContextPath.slice(0, response.session.rootPath.length)
+            assert.equals(expectedPrefix, response.session.rootPath);
 
-            assert("bayeuxClientPath" in this.sessionHttpData);
-            assert("id" in this.sessionHttpData);
-            assert.equals(this.sessionHttpData.bayeuxClientPath, this.sessionHttpData.rootPath + "/messaging");
+            assert("bayeuxClientPath" in response.session);
+            assert("id" in response.session);
+            assert.equals(response.session.bayeuxClientPath, response.session.rootPath + "/messaging");
         },
 
         "test killing sessions": function (done) {
@@ -152,7 +156,7 @@ buster.testCase("Session middleware", {
                 h.request({path: self.session.rootPath, method: "DELETE"}, function (res, body) {
                     assert(sessionStart.calledOnce);
                     var sessionInfo = sessionStart.getCall(0).args[0];
-                    assert.equals(newSession.rootPath, sessionInfo.rootPath);
+                    assert.equals(newSession.session.rootPath, sessionInfo.rootPath);
                     done();
                 }).end();
             }).end(this.validSessionPayload);
