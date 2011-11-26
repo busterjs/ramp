@@ -96,11 +96,12 @@
             Faye.Client.calledWithNew();
             this.cf.crossFrame = mockCrossFrame();
             this.cf.crossFrame._window.buster = {};
-            this.cf.exposeBusterObject({bayeuxClientUrl: "http://foo/messaging"});
+            this.cf.exposeBusterObject({bayeuxClientPath: "/messaging"});
 
             var busterObject = this.cf.crossFrame().window().buster;
             assertTrue(Faye.Client.calledOnce);
-            assertTrue(Faye.Client.calledWithExactly("http://foo/messaging"));
+            var expectedFayeClientUrl = window.location.protocol + "//" + window.location.host + "/messaging";
+            assertTrue(Faye.Client.calledWithExactly(expectedFayeClientUrl));
 
             var listener = function(){};
             bayeuxClient.subscribe.returns("hooligan");
