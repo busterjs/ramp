@@ -15,7 +15,13 @@
     }
 
     function mockFaye() {
-        return {subscribe: sinon.stub(), publish: sinon.stub(), addExtension: sinon.stub()};
+        return {
+            subscribe: sinon.stub(), publish: sinon.stub(), addExtension: sinon.stub(),
+            connect: function (cb, scope) {
+                scope.getClientId = sinon.spy(function () { return "abc123" });
+                cb();
+            }
+        };
     }
 
     TestCase("Buster server control frame", {
@@ -35,17 +41,17 @@
             buster.env = this.originalEnv;
         },
 
-        "test listening creates bayeux client and publishes ready": function () {
+        "test listening creates bayeux client": function () {
             this.sandbox.stub(this.cf, "createBayeuxClient");
-            this.cf.createBayeuxClient.returns(mockFaye());
-
+            var client = mockFaye();
+            this.cf.createBayeuxClient.returns(client);
             this.env.clientId = "123abc";
             this.cf.listen();
-            assertTrue(this.cf.bayeuxClient.publish.calledOnce);
-            assertTrue(this.cf.bayeuxClient.publish.calledWithExactly("/123abc/ready", {}));
+
+            assertTrue(this.cf.bayeuxClient === client);
         },
 
-        "test creating bayeux client subscribes to start and end": function () {
+        "test creating bayeux client subscribes to start and end and publishes ready": function () {
             this.sandbox.stub(Faye, "Client");
             Faye.Client.returns(mockFaye());
             Faye.Client.calledWithNew();
@@ -64,6 +70,8 @@
             bc.subscribe.getCall(1).args[1]("yay");
             assertTrue(this.cf.sessionEnd.calledOnce);
             assertTrue(this.cf.sessionEnd.calledWithExactly("yay"));
+
+            assertTrue(bc.publish.calledWithExactly("/" + this.env.clientId + "/ready", "abc123"));
         },
 
         "test sessionStart": function () {
