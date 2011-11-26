@@ -15,7 +15,7 @@
     }
 
     function mockFaye() {
-        return {subscribe: sinon.stub(), publish: sinon.stub()};
+        return {subscribe: sinon.stub(), publish: sinon.stub(), addExtension: sinon.stub()};
     }
 
     TestCase("Buster server control frame", {
