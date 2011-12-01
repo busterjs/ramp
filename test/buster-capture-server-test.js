@@ -37,6 +37,41 @@ buster.testCase("Main module", {
             }).end();
         },
 
+        "server metadata": {
+            "test GET to / with Accept json": function (done) {
+                var self = this;
+
+                h.request({
+                    path: "/", method: "GET",
+                    headers: {"Accept": "application/json"}
+                }, function (res, body) {
+                    assert.equals(res.statusCode, 200);
+                    var result = JSON.parse(body);
+                    assert.equals(result.messagingPath, self.server.messagingContextPath);
+                    done();
+                }).end();
+            },
+
+            "test GET to / without Accept": function (done) {
+                h.request({
+                    path: "/", method: "GET"
+                }, function (res, body) {
+                    assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
+                    done();
+                }).end();
+            },
+
+            "test none-GET to / with Accept json": function (done) {
+                h.request({
+                    path: "/", method: "POST",
+                    headers: {"Accept": "application/json"}
+                }, function (res, body) {
+                    assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
+                    done();
+                }).end();
+            }
+        },
+
         "proxying API methods": {
             "capture URL": function () {
                 this.server.capturePath = "/foo";
