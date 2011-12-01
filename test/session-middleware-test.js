@@ -102,19 +102,17 @@ buster.testCase("Session middleware", {
 
             var response = JSON.parse(this.body);
 
-            assert("session" in response);
+            assert("rootPath" in response);
+            assert.equals(this.res.headers.location, response.rootPath);
 
-            assert("rootPath" in response.session);
-            assert.equals(this.res.headers.location, response.session.rootPath);
-
-            assert("resourceContextPath" in response.session);
+            assert("resourceContextPath" in response);
             // resourceContextPath should be prefixed with rootPath.
-            var expectedPrefix = response.session.resourceContextPath.slice(0, response.session.rootPath.length)
-            assert.equals(expectedPrefix, response.session.rootPath);
+            var expectedPrefix = response.resourceContextPath.slice(0, response.rootPath.length)
+            assert.equals(expectedPrefix, response.rootPath);
 
-            assert("bayeuxClientPath" in response.session);
-            assert("id" in response.session);
-            assert.equals(response.session.bayeuxClientPath, response.session.rootPath + "/messaging");
+            assert("bayeuxClientPath" in response);
+            assert("id" in response);
+            assert.equals(response.bayeuxClientPath, response.rootPath + "/messaging");
 
             assert("clients" in response);
         },
@@ -158,7 +156,7 @@ buster.testCase("Session middleware", {
                 h.request({path: self.session.rootPath, method: "DELETE"}, function (res, body) {
                     assert(sessionStart.calledOnce);
                     var sessionInfo = sessionStart.getCall(0).args[0];
-                    assert.equals(newSession.session.rootPath, sessionInfo.rootPath);
+                    assert.equals(newSession.rootPath, sessionInfo.rootPath);
                     done();
                 }).end();
             }).end(this.validSessionPayload);
