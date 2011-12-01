@@ -1,8 +1,8 @@
 {
-    "name": "buster-server",
+    "name": "buster-capture-server",
     "version": "0.2.2",
-    "description": "Buster server",
-    "homepage": "http://busterjs.org/docs/buster-server",
+    "description": "Buster capture server",
+    "homepage": "http://busterjs.org/docs/buster-capture-server",
     "author": {
         "name": "August Lilleaas",
         "email": "august.lilleaas@gmail.com",
@@ -13,10 +13,10 @@
         "email": "christian@cjohansen.no",
         "url": "http://cjohansen.no"
     }],
-    "main": "./lib/buster-server",
+    "main": "./lib/buster-capture-server",
     "repository": {
         "type": "git",
-        "url": "git://gitorious.org/buster/buster-server.git"
+        "url": "git://gitorious.org/buster/buster-capture-server.git"
     },
     "dependencies": {
         "buster-core": "~0.4",

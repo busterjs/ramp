@@ -4,7 +4,7 @@ var refute = buster.refute;
 var http = require("http");
 var vm = require("vm");
 var faye = require("faye");
-var busterServer = require("./../lib/buster-server");
+var busterServer = require("./../lib/buster-capture-server");
 var sessionMiddlewareSession = require("./../lib/session/session")
 
 var h = require("./test-helper");

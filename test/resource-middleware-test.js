@@ -4,7 +4,7 @@ var http = require("http");
 var fs = require("fs");
 var h = require("./test-helper");
 
-var busterServer = require("./../lib/buster-server");
+var busterServer = require("./../lib/buster-capture-server");
 
 function assertBodyIsRootResourceProcessed(body, resourceSet) {
     assert.match(body, '<script src="' + resourceSet.contextPath  + '/foo.js"');

@@ -4,7 +4,7 @@ var refute = buster.refute;
 var captureMiddleware = require("./../lib/capture/capture-middleware");
 var captureMiddlewareClient = require("./../lib/capture/captured-client");
 var resourceMiddleware = require("./../lib/resources/resource-middleware");
-var busterServer = require("./../lib/buster-server");
+var busterServer = require("./../lib/buster-capture-server");
 
 var fs = require("fs");
 var http = require("http");
