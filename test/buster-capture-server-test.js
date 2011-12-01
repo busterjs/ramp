@@ -17,7 +17,7 @@ function createServer(done) {
     return httpServer;
 }
 
-buster.testCase("buster-server glue", {
+buster.testCase("Main module", {
     "attached to server": {
         setUp: function (done) {
             this.httpServer = createServer(done);
