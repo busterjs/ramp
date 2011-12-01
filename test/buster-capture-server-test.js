@@ -140,6 +140,23 @@ buster.testCase("Main module", {
                 assert.same(this.server.session.logger, theLogger);
                 assert.same(this.server.capture.logger, theLogger);
             }
+        },
+
+        "test automatic session takedown": function (done) {
+            var url = "http://localhost:" + h.SERVER_PORT + this.server.messagingContextPath;
+
+            this.server.session.on("session:end", function () {
+                buster.assert(true);
+                done();
+            });
+
+            var session = this.server.session.createSession({});
+
+            var client = new faye.Client(url);
+            var publication = client.publish("/session-owner");
+            publication.callback(function () {
+                client.disconnect();
+            });
         }
     },
 
