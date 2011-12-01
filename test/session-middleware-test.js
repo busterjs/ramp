@@ -331,6 +331,25 @@ buster.testCase("Session middleware", {
     "test setting session to none-joinable": function () {
         var session = this.sessionMiddleware.createSession({joinable: false});
         buster.refute(session.joinable);
+    },
+
+    "test destroying current session": function () {
+        var session = this.sessionMiddleware.createSession({});
+        var session2 = this.sessionMiddleware.createSession({});
+        var session3 = this.sessionMiddleware.createSession({});
+        assert.equals(this.sessionMiddleware.sessions, [session, session2, session3]);
+
+        this.sessionMiddleware.destroyCurrentSession();
+        assert.equals(this.sessionMiddleware.sessions, [session2, session3]);
+
+        this.sessionMiddleware.destroyCurrentSession();
+        assert.equals(this.sessionMiddleware.sessions, [session3]);
+
+        this.sessionMiddleware.destroyCurrentSession();
+        assert.equals(this.sessionMiddleware.sessions, []);
+
+        this.sessionMiddleware.destroyCurrentSession();
+        assert.equals(this.sessionMiddleware.sessions, []);
     }
 });
 
