@@ -194,6 +194,21 @@ buster.testCase("Session middleware", {
                 done();
             }).end();
         },
+
+        "test automatic session takedown": function (done) {
+            var url = "http://localhost:" + h.SERVER_PORT + this.session.bayeuxClientPath;
+
+            this.busterServer.session.on("session:end", function () {
+                buster.assert(true);
+                done();
+            });
+
+            var client = new faye.Client(url);
+            var publication = client.publish("/session-owner");
+            publication.callback(function () {
+                client.disconnect();
+            });
+        },
     },
 
     "test programmatically created session is created and loaded": function (done) {
