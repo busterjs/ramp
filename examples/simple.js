@@ -6,7 +6,7 @@
  *
  */
 
-var busterServer = require("../lib/buster-server");
+var busterServer = require("../lib/buster-capture-server");
 var http = require("http");
 var fs = require("fs");
 
