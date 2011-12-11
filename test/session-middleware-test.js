@@ -213,7 +213,7 @@ buster.testCase("Session middleware", {
 
     "test programmatically created session is created and loaded": function (done) {
         this.sessionMiddleware.on("session:start", function (session) {
-            assert(session.resourceSet.resources.hasOwnProperty("foo"));
+            assert(session.resourceSet.resources.hasOwnProperty("/foo"));
             done();
         });
 
