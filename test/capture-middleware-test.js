@@ -5,6 +5,7 @@ var captureMiddleware = require("./../lib/capture/capture-middleware");
 var captureMiddlewareClient = require("./../lib/capture/captured-client");
 var resourceMiddleware = require("./../lib/resources/resource-middleware");
 var busterServer = require("./../lib/buster-capture-server");
+var faye = require("faye");
 
 var fs = require("fs");
 var http = require("http");
@@ -379,6 +380,29 @@ buster.testCase("Client middleware", {
 
             this.client.currentSession = {toJSON: function () { return {foo: "bar"}}};
             this.busterServer.bayeux.publish("/" + this.client.id + "/ready", "abc123");
+        },
+
+        "test faye disconnect destroys the client": function (done) {
+            var self = this;
+            var bayeuxClient = new faye.Client(
+                "http://localhost:"
+                    + h.SERVER_PORT
+                    + this.busterServer.messagingContextPath
+            );
+
+            assert(true);
+            this.stub(this.client, "destroy", done);
+
+            bayeuxClient.connect(function () {
+                var publication = bayeuxClient.publish(
+                    "/" + self.client.id + "/ready",
+                    bayeuxClient.getClientId()
+                );
+
+                publication.callback(function () {
+                    bayeuxClient.disconnect();
+                });
+            }, bayeuxClient);
         }
     },
 
