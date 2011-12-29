@@ -77,7 +77,8 @@
         "test sessionStart": function () {
             var clock = this.sandbox.useFakeTimers();
             this.cf.crossFrame = mockCrossFrame();
-            this.cf.sessionStart({resourceContextPath: "/foo"});
+            this.cf.bayeuxClient = mockFaye();
+            this.cf.sessionStart({resourceContextPath: "/foo", id: "abc123"});
             assertEquals("/foo/", this.cf.crossFrame().frame().src);
 
             assertEquals(typeof(buster.clientReady), "function");
@@ -89,6 +90,7 @@
             this.cf.crossFrame._window.focus = sinon.spy();
             clock.tick(1);
             assert(this.cf.crossFrame._window.focus.calledOnce);
+            assertTrue(this.cf.bayeuxClient.publish.calledWith("/" + this.env.clientId + "/session/abc123/ready"));
         },
 
         "test sessionEnd blanks src on the client frame": function () {
