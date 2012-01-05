@@ -37,6 +37,32 @@ buster.testCase("Main module", {
             }).end();
         },
 
+        "should list known resources for GET /resources": function (done) {
+            this.server.busterResources.createResourceSet({
+                resources: {
+                    "/foo.js": {
+                        content: "cake",
+                        etag: "123abc"
+                    }
+                }
+            });
+
+            h.request({path: "/resources"}, function (res, body) {
+                assert.equals(res.statusCode, 200);
+                var actual = JSON.parse(body);
+                assert.equals(actual, {"/foo.js": ["123abc"]});
+                done();
+            }).end();
+        },
+
+        "should gc for DELETE /resources": function (done) {
+            var stub = this.stub(this.server.busterResources, "gc");
+            h.request({path: "/resources", method: "DELETE"}, function (res, body) {
+                assert.equals(res.statusCode, 200);
+                done();
+            }).end();
+        },
+
         "proxying API methods": {
             "capture URL": function () {
                 this.server.capturePath = "/foo";
@@ -92,7 +118,6 @@ buster.testCase("Main module", {
             },
 
             "assigns logger to middlewares": function () {
-                assert.same(this.server.logger, this.server.resource.logger);
                 assert.same(this.server.logger, this.server.session.logger);
                 assert.same(this.server.logger, this.server.capture.logger);
             },
@@ -101,7 +126,6 @@ buster.testCase("Main module", {
                 var theLogger = {};
                 this.server.logger = theLogger;
                 assert.same(this.server.logger, theLogger);
-                assert.same(this.server.resource.logger, theLogger);
                 assert.same(this.server.session.logger, theLogger);
                 assert.same(this.server.capture.logger, theLogger);
             }

@@ -3,7 +3,6 @@ var assert = buster.assert;
 var refute = buster.refute;
 var captureMiddleware = require("./../lib/capture/capture-middleware");
 var captureMiddlewareClient = require("./../lib/capture/captured-client");
-var resourceMiddleware = require("./../lib/resources/resource-middleware");
 var busterServer = require("./../lib/buster-capture-server");
 var faye = require("faye");
 
@@ -125,7 +124,6 @@ buster.testCase("Client middleware", {
     "test first client on new server gets different id": function (done) {
         var otherCm = Object.create(captureMiddleware);
         otherCm.server = this.busterServer;
-        otherCm.resourceMiddleware = Object.create(resourceMiddleware);
 
         var clients = [];
         var captureHandler = function (req, res, client) {
