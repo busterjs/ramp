@@ -2,7 +2,6 @@ var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
 var busterServer = require("./../lib/buster-capture-server");
-var captureMiddleware = require("./../lib/capture/capture-middleware");
 var faye = require("faye");
 var http = require("http");
 var h = require("./test-helper");
@@ -64,52 +63,12 @@ buster.testCase("Main module", {
         },
 
         "proxying API methods": {
-            "capture URL": function () {
-                this.server.capturePath = "/foo";
-
-                assert.equals(this.server.capture.capturePath, "/foo");
-                assert.equals(this.server.capturePath, "/foo");
-
-                // Setting it this way is not a supported API, but testing it just in case.
-                this.server.capture.capturePath = "/bar";
-                assert.equals(this.server.capture.capturePath, "/bar");
-                assert.equals(this.server.capturePath, "/bar");
-            },
-
-            "oncapture": function () {
-                this.server.oncapture = function () {};
-                assert.same(this.server.capture.oncapture, this.server.oncapture);
-
-                // Setting it this way is not a supported API, but testing it just in case.
-                this.server.capture.oncapture = function () {};
-                assert.same(this.server.capture.oncapture, this.server.oncapture);
-            },
-
-            "header": function () {
-                this.stub(this.server.capture, "header");
-                this.server.capture.header.returns("test");
-                assert.equals(this.server.header("foo", "bar"), "test");
-                assert(this.server.capture.header.calledOnce);
-                assert(this.server.capture.header.calledWithExactly("foo", "bar"));
-            },
-
             "has default logger": function () {
                 assert.equals(typeof this.server.logger.error, "function");
                 assert.equals(typeof this.server.logger.warn, "function");
                 assert.equals(typeof this.server.logger.log, "function");
                 assert.equals(typeof this.server.logger.info, "function");
                 assert.equals(typeof this.server.logger.debug, "function");
-            },
-
-            "assigns logger to middlewares": function () {
-                assert.same(this.server.logger, this.server.capture.logger);
-            },
-
-            "setting new logger": function () {
-                var theLogger = {};
-                this.server.logger = theLogger;
-                assert.same(this.server.logger, theLogger);
-                assert.same(this.server.capture.logger, theLogger);
             }
         }
     },
