@@ -1,7 +1,7 @@
 var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
-var captureMiddlewareClient = require("./../lib/capture/captured-client");
+var captureMiddlewareClient = require("./../lib/captured-client");
 var busterServer = require("./../lib/buster-capture-server");
 var faye = require("faye");
 
