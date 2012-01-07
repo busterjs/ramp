@@ -93,22 +93,6 @@ buster.testCase("Main module", {
                 assert(this.server.capture.header.calledWithExactly("foo", "bar"));
             },
 
-            "createSesson": function () {
-                this.stub(this.server.session, "createSession");
-                this.server.session.createSession.returns("test");
-                assert.equals(this.server.createSession("foo", "bar"), "test");
-                assert(this.server.session.createSession.calledOnce);
-                assert(this.server.session.createSession.calledWithExactly("foo", "bar"));
-            },
-
-            "destroySession": function () {
-                this.stub(this.server.session, "destroySession");
-                this.server.session.destroySession.returns("test");
-                assert.equals(this.server.destroySession("foo", "bar"), "test");
-                assert(this.server.session.destroySession.calledOnce);
-                assert(this.server.session.destroySession.calledWithExactly("foo", "bar"));
-            },
-
             "has default logger": function () {
                 assert.equals(typeof this.server.logger.error, "function");
                 assert.equals(typeof this.server.logger.warn, "function");
@@ -118,7 +102,6 @@ buster.testCase("Main module", {
             },
 
             "assigns logger to middlewares": function () {
-                assert.same(this.server.logger, this.server.session.logger);
                 assert.same(this.server.logger, this.server.capture.logger);
             },
 
@@ -126,7 +109,6 @@ buster.testCase("Main module", {
                 var theLogger = {};
                 this.server.logger = theLogger;
                 assert.same(this.server.logger, theLogger);
-                assert.same(this.server.session.logger, theLogger);
                 assert.same(this.server.capture.logger, theLogger);
             }
         }

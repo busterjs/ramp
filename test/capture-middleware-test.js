@@ -348,15 +348,15 @@ buster.testCase("Client middleware", {
 
         "test binding to session middleware": function () {
             var session = {foo: "test"};
-            var sessionMiddleware = this.busterServer.session;
+            var sessionMiddleware = this.busterServer;
 
             this.stub(this.cm, "startSession");
-            sessionMiddleware.emit("session:start", session);
+            sessionMiddleware.temporarySessionEventEmitter.emit("session:start", session);
             assert(this.cm.startSession.calledOnce);
             assert(this.cm.startSession.calledWithExactly(session));
 
             this.stub(this.cm, "endSession");
-            sessionMiddleware.emit("session:end");
+            sessionMiddleware.temporarySessionEventEmitter.emit("session:end");
             assert(this.cm.endSession.calledOnce);
         },
 
