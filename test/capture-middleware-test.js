@@ -43,7 +43,7 @@ buster.testCase("Client middleware", {
     },
 
     "test capturing client with session in progress": function (done) {
-        this.cm.startSession({});
+        this.busterServer.createSession({});
         this.stub(captureMiddlewareClient, "startSession");
         this.cm.oncapture = function (req, res, client) {
             assert(client.startSession.calledOnce);
@@ -63,7 +63,7 @@ buster.testCase("Client middleware", {
 
         h.request({path: this.cm.capturePath, method: "GET"}, function () {
             // Start the session as soon as the first client is captured
-            self.cm.startSession({joinable: false});
+            self.busterServer.createSession({joinable: false});
 
             // TODO: test that the 2nd client is the one that isn't started.
             h.request({path: self.cm.capturePath, method: "GET"}, function () {
@@ -350,14 +350,14 @@ buster.testCase("Client middleware", {
             var session = {foo: "test"};
             var sessionMiddleware = this.busterServer;
 
-            this.stub(this.cm, "startSession");
+            var startStub = this.stub(captureMiddlewareClient, "startSession");
             sessionMiddleware.temporarySessionEventEmitter.emit("session:start", session);
-            assert(this.cm.startSession.calledOnce);
-            assert(this.cm.startSession.calledWithExactly(session));
+            assert(startStub.calledOnce);
+            assert(startStub.calledWithExactly(session));
 
-            this.stub(this.cm, "endSession");
+            var endStub = this.stub(captureMiddlewareClient, "endSession");
             sessionMiddleware.temporarySessionEventEmitter.emit("session:end");
-            assert(this.cm.endSession.calledOnce);
+            assert(endStub.calledOnce);
         },
 
         "test publishes /session/start when session is present and is ready": function (done) {
