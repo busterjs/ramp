@@ -389,7 +389,7 @@ buster.testCase("Client middleware", {
             );
 
             assert(true);
-            this.stub(this.client, "destroy", done);
+            this.stub(this.client, "end", done);
 
             bayeuxClient.connect(function () {
                 var publication = bayeuxClient.publish(
@@ -432,25 +432,12 @@ buster.testCase("Client middleware", {
         },
 
         "test destroying one client": function () {
-            this.stub(this.clientB, "destroy");
+            this.spy(this.clientB, "end");
             this.cm.destroyClient(this.clientB);
 
             assert.equals(this.cm.capturedClients.length, 2);
             assert.equals(this.cm.capturedClients.indexOf(this.clientB), -1);
-            assert(this.clientB.destroy.calledOnce);
-        },
-
-        "test destroying client by bayeux client id": function () {
-            this.stub(this.clientB, "destroy");
-            this.clientA.bayeuxClientId = "123abc";
-            this.clientB.bayeuxClientId = "456abc";
-            this.clientC.bayeuxClientId = "123def";
-
-            this.cm.destroyClientByBayeuxClientId("456abc");
-
-            assert.equals(this.cm.capturedClients.length, 2);
-            assert.equals(this.cm.capturedClients.indexOf(this.clientB), -1);
-            assert(this.clientB.destroy.calledOnce);
+            assert(this.clientB.end.calledOnce);
         },
 
         "test creating session lists clients": function (done) {
