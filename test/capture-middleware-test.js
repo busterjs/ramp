@@ -199,7 +199,7 @@ buster.testCase("Client middleware", {
             h.request({path: this.client.url + "/env.js"}, function (res, body) {
                 assert.equals(res.statusCode, 200);
 
-                self.cm.destroyClient(self.client);
+                self.client.end();
 
                 h.request({path: self.client.url  + "/env.js"}, function (res, body) {
                     assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
@@ -433,7 +433,7 @@ buster.testCase("Client middleware", {
 
         "test destroying one client": function () {
             this.spy(this.clientB, "end");
-            this.cm.destroyClient(this.clientB);
+            this.clientB.end();
 
             assert.equals(this.cm.capturedClients.length, 2);
             assert.equals(this.cm.capturedClients.indexOf(this.clientB), -1);
