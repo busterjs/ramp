@@ -5,7 +5,7 @@ var http = require("http");
 var vm = require("vm");
 var faye = require("faye");
 var busterServer = require("./../lib/buster-capture-server");
-var sessionMiddlewareSession = require("./../lib/session/session")
+var bCapServSession = require("./../lib/session")
 
 var h = require("./test-helper");
 
@@ -72,8 +72,8 @@ buster.testCase("Session middleware", {
 
     "test posting with validation error": function (done) {
         var self = this;
-        this.stub(sessionMiddlewareSession, "validate");
-        sessionMiddlewareSession.validate.returns("An error.");
+        this.stub(bCapServSession, "validate");
+        bCapServSession.validate.returns("An error.");
 
         h.request({path: "/sessions", method: "POST"}, function (res, body) {
             assert.equals(500, res.statusCode);
