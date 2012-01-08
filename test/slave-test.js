@@ -8,7 +8,7 @@ var fs = require("fs");
 var http = require("http");
 var h = require("./test-helper");
 
-buster.testCase("Slaves", {
+buster.testCase("Slave", {
     setUp: function (done) {
         var self = this;
         this.httpServer = http.createServer(function (req, res) {
@@ -27,7 +27,7 @@ buster.testCase("Slaves", {
         this.httpServer.close();
     },
 
-    "test different slaves gets different URLs": function (done) {
+    "instances gets different URLs": function (done) {
         var slaves = [];
         this.busterServer.oncapture = function (req, res, slave) {
             slaves.push(slave);
@@ -43,7 +43,7 @@ buster.testCase("Slaves", {
         h.request({path: this.busterServer.capturePath, method: "GET"}, function () {}).end();
     },
 
-    "slave with header resource": {
+    "with header resource": {
         setUp: function (done) {
             var self = this;
 
@@ -62,7 +62,7 @@ buster.testCase("Slaves", {
             }).end();
         },
 
-        "test serves frameset": function (done) {
+        "serves frameset": function (done) {
             h.request({path: this.slave.url, method: "GET"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 200);
                 buster.assert.match(body, '<frame src="/slaveHeader/" />');
@@ -71,7 +71,7 @@ buster.testCase("Slaves", {
             }).end();
         },
 
-        "test creates resource set": function (done) {
+        "creates resource set": function (done) {
             h.request({path: "/slaveHeader/", method: "GET"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 200);
                 buster.assert.equals(body, "Hello, World!");
@@ -79,7 +79,7 @@ buster.testCase("Slaves", {
             }).end();
         },
 
-        "test setting new header removes old header": function (done) {
+        "removes old header when setting new header": function (done) {
             var self = this;
             this.busterServer.headerResourceSet.contextPath = "/foo";
 
@@ -95,7 +95,7 @@ buster.testCase("Slaves", {
         }
     },
 
-    "with a slave": {
+    "instance": {
         setUp: function (done) {
             var self = this;
             this.busterServer.oncapture = function (req, res, slave) {
@@ -109,7 +109,7 @@ buster.testCase("Slaves", {
             }).end();
         },
 
-        "should remove slave resource set when destroying": function (done) {
+        "removes slave resource set when destroying": function (done) {
             var self = this;
             h.request({path: this.slave.url + "/env.js"}, function (res, body) {
                 assert.equals(res.statusCode, 200);
@@ -135,20 +135,20 @@ buster.testCase("Slaves", {
                 }).end();
             },
 
-            "should be served as text/html": function () {
+            "is served as text/html": function () {
                 assert.equals(this.res.statusCode, 200);
                 assert.equals(this.res.headers["content-type"], "text/html");
             },
 
-            "should serve frameset": function () {
+            "serves frameset": function () {
                 assert.match(this.body, "<frameset");
             },
 
-            "should serve control frame": function () {
+            "serves control frame": function () {
                 assert.match(this.body, '<frame src="' + this.slave.url + '/control_frame.html" id="control_frame" />');
             },
 
-            "should serve session frame with no session loaded": function () {
+            "serves session frame with no session loaded": function () {
                 assert.match(this.body, '<frame id="slave_frame" />');
             },
         },
@@ -164,15 +164,15 @@ buster.testCase("Slaves", {
                 }).end();
             },
 
-            "test responds with 200 OK": function () {
+            "responds with 200 OK": function () {
                 assert.equals(this.res.statusCode, 200);
             },
 
-            "test serves with correct content-type": function () {
+            "serves with correct content-type": function () {
                 assert.equals(this.res.headers["content-type"], "application/javascript");
             },
 
-            "test in clean scope": function () {
+            "in clean scope": function () {
                 var scope = {};
                 require("vm").runInNewContext(this.body, scope);
 
@@ -183,7 +183,7 @@ buster.testCase("Slaves", {
                 assert.equals(this.slave.id, scope.buster.env.slaveId);
             },
 
-            "test in scope where buster is already defined": function () {
+            "in scope where buster is already defined": function () {
                 var scope = {buster: {}};
                 require("vm").runInNewContext(this.body, scope);
                 assert("buster" in scope);
@@ -193,7 +193,7 @@ buster.testCase("Slaves", {
             }
         },
 
-        "test setting custom env variables": function (done) {
+        "custom env variables": function (done) {
             this.slave.env.foo = "bar";
 
             h.request({path: this.slave.url + "/env.js"}, function (res, body) {
@@ -207,7 +207,7 @@ buster.testCase("Slaves", {
             }).end();
         },
 
-        "test control_frame.html loads all scripts": function (done) {
+        "loads all scripts in control_frame.html": function (done) {
             var self = this;
             this.slave.resourceSet.load = [
                 "/foo.js",
@@ -225,7 +225,7 @@ buster.testCase("Slaves", {
             }).end();
         },
 
-        "test slave serves all scripts": function (done) {
+        "serves all scripts": function (done) {
             var self = this;
 
             this.slave.resourceSet.load = ["/foo.js", "/bar/baz.js"];
@@ -244,7 +244,7 @@ buster.testCase("Slaves", {
             }).end();
         },
 
-        "test slave serves all built-in scripts": function (done) {
+        "serves all built-in scripts": function (done) {
             var self = this;
             var numResponses = 0;
             var handler = function (res, script) {
@@ -262,7 +262,7 @@ buster.testCase("Slaves", {
             }
         },
 
-        "test publishes /session/start when session is present and is ready": function (done) {
+        "publishes /session/start when session is present and is ready": function (done) {
             this.busterServer.bayeux.subscribe("/" + this.slave.id + "/session/start", function (sess) {
                 assert.equals(actualSession.toJSON(), sess);
                 done();
