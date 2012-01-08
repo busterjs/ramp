@@ -27,18 +27,6 @@ buster.testCase("Slaves", {
         this.httpServer.close();
     },
 
-    "test creating/capturing slave": function (done) {
-        this.stub(bCapServSlave, "startSession");
-        this.busterServer.oncapture =  function (req, res, slave) {
-            assert(typeof(slave), "object");
-            refute(slave.startSession.called);
-            res.end();
-            done();
-        };
-
-        h.request({path: this.busterServer.capturePath, method: "GET"}, function () {}).end();
-    },
-
     "test different slaves gets different URLs": function (done) {
         var slaves = [];
         this.busterServer.oncapture = function (req, res, slave) {
