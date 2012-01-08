@@ -6,7 +6,6 @@ var vm = require("vm");
 var faye = require("faye");
 var busterServer = require("./../lib/buster-capture-server");
 var bCapServSession = require("./../lib/session")
-var bCapServCapturedClient = require("./../lib/slave")
 
 var h = require("./test-helper");
 
@@ -30,9 +29,9 @@ buster.testCase("Session", {
             res.end();
         });
         this.httpServer.listen(h.SERVER_PORT, function () {
-            self.busterServer.oncapture = function (req, res, client) {
+            self.busterServer.oncapture = function (req, res, slave) {
                 delete self.busterServer.oncapture;
-                self.capturedClient = client;
+                self.slave = slave;
                 res.end();
                 done();
             };
@@ -59,7 +58,7 @@ buster.testCase("Session", {
     },
 
     "test emits event with session info when creating session": function (done) {
-        var sessionStart = this.spy(this.capturedClient, "startSession");
+        var sessionStart = this.spy(this.slave, "startSession");
         h.request({path: "/sessions", method: "POST"}, function (res, body) {
             assert(sessionStart.calledOnce);
             var sessionInfo = sessionStart.getCall(0).args[0];
@@ -156,7 +155,7 @@ buster.testCase("Session", {
 
         "test killing first session with second session created": function (done) {
             var self = this;
-            var sessionStart = this.spy(this.capturedClient, "startSession");
+            var sessionStart = this.spy(this.slave, "startSession");
             h.request({path: "/sessions", method: "POST"}, function (res, body) {
                 var newSession = JSON.parse(body);
                 h.request({path: self.session.rootPath, method: "DELETE"}, function (res, body) {
@@ -169,8 +168,8 @@ buster.testCase("Session", {
         },
 
         "test killing session that isn't current does nothing but deleting the session": function (done) {
-            var sessionStart = this.spy(this.capturedClient, "startSession");
-            var sessionEnd = this.spy(this.capturedClient, "endSession");
+            var sessionStart = this.spy(this.slave, "startSession");
+            var sessionEnd = this.spy(this.slave, "endSession");
 
             h.request({path: "/sessions", method: "POST"}, function (res, body) {
                 h.request({path: JSON.parse(body).rootPath, method: "DELETE"}, function () {
@@ -216,7 +215,7 @@ buster.testCase("Session", {
     },
 
     "test programmatically created session is created and loaded": function (done) {
-        this.stub(this.capturedClient, "startSession", function (session) {
+        this.stub(this.slave, "startSession", function (session) {
             assert(session.resourceSet.resources.hasOwnProperty("/foo"));
             done();
         });
@@ -269,7 +268,7 @@ buster.testCase("Session", {
     "test destroying session in queue with HTTP": function (done) {
         var self = this;
 
-        var spy = this.spy(this.capturedClient, "endSession");
+        var spy = this.spy(this.slave, "endSession");
 
         this.busterServer.createSession({load:[],resources:[]});
         this.busterServer.createSession({load:[],resources:[]});
