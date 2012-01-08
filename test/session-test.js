@@ -22,7 +22,7 @@ function waitFor(num, callback) {
     };
 }
 
-buster.testCase("Session middleware", {
+buster.testCase("Session", {
     setUp: function (done) {
         var self = this;
         this.httpServer = http.createServer(function (req, res) {
