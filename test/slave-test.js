@@ -398,15 +398,6 @@ buster.testCase("Slaves", {
             h.request({path: this.busterServer.capturePath, method: "GET"}, function () {}).end();
         },
 
-        "test destroying one slave": function () {
-            this.spy(this.slaveB, "end");
-            this.slaveB.end();
-
-            assert.equals(this.busterServer.slaves.length, 2);
-            assert.equals(this.busterServer.slaves.indexOf(this.slaveB), -1);
-            assert(this.slaveB.end.calledOnce);
-        },
-
         "test creating session lists slaves": function (done) {
             var self = this;
             h.request({path: "/sessions", method: "POST"}, function (res, body) {
