@@ -106,6 +106,17 @@ buster.testCase("Buster Capture Server", {
                 }.bind(this);
             },
 
+            "captures with custom capture URL": function (done) {
+                this.server.oncapture = function (req, res, slave) {
+                    res.end();
+                    done();
+                };
+
+                this.server.capturePath = "/foo";
+                h.request({ path: "/foo", method: "GET" }, function () {}).end();
+                assert(true);
+            },
+
             "having multiple slaves created": {
                 setUp: function (done) {
                     var self = this;

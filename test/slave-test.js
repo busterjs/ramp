@@ -86,38 +86,6 @@ buster.testCase("Slaves", {
         h.request({path: this.busterServer.capturePath, method: "GET"}, function () {}).end();
     },
 
-    "test default capture URL": function (done) {
-        this.busterServer.oncapture = function (req, res, slave) {
-            res.end();
-            done();
-        };
-
-        h.request({ path: this.busterServer.capturePath, method: "GET" }, function () {}).end();
-        assert(true);
-    },
-
-    "test custom capture URL": function (done) {
-        this.busterServer.oncapture = function (req, res, slave) {
-            res.end();
-            done();
-        };
-
-        this.busterServer.capturePath = "/foo";
-        h.request({ path: "/foo", method: "GET" }, function () {}).end();
-        assert(true);
-    },
-
-    "test creating slave without oncapture handler": function (done) {
-        var self = this;
-
-        h.request({path: this.busterServer.capturePath, method: "GET"}, function (res, body) {
-            assert.equals(res.statusCode, 400);
-            assert.match(body, "'oncapture' handler");
-            assert.equals(self.busterServer.slaves.length, 0);
-            done()
-        }).end();
-    },
-
     "slave with header resource": {
         setUp: function (done) {
             var self = this;
