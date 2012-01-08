@@ -119,27 +119,49 @@ buster.testCase("Buster Capture Server", {
                 }).end();
             },
 
-            "unloads slaves that end": function (done) {
-                var self = this;
-                h.request({path: this.server.capturePath, method: "GET"}, function (res, body) {
-                    h.request({path: self.server.capturePath, method: "GET"}, function (res, body) {
+            "having multiple slaves created": {
+                setUp: function (done) {
+                    var self = this;
+                    h.request({path: this.server.capturePath, method: "GET"}, function (res, body) {
                         h.request({path: self.server.capturePath, method: "GET"}, function (res, body) {
-
-                            var slaveToEnd = self.oncaptureSlaves[1];
-
-                            slaveToEnd.on("end", function () {
-                                assert.equals(self.server.slaves.length, 2);
-                                assert.inArray(self.server.slaves, self.oncaptureSlaves[0]);
-                                refute.inArray(self.server.slaves, self.oncaptureSlaves[1]);
-                                assert.inArray(self.server.slaves, self.oncaptureSlaves[2]);
+                            h.request({path: self.server.capturePath, method: "GET"}, function (res, body) {
                                 done();
-                            });
-
-                            h.emulateCloseBrowser(slaveToEnd);
-
+                            }).end();
                         }).end();
                     }).end();
-                }).end();
+                },
+
+                "unloads slaves that end": function (done) {
+                    var self = this;
+                    var slaveToEnd = self.oncaptureSlaves[1];
+
+                    slaveToEnd.on("end", function () {
+                        assert.equals(self.server.slaves.length, 2);
+                        assert.inArray(self.server.slaves, self.oncaptureSlaves[0]);
+                        refute.inArray(self.server.slaves, self.oncaptureSlaves[1]);
+                        assert.inArray(self.server.slaves, self.oncaptureSlaves[2]);
+                        done();
+                    });
+
+                    h.emulateCloseBrowser(slaveToEnd);
+                },
+
+                "lists slaves when creating session": function (done) {
+                    var self = this;
+                    h.request({path: "/sessions", method: "POST"}, function (res, body) {
+                        var response = JSON.parse(body);
+
+                        assert.match(response.slaves, [
+                            {id: self.oncaptureSlaves[0].id},
+                            {id: self.oncaptureSlaves[1].id},
+                            {id: self.oncaptureSlaves[2].id}
+                        ]);
+                        
+                        done();
+                    }).end(new Buffer(JSON.stringify({
+                        resourceSet: {load: [],resources: {}}
+                    }), "utf8"));
+                }
             }
         },
 

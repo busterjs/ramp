@@ -370,48 +370,5 @@ buster.testCase("Slaves", {
                 });
             }, bayeuxClient);
         }
-    },
-
-    "with multiple slaves": {
-        setUp: function (done) {
-            var self = this;
-            var i = 0;
-
-            this.busterServer.oncapture = function (req, res, slave) {
-                switch (++i) {
-                case 1:
-                    self.slaveA = slave;
-                    break;
-                case 2:
-                    self.slaveB = slave;
-                    break;
-                case 3:
-                    self.slaveC = slave;
-                    done()
-                    break;
-                }
-
-                res.end();
-            };
-
-            h.request({path: this.busterServer.capturePath, method: "GET"}, function () {}).end();
-            h.request({path: this.busterServer.capturePath, method: "GET"}, function () {}).end();
-            h.request({path: this.busterServer.capturePath, method: "GET"}, function () {}).end();
-        },
-
-        "test creating session lists slaves": function (done) {
-            var self = this;
-            h.request({path: "/sessions", method: "POST"}, function (res, body) {
-                var response = JSON.parse(body);
-
-                assert.match(response.slaves, [
-                    {id: self.slaveA.id}, {id: self.slaveB.id}, {id: self.slaveC.id}
-                ]);
-                
-                done();
-            }).end(new Buffer(JSON.stringify({
-                resourceSet: {load: [],resources: {}}
-            }), "utf8"));
-        }
     }
 });
