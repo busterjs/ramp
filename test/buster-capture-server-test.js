@@ -16,7 +16,7 @@ function createServer(done) {
     return httpServer;
 }
 
-buster.testCase("Main module", {
+buster.testCase("Buster Capture Server", {
     "attached to server": {
         setUp: function (done) {
             this.httpServer = createServer(done);
