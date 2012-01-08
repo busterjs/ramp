@@ -112,7 +112,7 @@ buster.testCase("Client middleware", {
         var self = this;
 
         h.request({path: this.busterServer.capturePath, method: "GET"}, function (res, body) {
-            assert.equals(res.statusCode, 500);
+            assert.equals(res.statusCode, 400);
             assert.match(body, "'oncapture' handler");
             assert.equals(self.busterServer.capturedClients.length, 0);
             done()

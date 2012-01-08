@@ -71,7 +71,7 @@ buster.testCase("Session middleware", {
     "test posting malformed data": function (done) {
         var self = this;
         h.request({path: "/sessions", method: "POST"}, function (res, body) {
-            assert.equals(500, res.statusCode);
+            assert.equals(400, res.statusCode);
             assert.match(body, /invalid JSON/i);
             assert.equals(0, self.busterServer.sessions.length);
             done();
@@ -84,7 +84,7 @@ buster.testCase("Session middleware", {
         bCapServSession.validate.returns("An error.");
 
         h.request({path: "/sessions", method: "POST"}, function (res, body) {
-            assert.equals(500, res.statusCode);
+            assert.equals(400, res.statusCode);
             assert.match(body, "An error.");
             assert.equals(0, self.busterServer.sessions.length);
             done();
