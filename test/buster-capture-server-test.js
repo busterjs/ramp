@@ -106,19 +106,6 @@ buster.testCase("Buster Capture Server", {
                 }.bind(this);
             },
 
-            "captures multiple slaves": function (done) {
-                var self = this;
-
-                h.request({path: this.server.capturePath, method: "GET"}, function (res, body) {
-                    h.request({path: self.server.capturePath, method: "GET"}, function (res, body) {
-                        h.request({path: self.server.capturePath, method: "GET"}, function (res, body) {
-                            assert.equals(self.server.slaves.length, 3);
-                            done();
-                        }).end();
-                    }).end();
-                }).end();
-            },
-
             "having multiple slaves created": {
                 setUp: function (done) {
                     var self = this;
@@ -129,6 +116,10 @@ buster.testCase("Buster Capture Server", {
                             }).end();
                         }).end();
                     }).end();
+                },
+
+                "stores slaves": function () {
+                    assert.equals(this.server.slaves.length, 3);
                 },
 
                 "unloads slaves that end": function (done) {
