@@ -6,7 +6,7 @@ var vm = require("vm");
 var faye = require("faye");
 var busterServer = require("./../lib/buster-capture-server");
 var bCapServSession = require("./../lib/session")
-var bCapServCapturedClient = require("./../lib/captured-client")
+var bCapServCapturedClient = require("./../lib/slave")
 
 var h = require("./test-helper");
 
@@ -121,7 +121,7 @@ buster.testCase("Session middleware", {
             assert("id" in response);
             assert.equals(response.bayeuxClientPath, response.rootPath + "/messaging");
 
-            assert("clients" in response);
+            assert("slaves" in response);
         },
 
         "test killing sessions": function (done) {

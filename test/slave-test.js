@@ -1,7 +1,7 @@
 var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
-var captureMiddlewareClient = require("./../lib/captured-client");
+var bCapServSlave = require("./../lib/slave");
 var busterServer = require("./../lib/buster-capture-server");
 var faye = require("faye");
 
@@ -9,7 +9,7 @@ var fs = require("fs");
 var http = require("http");
 var h = require("./test-helper");
 
-buster.testCase("Client middleware", {
+buster.testCase("Slaves", {
     setUp: function (done) {
         var self = this;
         this.httpServer = http.createServer(function (req, res) {
@@ -28,11 +28,11 @@ buster.testCase("Client middleware", {
         this.httpServer.close();
     },
 
-    "test creating/capturing client": function (done) {
-        this.stub(captureMiddlewareClient, "startSession");
-        this.busterServer.oncapture =  function (req, res, client) {
-            assert(typeof(client), "object");
-            refute(client.startSession.called);
+    "test creating/capturing slave": function (done) {
+        this.stub(bCapServSlave, "startSession");
+        this.busterServer.oncapture =  function (req, res, slave) {
+            assert(typeof(slave), "object");
+            refute(slave.startSession.called);
             res.end();
             done();
         };
@@ -40,45 +40,45 @@ buster.testCase("Client middleware", {
         h.request({path: this.busterServer.capturePath, method: "GET"}, function () {}).end();
     },
 
-    "test capturing client with session in progress": function (done) {
+    "test capturing slave with session in progress": function (done) {
         this.busterServer.createSession({});
-        this.stub(captureMiddlewareClient, "startSession");
-        this.busterServer.oncapture = function (req, res, client) {
-            assert(client.startSession.calledOnce);
+        this.stub(bCapServSlave, "startSession");
+        this.busterServer.oncapture = function (req, res, slave) {
+            assert(slave.startSession.calledOnce);
             res.end();
             done();
         };
         h.request({path: this.busterServer.capturePath, method: "GET"}, function () {}).end();
     },
 
-    "test capturing client with none-joinable session in progress": function (done) {
+    "test capturing slave with none-joinable session in progress": function (done) {
         var self = this;
-        this.stub(captureMiddlewareClient, "startSession");
+        this.stub(bCapServSlave, "startSession");
 
-        this.busterServer.oncapture = function (req, res, client) {
+        this.busterServer.oncapture = function (req, res, slave) {
             res.end();
         };
 
         h.request({path: this.busterServer.capturePath, method: "GET"}, function () {
-            // Start the session as soon as the first client is captured
+            // Start the session as soon as the first slave is captured
             self.busterServer.createSession({joinable: false});
 
-            // TODO: test that the 2nd client is the one that isn't started.
+            // TODO: test that the 2nd slave is the one that isn't started.
             h.request({path: self.busterServer.capturePath, method: "GET"}, function () {
-                assert(captureMiddlewareClient.startSession.calledOnce);
+                assert(bCapServSlave.startSession.calledOnce);
                 done();
             }).end();
         }).end();
     },
 
-    "test different clients gets different URLs": function (done) {
-        var clients = [];
-        this.busterServer.oncapture = function (req, res, client) {
-            clients.push(client);
+    "test different slaves gets different URLs": function (done) {
+        var slaves = [];
+        this.busterServer.oncapture = function (req, res, slave) {
+            slaves.push(slave);
             res.end();
 
-            if (clients.length == 2) {
-                refute.equals(clients[0].url, clients[1].url);
+            if (slaves.length == 2) {
+                refute.equals(slaves[0].url, slaves[1].url);
                 done();
             }
         };
@@ -88,7 +88,7 @@ buster.testCase("Client middleware", {
     },
 
     "test default capture URL": function (done) {
-        this.busterServer.oncapture = function (req, res, client) {
+        this.busterServer.oncapture = function (req, res, slave) {
             res.end();
             done();
         };
@@ -98,7 +98,7 @@ buster.testCase("Client middleware", {
     },
 
     "test custom capture URL": function (done) {
-        this.busterServer.oncapture = function (req, res, client) {
+        this.busterServer.oncapture = function (req, res, slave) {
             res.end();
             done();
         };
@@ -108,18 +108,18 @@ buster.testCase("Client middleware", {
         assert(true);
     },
 
-    "test creating client without oncapture handler": function (done) {
+    "test creating slave without oncapture handler": function (done) {
         var self = this;
 
         h.request({path: this.busterServer.capturePath, method: "GET"}, function (res, body) {
             assert.equals(res.statusCode, 400);
             assert.match(body, "'oncapture' handler");
-            assert.equals(self.busterServer.capturedClients.length, 0);
+            assert.equals(self.busterServer.slaves.length, 0);
             done()
         }).end();
     },
 
-    "client with header resource": {
+    "slave with header resource": {
         setUp: function (done) {
             var self = this;
 
@@ -127,9 +127,9 @@ buster.testCase("Client middleware", {
                 resources: {"/": {content: "Hello, World!"}}
             });
 
-            this.busterServer.oncapture = function (req, res, client) {
+            this.busterServer.oncapture = function (req, res, slave) {
                 delete self.busterServer.oncapture;
-                self.client = client;
+                self.slave = slave;
                 res.end();
                 done();
             };
@@ -139,16 +139,16 @@ buster.testCase("Client middleware", {
         },
 
         "test serves frameset": function (done) {
-            h.request({path: this.client.url, method: "GET"}, function (res, body) {
+            h.request({path: this.slave.url, method: "GET"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 200);
-                buster.assert.match(body, '<frame src="/clientHeader/" />');
+                buster.assert.match(body, '<frame src="/slaveHeader/" />');
                 buster.assert.match(body, '<frameset rows="0px,80px,*"');
                 done();
             }).end();
         },
 
         "test creates resource set": function (done) {
-            h.request({path: "/clientHeader/", method: "GET"}, function (res, body) {
+            h.request({path: "/slaveHeader/", method: "GET"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 200);
                 buster.assert.equals(body, "Hello, World!");
                 done();
@@ -171,12 +171,12 @@ buster.testCase("Client middleware", {
         }
     },
 
-    "with a client": {
+    "with a slave": {
         setUp: function (done) {
             var self = this;
-            this.busterServer.oncapture = function (req, res, client) {
+            this.busterServer.oncapture = function (req, res, slave) {
                 delete self.busterServer.oncapture;
-                self.client = client;
+                self.slave = slave;
                 res.end();
                 done();
             };
@@ -185,14 +185,14 @@ buster.testCase("Client middleware", {
             }).end();
         },
 
-        "should remove client resource set when destroying": function (done) {
+        "should remove slave resource set when destroying": function (done) {
             var self = this;
-            h.request({path: this.client.url + "/env.js"}, function (res, body) {
+            h.request({path: this.slave.url + "/env.js"}, function (res, body) {
                 assert.equals(res.statusCode, 200);
 
-                self.client.end();
+                self.slave.end();
 
-                h.request({path: self.client.url  + "/env.js"}, function (res, body) {
+                h.request({path: self.slave.url  + "/env.js"}, function (res, body) {
                     assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
                     done();
                 }).end();
@@ -203,7 +203,7 @@ buster.testCase("Client middleware", {
         "index page": {
             setUp: function (done) {
                 var self = this;
-                h.request({path: this.client.url}, function (res, body) {
+                h.request({path: this.slave.url}, function (res, body) {
                     self.res = res;
                     self.body = body;
                     done();
@@ -220,18 +220,18 @@ buster.testCase("Client middleware", {
             },
 
             "should serve control frame": function () {
-                assert.match(this.body, '<frame src="' + this.client.url + '/control_frame.html" id="control_frame" />');
+                assert.match(this.body, '<frame src="' + this.slave.url + '/control_frame.html" id="control_frame" />');
             },
 
             "should serve session frame with no session loaded": function () {
-                assert.match(this.body, '<frame id="client_frame" />');
+                assert.match(this.body, '<frame id="slave_frame" />');
             },
         },
 
         "serving env.js": {
             setUp: function (done) {
                 var self = this;
-                h.request({path: this.client.url + "/env.js"}, function (res, body) {
+                h.request({path: this.slave.url + "/env.js"}, function (res, body) {
                     self.res = res;
                     self.body = body;
 
@@ -255,7 +255,7 @@ buster.testCase("Client middleware", {
                 assert("env" in scope.buster);
                 assert.equals(typeof(scope.buster.env), "object");
                 assert.equals(scope.buster.env.bayeuxPath, "/sessions/messaging");
-                assert.equals(this.client.id, scope.buster.env.clientId);
+                assert.equals(this.slave.id, scope.buster.env.slaveId);
             },
 
             "test in scope where buster is already defined": function () {
@@ -269,9 +269,9 @@ buster.testCase("Client middleware", {
         },
 
         "test setting custom env variables": function (done) {
-            this.client.env.foo = "bar";
+            this.slave.env.foo = "bar";
 
-            h.request({path: this.client.url + "/env.js"}, function (res, body) {
+            h.request({path: this.slave.url + "/env.js"}, function (res, body) {
                 assert.equals(res.statusCode, 200);
                 assert.equals(res.headers["content-type"], "application/javascript");
 
@@ -284,34 +284,34 @@ buster.testCase("Client middleware", {
 
         "test control_frame.html loads all scripts": function (done) {
             var self = this;
-            this.client.resourceSet.load = [
+            this.slave.resourceSet.load = [
                 "/foo.js",
                 "/bar.js",
                 "/baz/maz.js"
             ];
 
-            h.request({path: this.client.url + "/control_frame.html"}, function (res, body) {
+            h.request({path: this.slave.url + "/control_frame.html"}, function (res, body) {
                 assert.equals(res.statusCode, 200);
                 assert.equals(res.headers["content-type"], "text/html");
-                assert.match(body, self.client.url + "/foo.js");
-                assert.match(body, self.client.url + "/bar.js");
-                assert.match(body, self.client.url + "/baz/maz.js");
+                assert.match(body, self.slave.url + "/foo.js");
+                assert.match(body, self.slave.url + "/bar.js");
+                assert.match(body, self.slave.url + "/baz/maz.js");
                 done();
             }).end();
         },
 
-        "test client serves all scripts": function (done) {
+        "test slave serves all scripts": function (done) {
             var self = this;
 
-            this.client.resourceSet.load = ["/foo.js", "/bar/baz.js"];
-            this.client.resourceSet.addResource("/foo.js", {content:"doing it"});
-            this.client.resourceSet.addResource("/bar/baz.js", {content:"buster yo"});
+            this.slave.resourceSet.load = ["/foo.js", "/bar/baz.js"];
+            this.slave.resourceSet.addResource("/foo.js", {content:"doing it"});
+            this.slave.resourceSet.addResource("/bar/baz.js", {content:"buster yo"});
 
-            h.request({path: this.client.url + "/foo.js", method: "GET"}, function (res, body) {
+            h.request({path: this.slave.url + "/foo.js", method: "GET"}, function (res, body) {
                 assert.equals(200, res.statusCode);
                 assert.equals("doing it", body);
 
-                h.request({path: self.client.url + "/bar/baz.js", method: "GET"}, function (res, body) {
+                h.request({path: self.slave.url + "/bar/baz.js", method: "GET"}, function (res, body) {
                     assert.equals(200, res.statusCode);
                     assert.equals("buster yo", body);
                     done();
@@ -319,45 +319,45 @@ buster.testCase("Client middleware", {
             }).end();
         },
 
-        "test client serves all built-in scripts": function (done) {
+        "test slave serves all built-in scripts": function (done) {
             var self = this;
             var numResponses = 0;
             var handler = function (res, script) {
                 assert.equals(200, res.statusCode, "Built-in script '" + script + "' failed to load");
                 numResponses++;
-                if (numResponses == self.client.resourceSet.load.length) done();
+                if (numResponses == self.slave.resourceSet.load.length) done();
             }
 
-            for (var i = 0, ii = this.client.resourceSet.load.length; i < ii; i++) {
+            for (var i = 0, ii = this.slave.resourceSet.load.length; i < ii; i++) {
                 (function (script) {
-                    h.request({path: self.client.url + script, method: "GET"}, function (res, body) {
+                    h.request({path: self.slave.url + script, method: "GET"}, function (res, body) {
                         handler(res, script);
                     }).end();
-                }(this.client.resourceSet.load[i]));
+                }(this.slave.resourceSet.load[i]));
             }
         },
 
         "test publishes /session/start when session is present and is ready": function (done) {
-            this.busterServer.bayeux.subscribe("/" + this.client.id + "/session/start", function (sess) {
+            this.busterServer.bayeux.subscribe("/" + this.slave.id + "/session/start", function (sess) {
                 assert.equals(sess, {foo: "bar"});
                 done();
             });
 
-            this.client.startSession({toJSON: function () { return {foo: "bar"}}});
-            this.client.bayeuxClient.publish("/" + this.client.id + "/ready", "abc123");
+            this.slave.startSession({toJSON: function () { return {foo: "bar"}}});
+            this.slave.bayeuxClient.publish("/" + this.slave.id + "/ready", "abc123");
         },
 
         "test ready event broadcasts session": function (done) {
-            this.busterServer.bayeux.subscribe("/" + this.client.id + "/session/start", function (sess) {
+            this.busterServer.bayeux.subscribe("/" + this.slave.id + "/session/start", function (sess) {
                 assert(true);
                 done();
             });
 
-            this.client.currentSession = {toJSON: function () { return {foo: "bar"}}};
-            this.busterServer.bayeux.publish("/" + this.client.id + "/ready", "abc123");
+            this.slave.currentSession = {toJSON: function () { return {foo: "bar"}}};
+            this.busterServer.bayeux.publish("/" + this.slave.id + "/ready", "abc123");
         },
 
-        "test faye disconnect destroys the client": function (done) {
+        "test faye disconnect destroys the slave": function (done) {
             var self = this;
             var bayeuxClient = new faye.Client(
                 "http://localhost:"
@@ -366,11 +366,11 @@ buster.testCase("Client middleware", {
             );
 
             assert(true);
-            this.stub(this.client, "end", done);
+            this.stub(this.slave, "end", done);
 
             bayeuxClient.connect(function () {
                 var publication = bayeuxClient.publish(
-                    "/" + self.client.id + "/ready",
+                    "/" + self.slave.id + "/ready",
                     bayeuxClient.getClientId()
                 );
 
@@ -381,21 +381,21 @@ buster.testCase("Client middleware", {
         }
     },
 
-    "with multiple clients": {
+    "with multiple slaves": {
         setUp: function (done) {
             var self = this;
             var i = 0;
 
-            this.busterServer.oncapture = function (req, res, client) {
+            this.busterServer.oncapture = function (req, res, slave) {
                 switch (++i) {
                 case 1:
-                    self.clientA = client;
+                    self.slaveA = slave;
                     break;
                 case 2:
-                    self.clientB = client;
+                    self.slaveB = slave;
                     break;
                 case 3:
-                    self.clientC = client;
+                    self.slaveC = slave;
                     done()
                     break;
                 }
@@ -408,22 +408,22 @@ buster.testCase("Client middleware", {
             h.request({path: this.busterServer.capturePath, method: "GET"}, function () {}).end();
         },
 
-        "test destroying one client": function () {
-            this.spy(this.clientB, "end");
-            this.clientB.end();
+        "test destroying one slave": function () {
+            this.spy(this.slaveB, "end");
+            this.slaveB.end();
 
-            assert.equals(this.busterServer.capturedClients.length, 2);
-            assert.equals(this.busterServer.capturedClients.indexOf(this.clientB), -1);
-            assert(this.clientB.end.calledOnce);
+            assert.equals(this.busterServer.slaves.length, 2);
+            assert.equals(this.busterServer.slaves.indexOf(this.slaveB), -1);
+            assert(this.slaveB.end.calledOnce);
         },
 
-        "test creating session lists clients": function (done) {
+        "test creating session lists slaves": function (done) {
             var self = this;
             h.request({path: "/sessions", method: "POST"}, function (res, body) {
                 var response = JSON.parse(body);
 
-                assert.match(response.clients, [
-                    {id: self.clientA.id}, {id: self.clientB.id}, {id: self.clientC.id}
+                assert.match(response.slaves, [
+                    {id: self.slaveA.id}, {id: self.slaveB.id}, {id: self.slaveC.id}
                 ]);
                 
                 done();

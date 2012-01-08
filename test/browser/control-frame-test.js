@@ -29,7 +29,7 @@
             this.cf = buster.create(buster.server.controlFrame);
             this.sandbox = sinon.sandbox.create();
 
-            delete buster.clientReady;
+            delete buster.slaveReady;
 
             this.env = {};
             this.originalEnv = buster.env;
@@ -45,7 +45,7 @@
             this.sandbox.stub(this.cf, "createBayeuxClient");
             var client = mockFaye();
             this.cf.createBayeuxClient.returns(client);
-            this.env.clientId = "123abc";
+            this.env.slaveId = "123abc";
             this.cf.listen();
 
             assertTrue(this.cf.bayeuxClient === client);
@@ -56,7 +56,7 @@
             Faye.Client.returns(mockFaye());
             Faye.Client.calledWithNew();
 
-            this.env.clientId = "123abc";
+            this.env.slaveId = "123abc";
             var bc = this.cf.createBayeuxClient();
 
             assertTrue(bc.subscribe.calledWith("/123abc/session/start"));
@@ -71,7 +71,7 @@
             assertTrue(this.cf.sessionEnd.calledOnce);
             assertTrue(this.cf.sessionEnd.calledWithExactly("yay"));
 
-            assertTrue(bc.publish.calledWithExactly("/" + this.env.clientId + "/ready", "abc123"));
+            assertTrue(bc.publish.calledWithExactly("/" + this.env.slaveId + "/ready", "abc123"));
         },
 
         "test sessionStart": function () {
@@ -81,19 +81,19 @@
             this.cf.sessionStart({resourceContextPath: "/foo", id: "abc123"});
             assertEquals("/foo/", this.cf.crossFrame().frame().src);
 
-            assertEquals(typeof(buster.clientReady), "function");
+            assertEquals(typeof(buster.slaveReady), "function");
 
             this.sandbox.stub(this.cf, "exposeBusterObject");
-            buster.clientReady();
+            buster.slaveReady();
             assert(this.cf.exposeBusterObject.calledOnce);
 
             this.cf.crossFrame._window.focus = sinon.spy();
             clock.tick(1);
             assert(this.cf.crossFrame._window.focus.calledOnce);
-            assertTrue(this.cf.bayeuxClient.publish.calledWith("/" + this.env.clientId + "/session/abc123/ready"));
+            assertTrue(this.cf.bayeuxClient.publish.calledWith("/" + this.env.slaveId + "/session/abc123/ready"));
         },
 
-        "test sessionEnd blanks src on the client frame": function () {
+        "test sessionEnd blanks src on the slave frame": function () {
             this.cf.crossFrame = mockCrossFrame();
             this.cf.sessionEnd({});
             assertEquals("", this.cf.crossFrame().frame().src);
@@ -127,7 +127,7 @@
 
         "test crossFrame": function () {
             var crossFrame = this.cf.crossFrame();
-            assertEquals("client_frame", crossFrame.targetFrameId);
+            assertEquals("slave_frame", crossFrame.targetFrameId);
         },
 
         "test crossFrame reuses the same object": function () {
