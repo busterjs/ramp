@@ -39,37 +39,6 @@ buster.testCase("Slaves", {
         h.request({path: this.busterServer.capturePath, method: "GET"}, function () {}).end();
     },
 
-    "test capturing slave with session in progress": function (done) {
-        this.busterServer.createSession({});
-        this.stub(bCapServSlave, "startSession");
-        this.busterServer.oncapture = function (req, res, slave) {
-            assert(slave.startSession.calledOnce);
-            res.end();
-            done();
-        };
-        h.request({path: this.busterServer.capturePath, method: "GET"}, function () {}).end();
-    },
-
-    "test capturing slave with none-joinable session in progress": function (done) {
-        var self = this;
-        this.stub(bCapServSlave, "startSession");
-
-        this.busterServer.oncapture = function (req, res, slave) {
-            res.end();
-        };
-
-        h.request({path: this.busterServer.capturePath, method: "GET"}, function () {
-            // Start the session as soon as the first slave is captured
-            self.busterServer.createSession({joinable: false});
-
-            // TODO: test that the 2nd slave is the one that isn't started.
-            h.request({path: self.busterServer.capturePath, method: "GET"}, function () {
-                assert(bCapServSlave.startSession.calledOnce);
-                done();
-            }).end();
-        }).end();
-    },
-
     "test different slaves gets different URLs": function (done) {
         var slaves = [];
         this.busterServer.oncapture = function (req, res, slave) {

@@ -117,6 +117,29 @@ buster.testCase("Buster Capture Server", {
                 assert(true);
             },
 
+            "captures slave with joinable session in progress": function (done) {
+                this.server.createSession({});
+                var stub = this.stub(bCapServSlave, "startSession");
+
+                h.request({path: this.server.capturePath, method: "GET"}, function () {
+                    assert(stub.calledOnce);
+                    done();
+                }).end();
+            },
+
+            "captures slave with none-joinable session in progress": function (done) {
+                var self = this;
+
+                h.request({path: this.server.capturePath, method: "GET"}, function () {
+                    self.server.createSession({joinable: false});
+                    var stub = self.stub(bCapServSlave, "startSession");
+                    h.request({path: self.server.capturePath, method: "GET"}, function () {
+                        refute(stub.called);
+                        done();
+                    }).end();
+                }).end();
+            },
+
             "having multiple slaves created": {
                 setUp: function (done) {
                     var self = this;

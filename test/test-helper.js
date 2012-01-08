@@ -19,9 +19,7 @@ module.exports = {
         return req;
     },
 
-    // Opening and closing a faye client yields the same code paths as
-    // opening and closing an actual browser.
-    emulateCloseBrowser: function (slave) {
+    bayeuxClientForSlave: function (slave, cb) {
         var bayeuxClient = new faye.Client(
             "http://localhost:"
                 + this.SERVER_PORT
@@ -35,8 +33,18 @@ module.exports = {
             );
 
             publication.callback(function () {
-                bayeuxClient.disconnect();
+                if (cb) cb();
             });
         }, bayeuxClient);
+
+        return bayeuxClient;
+    },
+
+    // Opening and closing a faye client yields the same code paths as
+    // opening and closing an actual browser.
+    emulateCloseBrowser: function (slave) {
+        var bayeuxClient = this.bayeuxClientForSlave(slave, function () {
+            bayeuxClient.disconnect();
+        });
     }
 };
