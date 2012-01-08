@@ -322,20 +322,6 @@ buster.testCase("Client middleware", {
             }
         },
 
-        "test binding to session middleware": function () {
-            var session = {foo: "test"};
-            var sessionMiddleware = this.busterServer;
-
-            var startStub = this.stub(captureMiddlewareClient, "startSession");
-            sessionMiddleware.temporarySessionEventEmitter.emit("session:start", session);
-            assert(startStub.calledOnce);
-            assert(startStub.calledWithExactly(session));
-
-            var endStub = this.stub(captureMiddlewareClient, "endSession");
-            sessionMiddleware.temporarySessionEventEmitter.emit("session:end");
-            assert(endStub.calledOnce);
-        },
-
         "test publishes /session/start when session is present and is ready": function (done) {
             this.busterServer.bayeux.subscribe("/" + this.client.id + "/session/start", function (sess) {
                 assert.equals(sess, {foo: "bar"});

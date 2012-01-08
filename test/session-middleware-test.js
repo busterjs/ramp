@@ -6,6 +6,7 @@ var vm = require("vm");
 var faye = require("faye");
 var busterServer = require("./../lib/buster-capture-server");
 var bCapServSession = require("./../lib/session")
+var bCapServCapturedClient = require("./../lib/captured-client")
 
 var h = require("./test-helper");
 
@@ -28,7 +29,15 @@ buster.testCase("Session middleware", {
             res.writeHead(h.NO_RESPONSE_STATUS_CODE);
             res.end();
         });
-        this.httpServer.listen(h.SERVER_PORT, done);
+        this.httpServer.listen(h.SERVER_PORT, function () {
+            self.busterServer.oncapture = function (req, res, client) {
+                delete self.busterServer.oncapture;
+                self.capturedClient = client;
+                res.end();
+                done();
+            };
+            h.request({path: self.busterServer.capturePath, method: "GET"}, function () {}).end();
+        });
         this.busterServer = busterServer.create();
         this.busterServer.attach(this.httpServer);
 
@@ -50,8 +59,7 @@ buster.testCase("Session middleware", {
     },
 
     "test emits event with session info when creating session": function (done) {
-        var sessionStart = this.spy();
-        this.busterServer.temporarySessionEventEmitter.on("session:start", sessionStart);
+        var sessionStart = this.spy(this.capturedClient, "startSession");
         h.request({path: "/sessions", method: "POST"}, function (res, body) {
             assert(sessionStart.calledOnce);
             var sessionInfo = sessionStart.getCall(0).args[0];
@@ -118,8 +126,8 @@ buster.testCase("Session middleware", {
 
         "test killing sessions": function (done) {
             var self = this;
-            var sessionEnd = this.spy();
-            this.busterServer.temporarySessionEventEmitter.on("session:end", sessionEnd);
+            var sessionEnd = this.spy(this.session, "end");
+            
             h.request({path: this.session.rootPath, method: "DELETE"}, function (res, body) {
                 assert.equals(200, res.statusCode);
                 assert(sessionEnd.calledOnce);
@@ -148,8 +156,7 @@ buster.testCase("Session middleware", {
 
         "test killing first session with second session created": function (done) {
             var self = this;
-            var sessionStart = this.spy();
-            this.busterServer.temporarySessionEventEmitter.on("session:start", sessionStart);
+            var sessionStart = this.spy(this.capturedClient, "startSession");
             h.request({path: "/sessions", method: "POST"}, function (res, body) {
                 var newSession = JSON.parse(body);
                 h.request({path: self.session.rootPath, method: "DELETE"}, function (res, body) {
@@ -162,10 +169,8 @@ buster.testCase("Session middleware", {
         },
 
         "test killing session that isn't current does nothing but deleting the session": function (done) {
-            var sessionStart = this.spy();
-            this.busterServer.temporarySessionEventEmitter.on("session:start", sessionStart);
-            var sessionEnd = this.spy();
-            this.busterServer.temporarySessionEventEmitter.on("session:end", sessionEnd);
+            var sessionStart = this.spy(this.capturedClient, "startSession");
+            var sessionEnd = this.spy(this.capturedClient, "endSession");
 
             h.request({path: "/sessions", method: "POST"}, function (res, body) {
                 h.request({path: JSON.parse(body).rootPath, method: "DELETE"}, function () {
@@ -197,7 +202,7 @@ buster.testCase("Session middleware", {
         "test automatic session takedown": function (done) {
             var url = "http://localhost:" + h.SERVER_PORT + this.session.bayeuxClientPath;
 
-            this.busterServer.temporarySessionEventEmitter.on("session:end", function () {
+            this.stub(this.session, "end", function () {
                 buster.assert(true);
                 done();
             });
@@ -211,7 +216,7 @@ buster.testCase("Session middleware", {
     },
 
     "test programmatically created session is created and loaded": function (done) {
-        this.busterServer.temporarySessionEventEmitter.on("session:start", function (session) {
+        this.stub(this.capturedClient, "startSession", function (session) {
             assert(session.resourceSet.resources.hasOwnProperty("/foo"));
             done();
         });
@@ -264,8 +269,7 @@ buster.testCase("Session middleware", {
     "test destroying session in queue with HTTP": function (done) {
         var self = this;
 
-        var spy = this.spy();
-        this.busterServer.temporarySessionEventEmitter.on("session:end", spy);
+        var spy = this.spy(this.capturedClient, "endSession");
 
         this.busterServer.createSession({load:[],resources:[]});
         this.busterServer.createSession({load:[],resources:[]});
