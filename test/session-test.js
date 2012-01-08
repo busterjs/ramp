@@ -57,39 +57,6 @@ buster.testCase("Session", {
         this.httpServer.close();
     },
 
-    "test emits event with session info when creating session": function (done) {
-        var sessionStart = this.spy(this.slave, "startSession");
-        h.request({path: "/sessions", method: "POST"}, function (res, body) {
-            assert(sessionStart.calledOnce);
-            var sessionInfo = sessionStart.getCall(0).args[0];
-            assert.equals("object", typeof(sessionInfo));
-            done();
-        }).end(this.validSessionPayload);
-    },
-
-    "test posting malformed data": function (done) {
-        var self = this;
-        h.request({path: "/sessions", method: "POST"}, function (res, body) {
-            assert.equals(400, res.statusCode);
-            assert.match(body, /invalid JSON/i);
-            assert.equals(0, self.busterServer.sessions.length);
-            done();
-        }).end("{not json}!");
-    },
-
-    "test posting with validation error": function (done) {
-        var self = this;
-        this.stub(bCapServSession, "validate");
-        bCapServSession.validate.returns("An error.");
-
-        h.request({path: "/sessions", method: "POST"}, function (res, body) {
-            assert.equals(400, res.statusCode);
-            assert.match(body, "An error.");
-            assert.equals(0, self.busterServer.sessions.length);
-            done();
-        }).end("{}");
-    },
-
     "with HTTP created session": {
         setUp: function (done) {
             var self = this;

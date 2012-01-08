@@ -3,6 +3,7 @@ var assert = buster.assert;
 var refute = buster.refute;
 var busterServer = require("./../lib/buster-capture-server");
 var bCapServSlave = require("./../lib/slave");
+var bCapServSession = require("./../lib/session");
 var faye = require("faye");
 var http = require("http");
 var h = require("./test-helper");
@@ -29,6 +30,17 @@ buster.testCase("Buster Capture Server", {
             this.httpServer = createServer(done);
             this.server = busterServer.create();
             this.server.attach(this.httpServer);
+
+            this.validSessionPayload = {
+                resourceSet: {
+                    load: ["/foo.js"],
+                    resources: {
+                        "/foo.js": {
+                            content: "var a = 5 + 5;"
+                        }
+                    }
+                }
+            };
         },
 
         tearDown: function (done) {
@@ -140,6 +152,16 @@ buster.testCase("Buster Capture Server", {
                 }).end();
             },
 
+            "having a slave": {
+                setUp: function (done) {
+                    var self = this;
+                    h.request({path: this.server.capturePath, method: "GET"}, function (res, body) {
+                        self.slave = self.oncaptureSlaves[0];
+                        done();
+                    }).end();
+                },
+            },
+
             "having multiple slaves created": {
                 setUp: function (done) {
                     var self = this;
@@ -186,6 +208,39 @@ buster.testCase("Buster Capture Server", {
                     }).end(new Buffer(JSON.stringify({
                         resourceSet: {load: [],resources: {}}
                     }), "utf8"));
+                },
+
+                "starts session immediately in slave when no other sessions are present": function (done) {
+                    var spy = this.spy(bCapServSlave, "startSession");
+
+                    h.request({path: "/sessions", method: "POST"}, function (res, body) {
+                        assert.equals(res.statusCode, 201);
+                        assert(spy.calledThrice);
+                        done();
+                    }).end(JSON.stringify(this.validSessionPayload));
+                },
+
+                "ignores malformed JSON when creating session with HTTP": function (done) {
+                    var self = this;
+                    h.request({path: "/sessions", method: "POST"}, function (res, body) {
+                        assert.equals(400, res.statusCode);
+                        assert.match(body, /invalid JSON/i);
+                        assert.equals(0, self.server.sessions.length);
+                        done();
+                    }).end("{not json}!");
+                },
+
+                "handles validation when creating session with HTTP": function (done) {
+                    var self = this;
+                    this.stub(bCapServSession, "validate");
+                    bCapServSession.validate.returns("An error.");
+
+                    h.request({path: "/sessions", method: "POST"}, function (res, body) {
+                        assert.equals(400, res.statusCode);
+                        assert.match(body, "An error.");
+                        assert.equals(0, self.server.sessions.length);
+                        done();
+                    }).end("{}");
                 }
             }
         },
