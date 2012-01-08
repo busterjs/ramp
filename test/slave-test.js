@@ -190,12 +190,13 @@ buster.testCase("Slaves", {
             h.request({path: this.slave.url + "/env.js"}, function (res, body) {
                 assert.equals(res.statusCode, 200);
 
-                self.slave.end();
-
-                h.request({path: self.slave.url  + "/env.js"}, function (res, body) {
-                    assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
-                    done();
-                }).end();
+                self.slave.on("end", function () {
+                    h.request({path: self.slave.url  + "/env.js"}, function (res, body) {
+                        assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
+                        done();
+                    }).end();
+                });
+                h.emulateCloseBrowser(self.slave);
             }).end();
 
         },
@@ -356,7 +357,7 @@ buster.testCase("Slaves", {
             );
 
             assert(true);
-            this.stub(this.slave, "end", done);
+            this.slave.on("end", done);
 
             bayeuxClient.connect(function () {
                 var publication = bayeuxClient.publish(
