@@ -62,14 +62,12 @@ buster.testCase("Buster Capture Server", {
             }).end();
         },
 
-        "proxying API methods": {
-            "has default logger": function () {
-                assert.equals(typeof this.server.logger.error, "function");
-                assert.equals(typeof this.server.logger.warn, "function");
-                assert.equals(typeof this.server.logger.log, "function");
-                assert.equals(typeof this.server.logger.info, "function");
-                assert.equals(typeof this.server.logger.debug, "function");
-            }
+        "has default logger": function () {
+            assert.equals(typeof this.server.logger.error, "function");
+            assert.equals(typeof this.server.logger.warn, "function");
+            assert.equals(typeof this.server.logger.log, "function");
+            assert.equals(typeof this.server.logger.info, "function");
+            assert.equals(typeof this.server.logger.debug, "function");
         }
     },
 
