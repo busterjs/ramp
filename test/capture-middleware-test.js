@@ -153,6 +153,21 @@ buster.testCase("Client middleware", {
                 buster.assert.equals(body, "Hello, World!");
                 done();
             }).end();
+        },
+
+        "test setting new header removes old header": function (done) {
+            var self = this;
+            this.busterServer.headerResourceSet.contextPath = "/foo";
+
+            h.request({path: "/foo/", method: "GET"}, function (res, body) {
+                assert.equals(res.statusCode, 200);
+
+                self.busterServer.header(80, {});
+                h.request({path: "/foo/", method: "GET"}, function (res, body) {
+                    assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
+                    done();
+                }).end();
+            }).end();
         }
     },
 
