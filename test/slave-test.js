@@ -3,7 +3,6 @@ var assert = buster.assert;
 var refute = buster.refute;
 var bCapServSlave = require("./../lib/slave");
 var busterServer = require("./../lib/buster-capture-server");
-var faye = require("faye");
 
 var fs = require("fs");
 var http = require("http");
@@ -346,29 +345,6 @@ buster.testCase("Slaves", {
 
             var actualSession = this.busterServer.createSession({});
             this.slave.bayeuxClient.publish("/" + this.slave.id + "/ready", "abc123");
-        },
-
-        "test faye disconnect destroys the slave": function (done) {
-            var self = this;
-            var bayeuxClient = new faye.Client(
-                "http://localhost:"
-                    + h.SERVER_PORT
-                    + this.busterServer.messagingContextPath
-            );
-
-            assert(true);
-            this.slave.on("end", done);
-
-            bayeuxClient.connect(function () {
-                var publication = bayeuxClient.publish(
-                    "/" + self.slave.id + "/ready",
-                    bayeuxClient.getClientId()
-                );
-
-                publication.callback(function () {
-                    bayeuxClient.disconnect();
-                });
-            }, bayeuxClient);
         }
     }
 });
