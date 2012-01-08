@@ -339,22 +339,12 @@ buster.testCase("Slaves", {
 
         "test publishes /session/start when session is present and is ready": function (done) {
             this.busterServer.bayeux.subscribe("/" + this.slave.id + "/session/start", function (sess) {
-                assert.equals(sess, {foo: "bar"});
+                assert.equals(actualSession.toJSON(), sess);
                 done();
             });
 
-            this.slave.startSession({toJSON: function () { return {foo: "bar"}}});
+            var actualSession = this.busterServer.createSession({});
             this.slave.bayeuxClient.publish("/" + this.slave.id + "/ready", "abc123");
-        },
-
-        "test ready event broadcasts session": function (done) {
-            this.busterServer.bayeux.subscribe("/" + this.slave.id + "/session/start", function (sess) {
-                assert(true);
-                done();
-            });
-
-            this.slave.currentSession = {toJSON: function () { return {foo: "bar"}}};
-            this.busterServer.bayeux.publish("/" + this.slave.id + "/ready", "abc123");
         },
 
         "test faye disconnect destroys the slave": function (done) {
