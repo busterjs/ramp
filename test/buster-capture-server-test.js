@@ -58,6 +58,7 @@ buster.testCase("Buster Capture Server", {
             var stub = this.stub(this.server.busterResources, "gc");
             h.request({path: "/resources", method: "DELETE"}, function (res, body) {
                 assert.equals(res.statusCode, 200);
+                assert(stub.calledOnce);
                 done();
             }).end();
         },
