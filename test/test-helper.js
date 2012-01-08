@@ -1,4 +1,5 @@
 var http = require("http");
+var faye = require("faye");
 
 module.exports = {
     NO_RESPONSE_STATUS_CODE: 418,
@@ -16,5 +17,26 @@ module.exports = {
             res.on("end", function () { callback(res, body); });
         });
         return req;
+    },
+
+    // Opening and closing a faye client yields the same code paths as
+    // opening and closing an actual browser.
+    emulateCloseBrowser: function (slave) {
+        var bayeuxClient = new faye.Client(
+            "http://localhost:"
+                + this.SERVER_PORT
+                + slave.getEnv()["bayeuxPath"]
+        );
+
+        bayeuxClient.connect(function () {
+            var publication = bayeuxClient.publish(
+                "/" + slave.id + "/ready",
+                bayeuxClient.getClientId()
+            );
+
+            publication.callback(function () {
+                bayeuxClient.disconnect();
+            });
+        }, bayeuxClient);
     }
 };

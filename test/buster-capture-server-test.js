@@ -2,6 +2,7 @@ var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
 var busterServer = require("./../lib/buster-capture-server");
+var bCapServSlave = require("./../lib/slave");
 var faye = require("faye");
 var http = require("http");
 var h = require("./test-helper");
@@ -15,6 +16,12 @@ function createServer(done) {
     httpServer.listen(h.SERVER_PORT, done);
     return httpServer;
 }
+
+buster.assertions.add("inArray", {
+    assert: function (array, actual) { return array.indexOf(actual) >= 0; },
+    assertMessage: "Expected xxx",
+    refuteMessage: "Expected yyy"
+});
 
 buster.testCase("Buster Capture Server", {
     "attached to server": {
@@ -61,6 +68,79 @@ buster.testCase("Buster Capture Server", {
                 assert(stub.calledOnce);
                 done();
             }).end();
+        },
+
+        "captures slave": function (done) {
+            var self = this;
+            this.server.oncapture = function (req, res, slave) {
+                assert(bCapServSlave.isPrototypeOf(slave));
+                assert.equals(self.server.slaves.length, 1);
+                assert.same(self.server.slaves[0], slave);
+
+                res.writeHead(666, {"X-Foo": "bar"});
+                res.end();
+            };
+
+            h.request({path: this.server.capturePath, method: "GET"}, function (res, body) {
+                assert.equals(res.statusCode, 666);
+                assert.equals(res.headers["x-foo"], "bar");
+                done();
+            }).end();
+        },
+
+        "errors when capturing slave with no oncapture handler": function (done) {
+            h.request({path: this.server.capturePath, method: "GET"}, function (res, body) {
+                assert.equals(res.statusCode, 400);
+                assert.match(body, "no 'oncapture' handler");
+                done();
+            }).end();
+        },
+
+        "with basic oncapture handler": {
+            setUp: function () {
+                this.oncaptureSlaves = [];
+                this.server.oncapture = function (req, res, slave) {
+                    this.oncaptureSlaves.push(slave);
+                    res.writeHead(200);
+                    res.end();
+                }.bind(this);
+            },
+
+            "captures multiple slaves": function (done) {
+                var self = this;
+
+                h.request({path: this.server.capturePath, method: "GET"}, function (res, body) {
+                    h.request({path: self.server.capturePath, method: "GET"}, function (res, body) {
+                        h.request({path: self.server.capturePath, method: "GET"}, function (res, body) {
+                            assert.equals(self.server.slaves.length, 3);
+                            done();
+                        }).end();
+                    }).end();
+                }).end();
+            },
+
+            "unloads slaves that end": function (done) {
+                var self = this;
+                h.request({path: this.server.capturePath, method: "GET"}, function (res, body) {
+                    h.request({path: self.server.capturePath, method: "GET"}, function (res, body) {
+                        h.request({path: self.server.capturePath, method: "GET"}, function (res, body) {
+
+                            var slaveToEnd = self.oncaptureSlaves[1];
+
+                            slaveToEnd.on("end", function () {
+                                assert.equals(self.server.slaves.length, 2);
+                                assert.inArray(self.server.slaves, self.oncaptureSlaves[0]);
+                                refute.inArray(self.server.slaves, self.oncaptureSlaves[1]);
+                                assert.inArray(self.server.slaves, self.oncaptureSlaves[2]);
+                                done();
+                            });
+
+                            h.emulateCloseBrowser(slaveToEnd);
+
+                        }).end();
+                    }).end();
+                }).end();
+            }
         },
 
         "has default logger": function () {
