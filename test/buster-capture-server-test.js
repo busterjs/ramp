@@ -133,10 +133,10 @@ buster.testCase("Buster Capture Server", {
 
             "captures slave with joinable session in progress": function (done) {
                 this.server.createSession({});
-                var stub = this.stub(bCapServSlave, "startSession");
+                var self = this;
 
                 h.request({path: this.server.capturePath, method: "GET"}, function () {
-                    assert(stub.calledOnce);
+                    assert(self.oncaptureSlaves[0].sessionInProgress);
                     done();
                 }).end();
             },
@@ -146,7 +146,7 @@ buster.testCase("Buster Capture Server", {
 
                 h.request({path: this.server.capturePath, method: "GET"}, function () {
                     self.server.createSession({joinable: false});
-                    var stub = self.stub(bCapServSlave, "startSession");
+                    var stub = self.stub(self.server.slaves[0], "startSession");
                     h.request({path: self.server.capturePath, method: "GET"}, function () {
                         refute(stub.called);
                         done();
@@ -213,11 +213,10 @@ buster.testCase("Buster Capture Server", {
                 },
 
                 "starts session immediately in slave when no other sessions are present": function (done) {
-                    var spy = this.spy(bCapServSlave, "startSession");
-
+                    var self = this;
                     h.request({path: "/sessions", method: "POST"}, function (res, body) {
                         assert.equals(res.statusCode, 201);
-                        assert(spy.calledThrice);
+                        assert(self.oncaptureSlaves.every(function (s) { return s.sessionInProgress; }));
                         done();
                     }).end(JSON.stringify(this.validSessionPayload));
                 },

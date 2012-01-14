@@ -269,7 +269,7 @@ buster.testCase("Slave", {
             });
 
             var actualSession = this.busterServer.createSession({});
-            this.slave.bayeuxClient.publish("/" + this.slave.id + "/ready", "abc123");
+            this.busterServer.bayeux.publish("/" + this.slave.id + "/ready", "abc123");
         }
     }
 });
