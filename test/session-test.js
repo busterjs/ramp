@@ -137,12 +137,12 @@ buster.testCase("Session", {
 
         "test killing session that isn't current does nothing but deleting the session": function (done) {
             var sessionStart = this.spy(this.slave, "startSession");
-            var sessionEnd = this.spy(this.slave, "endSession");
+            var self = this;
 
             h.request({path: "/sessions", method: "POST"}, function (res, body) {
                 h.request({path: JSON.parse(body).rootPath, method: "DELETE"}, function () {
                     refute(sessionStart.called);
-                    refute(sessionEnd.called);
+                    assert(self.slave.sessionInProgress);
                     done();
                 }).end();
             }).end(this.validSessionPayload);
@@ -236,15 +236,13 @@ buster.testCase("Session", {
     "test destroying session in queue with HTTP": function (done) {
         var self = this;
 
-        var spy = this.spy(this.slave, "endSession");
-
         this.busterServer.createSession({load:[],resources:[]});
         this.busterServer.createSession({load:[],resources:[]});
         var session = this.busterServer.createSession({load:[],resources:[]});
 
         h.request({path: session.rootPath, method: "DELETE"}, function (res, body) {
-            // Callback is only called when current session ends.
-            assert.equals(0, spy.callCount);
+            // Only ending sessions in slaves when current session ends.
+            assert(self.busterServer.slaves.every(function (s) { return s.sessionInProgress; }));
 
             assert.equals(2, self.busterServer.sessions.length);
 
