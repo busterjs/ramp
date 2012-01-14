@@ -172,17 +172,6 @@ buster.testCase("Slave", {
                 assert.equals(this.res.headers["content-type"], "application/javascript");
             },
 
-            "in clean scope": function () {
-                var scope = {};
-                require("vm").runInNewContext(this.body, scope);
-
-                assert("buster" in scope);
-                assert("env" in scope.buster);
-                assert.equals(typeof(scope.buster.env), "object");
-                assert.equals(scope.buster.env.bayeuxPath, "/sessions/messaging");
-                assert.equals(this.slave.id, scope.buster.env.slaveId);
-            },
-
             "in scope where buster is already defined": function () {
                 var scope = {buster: {}};
                 require("vm").runInNewContext(this.body, scope);
@@ -200,7 +189,7 @@ buster.testCase("Slave", {
                 assert.equals(res.statusCode, 200);
                 assert.equals(res.headers["content-type"], "application/javascript");
 
-                var scope = {};
+                var scope = {buster: {}};
                 require("vm").runInNewContext(body, scope);
                 assert.equals("bar", scope.buster.env.foo);
                 done();
