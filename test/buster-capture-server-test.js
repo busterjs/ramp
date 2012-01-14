@@ -2,6 +2,7 @@ var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
 var busterServer = require("./../lib/buster-capture-server");
+var bResources = require("buster-resources");
 var bCapServSlave = require("./../lib/slave");
 var bCapServSession = require("./../lib/session");
 var faye = require("faye");
@@ -56,11 +57,13 @@ buster.testCase("Buster Capture Server", {
         },
 
         "should list known resources for GET /resources": function (done) {
-            this.server.busterResources.createResourceSet({
-                resources: {
-                    "/foo.js": {
-                        content: "cake",
-                        etag: "123abc"
+            this.server.createSession({
+                resourceSet: {
+                    resources: {
+                        "/foo.js": {
+                            content: "cake",
+                            etag: "123abc"
+                        }
                     }
                 }
             });
@@ -74,7 +77,7 @@ buster.testCase("Buster Capture Server", {
         },
 
         "should gc for DELETE /resources": function (done) {
-            var stub = this.stub(this.server.busterResources, "gc");
+            var stub = this.stub(bResources, "gc");
             h.request({path: "/resources", method: "DELETE"}, function (res, body) {
                 assert.equals(res.statusCode, 200);
                 assert(stub.calledOnce);

@@ -47,7 +47,7 @@ buster.testCase("Slave", {
         setUp: function (done) {
             var self = this;
 
-            this.busterServer.header(80, {
+            this.headerResourceSet = this.busterServer.header(80, {
                 resources: {"/": {content: "Hello, World!"}}
             });
 
@@ -81,7 +81,7 @@ buster.testCase("Slave", {
 
         "removes old header when setting new header": function (done) {
             var self = this;
-            this.busterServer.headerResourceSet.contextPath = "/foo";
+            this.headerResourceSet.contextPath = "/foo";
 
             h.request({path: "/foo/", method: "GET"}, function (res, body) {
                 assert.equals(res.statusCode, 200);
