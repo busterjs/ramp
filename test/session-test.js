@@ -92,7 +92,8 @@ buster.testCase("Session", {
 
         "test killing sessions": function (done) {
             var self = this;
-            var sessionEnd = this.spy(this.session, "end");
+            var  sessionEnd = this.spy();
+            this.session.on("end", sessionEnd);
             
             h.request({path: this.session.rootPath, method: "DELETE"}, function (res, body) {
                 assert.equals(200, res.statusCode);
