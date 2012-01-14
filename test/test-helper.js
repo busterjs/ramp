@@ -46,5 +46,15 @@ module.exports = {
         var bayeuxClient = this.bayeuxClientForSlave(slave, function () {
             bayeuxClient.disconnect();
         });
+    },
+
+    mockLogger: function (test) {
+        return {
+            error: test.spy(),
+            warn: test.spy(),
+            log: test.spy(),
+            info: test.spy(),
+            debug: test.spy()
+        }
     }
 };

@@ -254,6 +254,17 @@ buster.testCase("Buster Capture Server", {
             assert.equals(typeof this.server.logger.log, "function");
             assert.equals(typeof this.server.logger.info, "function");
             assert.equals(typeof this.server.logger.debug, "function");
+        },
+
+        "setting logger after the fact affects bayeux logging": function (done) {
+            var newLogger = h.mockLogger(this);
+            this.server.logger = newLogger;
+
+            var publication = this.server.bayeux.publish("/foo", {});
+            publication.callback(function () {
+                assert(newLogger.debug.called);
+                done();
+            });
         }
     },
 
