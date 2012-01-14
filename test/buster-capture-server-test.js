@@ -88,7 +88,6 @@ buster.testCase("Buster Capture Server", {
         "captures slave": function (done) {
             var self = this;
             this.server.oncapture = function (req, res, slave) {
-                assert(bCapServSlave.isPrototypeOf(slave));
                 assert.equals(self.server.slaves.length, 1);
                 assert.same(self.server.slaves[0], slave);
 
