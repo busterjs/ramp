@@ -268,53 +268,6 @@ buster.testCase("Buster Capture Server", {
         }
     },
 
-    "attaching to existing server": {
-        setUp: function (done) {
-            this.httpServer = createServer(done);
-        },
-
-        tearDown: function (done) {
-            this.httpServer.on("close", done);
-            this.httpServer.close();
-        },
-
-        "keeps listener created when creating server": function (done) {
-            this.server = busterServer.create();
-            this.server.attach(this.httpServer);
-            var spy = this.spy(this.server, "respond");
-
-            h.request({path: "/doesnotexist", method: "GET"}, function (res, body) {
-                assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
-                assert(spy.calledOnce);
-                done();
-            }).end();
-        },
-
-        "keeps listener added after creating server and before attaching": function (done) {
-            this.httpServer.addListener("request", function (req, res) {
-                assert(spy.calledOnce);
-                done();
-            });
-            this.server = busterServer.create();
-            this.server.attach(this.httpServer);
-            var spy = this.spy(this.server, "respond");
-
-            h.request({path: "/doesnotexist", method: "GET"}, function (res, body) {}).end();
-        },
-
-        "keeps listener added after creating server and after attaching": function (done) {
-            this.server = busterServer.create();
-            this.server.attach(this.httpServer);
-            var spy = this.spy(this.server, "respond");
-            this.httpServer.addListener("request", function (req, res) {
-                assert(spy.calledOnce);
-                done();
-            });
-
-            h.request({path: "/doesnotexist", method: "GET"}, function (res, body) {}).end();
-        }
-    },
-
     "without an http server": {
         setUp: function (done) {
             this.httpServer = createServer(done);
