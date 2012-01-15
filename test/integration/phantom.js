@@ -1,4 +1,4 @@
-var SERVER_PORT = 12127;
+var SERVER_PORT = parseInt(phantom.args[0], 10);
 
 var page = new WebPage();
 page.onConsoleMessage = function (msg) { console.log("debug " + msg); };
@@ -20,4 +20,4 @@ server.listen(SERVER_PORT, function (request, response) {
     response.statusCode = 200;
     response.write("");
 });
-console.log("port " + SERVER_PORT);
+console.log("ready 1");

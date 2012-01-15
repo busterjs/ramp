@@ -17,12 +17,9 @@ buster.testCase("Integration", {
         });
         this.httpServer.listen(h.SERVER_PORT, done);
 
-        this.openConnections = [];
+        this.reqConns = [];
         this.httpServer.on("connection", function (socket) {
-            self.openConnections.push(socket);
-            socket.on("close", function () {
-                self.openConnections.splice(self.openConnections.indexOf(socket), 1);
-            });
+            self.reqConns.push(socket);
         });
 
         this.server = bCapServ.create();
@@ -30,22 +27,14 @@ buster.testCase("Integration", {
     },
 
     tearDown: function (done) {
-        var self = this;
-        var connectionCloser = function () {
-            if (self.openConnections.length == 0) {
-                self.httpServer.on("close", done);
-                self.httpServer.close();
-            } else {
-                var connection = self.openConnections.pop();
-                connection.on("close", connectionCloser);
-                connection.end();
-            }
-        };
+        // Ensure all connections are nuked out of orbit
+        this.reqConns.forEach(function (c) { c.destroy(); });
 
-        connectionCloser();
+        this.httpServer.on("close", done);
+        this.httpServer.close();
     },
 
-    "test test": function (done) {
+    "test one browser": function (done) {
         var self = this;
 
         h.capture(this.server, function (slave, phantom) {
@@ -53,6 +42,27 @@ buster.testCase("Integration", {
             phantom.kill(function () {
                 assert.equals(self.server.slaves.length, 0);
                 done();
+            });
+        });
+    },
+
+    "test multiple browsers": function (done) {
+        var self = this;
+
+        h.capture(this.server, function (slave, phantom) {
+            assert.equals(self.server.slaves.length, 1);
+
+            h.capture(self.server, function (slave, phantom2) {
+                assert.equals(self.server.slaves.length, 2);
+
+                phantom.kill(function () {
+                    assert.equals(self.server.slaves.length, 1);
+
+                    phantom2.kill(function () {
+                        assert.equals(self.server.slaves.length, 0);
+                        done();
+                    });
+                });
             });
         });
     }

@@ -73,6 +73,7 @@ module.exports = {
         server.oncapture = function (req, res, slave) {
             res.writeHead(302, {"Location": slave.url});
             res.end();
+            server.oncapture = null;
 
             slave.on("ready", function () {
                 // TODO: Figure out why we need a timeout here.
@@ -87,14 +88,16 @@ module.exports = {
     }
 };
 
+var phantomPort = 12000;
+
 var Phantom = function (onready) {
     var isOpening = false;
     var eventEmitter = new EventEmitter();
     var phantomScriptPath = __dirname + "/integration/phantom.js";
-    var port;
-    var blankPageUrl;
+    var phantomControlPort = ++phantomPort; // TODO: reuse old ports
+    var blankPageUrl = "http://127.0.0.1:" + phantomControlPort + "/blank";
 
-    var phantom = CP.spawn("phantomjs", [phantomScriptPath]);
+    var phantom = CP.spawn("phantomjs", [phantomScriptPath, phantomControlPort]);
     phantom.stdout.on("data", function (data) {
         var msg = data.toString("utf8");
         var command = msg.match(/^[^ ]+/)[0];
@@ -102,14 +105,12 @@ var Phantom = function (onready) {
         eventEmitter.emit(command, data);
     });
 
-    eventEmitter.on("port", function (data) {
-        port = parseInt(data, 10);
-        blankPageUrl = "http://127.0.0.1:" + port + "/blank";
-        onready();
-    });
-
     eventEmitter.on("debug", function (data) {
         console.log(data);
+    });
+
+    eventEmitter.on("ready", function (data) {
+        onready();
     });
 
     return {
@@ -118,10 +119,10 @@ var Phantom = function (onready) {
             isOpening = true;
 
             module.exports.request({
-                port: port,
+                port: phantomControlPort,
                 path: "/load",
                 headers: {"X-Phantom-Load-Url": url}
-            }, function(){}).end();
+            }, function(res, body){}).end();
 
             eventEmitter.once("page", function (status) {
                 isOpening = false;
