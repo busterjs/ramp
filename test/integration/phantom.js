@@ -9,11 +9,6 @@ server.listen(SERVER_PORT, function (request, response) {
         var url = request.headers["X-Phantom-Load-Url"];
         page.open(url, function (status) {
             console.log("page " + status);
-            // page.evaluate(function () {
-            //     window.addEventListener("beforeunload", function () {
-            //         console.log("UNLOAD ZOMG");
-            //     });
-            // });
         });
     }
 
