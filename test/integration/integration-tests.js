@@ -65,5 +65,26 @@ buster.testCase("Integration", {
                 });
             });
         });
+    },
+
+    "test posting events from session": function (done) {
+        var self = this;
+        h.capture(this.server, function (slave, phantom) {
+            var session = self.server.createSession({
+                resourceSet: {
+                    resources: {
+                        "/test.js": {
+                            content: 'buster.publish("/some/event", 123);'
+                        }
+                    },
+                    load: ["/test.js"]
+                }
+            });
+
+            session.subscribe("/some/event", function (data) {
+                assert.equals(data, 123);
+                phantom.kill(done);
+            });
+        });
     }
 });
