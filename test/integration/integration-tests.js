@@ -86,5 +86,33 @@ buster.testCase("Integration", {
                 phantom.kill(done);
             });
         });
+    },
+
+    "test subscribing to events from session": function (done) {
+        var self = this;
+        h.capture(this.server, function (slave, phantom) {
+            var session = self.server.createSession({
+                resourceSet: {
+                    resources: {
+                        "/test.js": {
+                            content: ''
+                                + 'buster.subscribe("/some/event", function (data) {'
+                                + '    console.log("ohai");'
+                                + '    buster.publish("/other/event", data);'
+                                + '});'
+                        }
+                    },
+                    load: ["/test.js"]
+                }
+            });
+
+            // TODO: We need to get notified when the session is actually
+            // loaded in all the slaves.
+            session.publish("/some/event", 123);
+            session.subscribe("/other/event", function (data) {
+                assert.equals(data, 123);
+                phantom.kill(done);
+            });
+        });
     }
 });
