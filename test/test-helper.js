@@ -106,7 +106,7 @@ var Phantom = function (onready) {
     });
 
     eventEmitter.on("debug", function (data) {
-        console.log(data);
+        console.log("Phantom console.log:", data);
     });
 
     eventEmitter.on("ready", function (data) {
