@@ -95,20 +95,20 @@ buster.testCase("Integration", {
                 resourceSet: {
                     resources: {
                         "/test.js": {
-                            content: ''
-                                + 'buster.subscribe("/some/event", function (data) {'
-                                + '    console.log("ohai");'
-                                + '    buster.publish("/other/event", data);'
-                                + '});'
+                            content: [
+                                'var subs = buster.subscribe("/some/event", function (data) {',
+                                '    buster.publish("/other/event", data);',
+                                '});'].join("\n")
                         }
                     },
                     load: ["/test.js"]
                 }
             });
 
-            // TODO: We need to get notified when the session is actually
-            // loaded in all the slaves.
-            session.publish("/some/event", 123);
+            slave.on("sessionLoaded", function () {
+                var publ = session.publish("/some/event", 123);
+            });
+
             session.subscribe("/other/event", function (data) {
                 assert.equals(data, 123);
                 phantom.kill(done);
