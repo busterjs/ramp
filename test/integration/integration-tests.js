@@ -105,13 +105,32 @@ buster.testCase("Integration", {
                 }
             });
 
-            slave.on("sessionLoaded", function () {
+            slave.on("sessionLoaded", function (s) {
                 var publ = session.publish("/some/event", 123);
+                assert.same(session, s);
             });
 
             session.subscribe("/other/event", function (data) {
                 assert.equals(data, 123);
                 phantom.kill(done);
+            });
+        });
+    },
+
+    "test loading second session": function (done) {
+        var self = this;
+        h.capture(this.server, function (slave, phantom) {
+            var sess1 = self.server.createSession({});
+            slave.once("sessionLoaded", function (s) {
+                assert.same(sess1, s);
+                sess1.on("end", function () {
+                    var sess2 = self.server.createSession({});
+                    slave.once("sessionLoaded", function (s) {
+                        assert.same(sess2, s);
+                        done();
+                    });
+                });
+                sess1.end();
             });
         });
     }
