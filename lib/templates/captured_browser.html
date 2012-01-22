@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head> 
-    <title>Buster</title> 
-  </head> 
-  <frameset rows="0px,<% if (hasHeaderFrame) { %><%= headerFrameHeight %>px,<% } %>*" border="0"> 
-    <frame src="<%= slaveRoot %>/control_frame.html" id="control_frame" /> 
+  <head>
+    <title>Buster</title>
+  </head>
+  <frameset rows="0px,<% if (hasHeaderFrame) { %><%= headerFrameHeight %>px,<% } %>*" border="0">
+    <frame src="<%= slaveRoot %>/control_frame.html" id="control_frame" />
     <% if (hasHeaderFrame) { %>
       <frame src="<%= headerFrameUrl %>" />
     <% } %>
     <frame id="slave_frame" />
-  </frameset> 
-</html> 
+  </frameset>
+</html>
