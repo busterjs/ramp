@@ -46,7 +46,7 @@ buster.testCase("Integration", {
     "test one browser": function (done) {
         var self = this;
 
-        h.capture(this.captureServer, function (slave, phantom) {
+        h.capture(this.srv, function (slave, phantom) {
             assert.equals(self.captureServer.slaves.length, 1);
             phantom.kill(function () {
                 assert.equals(self.captureServer.slaves.length, 0);
@@ -58,10 +58,10 @@ buster.testCase("Integration", {
     "test multiple browsers": function (done) {
         var self = this;
 
-        h.capture(this.captureServer, function (slave, phantom) {
+        h.capture(this.srv, function (slave, phantom) {
             assert.equals(self.captureServer.slaves.length, 1);
 
-            h.capture(self.captureServer, function (slave, phantom2) {
+            h.capture(self.srv, function (slave, phantom2) {
                 assert.equals(self.captureServer.slaves.length, 2);
 
                 phantom.kill(function () {
@@ -78,7 +78,7 @@ buster.testCase("Integration", {
 
     "test posting events from session": function (done) {
         var self = this;
-        h.capture(this.captureServer, function (slave, phantom) {
+        h.capture(this.srv, function (slave, phantom) {
             var session = self.captureServer.createSession({
                 resourceSet: {
                     resources: {
@@ -99,7 +99,7 @@ buster.testCase("Integration", {
 
     "test subscribing to events from session": function (done) {
         var self = this;
-        h.capture(this.captureServer, function (slave, phantom) {
+        h.capture(this.srv, function (slave, phantom) {
             var session = self.captureServer.createSession({
                 resourceSet: {
                     resources: {
@@ -128,7 +128,7 @@ buster.testCase("Integration", {
 
     "test loading second session": function (done) {
         var self = this;
-        h.capture(this.captureServer, function (slave, phantom) {
+        h.capture(this.srv, function (slave, phantom) {
             var sess1 = self.captureServer.createSession({});
             slave.once("sessionLoaded", function (s) {
                 assert.same(sess1, s);

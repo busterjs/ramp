@@ -63,17 +63,17 @@ module.exports = {
     Phantom: function (onready) {
     },
 
-    capture: function(server, oncapture) {
-        var captureUrl = "http://127.0.0.1:" + this.SERVER_PORT + server.capturePath;
+    capture: function(srv, oncapture) {
+        var captureUrl = "http://127.0.0.1:" + srv.httpServer.address().port + srv.captureServer.capturePath;
 
         var phantom = Phantom(function () {
             phantom.open(captureUrl, function () {});
         });
 
-        server.oncapture = function (req, res, slave) {
+        srv.captureServer.oncapture = function (req, res, slave) {
             res.writeHead(302, {"Location": slave.url});
             res.end();
-            server.oncapture = null;
+            srv.captureServer.oncapture = null;
 
             slave.on("ready", function () {
                 // TODO: Figure out why we need a timeout here.
