@@ -2,12 +2,14 @@
 <html lang="en">
   <head>
     <title>Buster</title>
-  </head>
-  <frameset rows="0px,<% if (hasHeaderFrame) { %><%= headerFrameHeight %>px,<% } %>*" border="0">
-    <frame src="<%= slaveRoot %>/control_frame.html" id="control_frame" />
-    <% if (hasHeaderFrame) { %>
-      <frame src="<%= headerFrameUrl %>" />
+    <% for (var i = 0, ii = scripts.length; i < ii; i++) { %>
+      <script type="text/javascript" src="<%= slaveRoot %><%= scripts[i] %>"></script>
     <% } %>
-    <frame id="slave_frame" />
+  </head>
+  <frameset rows="<% if (hasHeaderFrame) { %><%= headerFrameHeight %>px,<% } %>*" frameborder="0" noresize>
+    <% if (hasHeaderFrame) { %>
+      <frame src="<%= slaveRoot %><%= headerFrameUrl %>"></frame>
+    <% } %>
+    <frame id="session_frame"></frame>
   </frameset>
 </html>
