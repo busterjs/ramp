@@ -142,5 +142,24 @@ buster.testCase("Integration", {
                 sess1.end();
             });
         });
+    },
+
+    "test recaptures when server restarts": function (done) {
+        var port = h.SERVER_PORT + 1;
+        var srv1 = createServer(port, function () {
+            h.capture(srv1, function (slave1, phantom) {
+
+                srv1.kill(function () {
+                    var srv2 = createServer(port, function () {
+                        srv2.captureServer.oncapture = function (req, res, slave2) {
+                            refute.same(slave1, slave2);
+                            res.writeHead(302, {"Location": slave2.url});
+                            res.end();
+                            srv2.kill(done);
+                        };
+                    });
+                });
+            });
+        });
     }
 });
