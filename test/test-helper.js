@@ -16,7 +16,7 @@ module.exports = {
         var req = http.request(options, function (res) {
             var body = "";
             res.on("data", function (chunk) { body += chunk; });
-            res.on("end", function () { callback(res, body); });
+            res.on("end", function () { callback && callback(res, body); });
         });
         return req;
     },
