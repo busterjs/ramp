@@ -53,6 +53,35 @@ buster.testCase("Capture server", {
                 assert.equals(s.id, this.slave.id);
                 assert.defined(s.url);
                 assert.equals(s.url, this.slave.url);
+            },
+
+            "serves slave page": function (done) {
+                var self = this;
+                h.request({path: this.slave.url}, function (res, body) {
+                    assert.equals(res.statusCode, 200);
+                    assert.match(res.headers["content-type"], "text/html");
+                    done();
+                }).end();
+            },
+
+            "serves slave page with header": function (done) {
+                var self = this;
+
+                var rs = bResourcesResourceSet.create();
+                rs.addResource({
+                    path: "/",
+                    content: "<p>Hello, World.</p>"
+                });
+                this.cs.header(80, rs);
+                h.request({path: this.slave.url}, function (res, body) {
+                    var dom = h.parseDOM(body);
+                    var headerSrc = h.domSelect(dom, "frame")[0].attribs.src
+                    h.request({path: headerSrc}, function (res, body) {
+                        assert.equals(res.statusCode, 200);
+                        assert.equals(body, "<p>Hello, World.</p>");
+                        done();
+                    }).end();
+                }).end();
             }
         }
     }

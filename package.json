@@ -27,6 +27,8 @@
         "when": "https://github.com/cujojs/when/tarball/v0.11.1"
     },
     "devDependencies": {
-        "buster": ""
+        "buster": "",
+        "htmlparser": "~1.7",
+        "soupselect": "~0.2"
     }
 }
