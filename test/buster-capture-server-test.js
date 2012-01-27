@@ -3,6 +3,7 @@ var assert = buster.assert;
 var refute = buster.refute;
 
 var bCapServ = require("./../lib/buster-capture-server");
+var bResourcesResourceSet = require("buster-resources").resourceSet;
 var http = require("http");
 var h = require("./test-helper");
 
@@ -27,23 +28,32 @@ buster.testCase("Capture server", {
             this.cs.attach(this.httpServer);
         },
 
-        "captures slave when capture path is visited": function (done) {
-            var self = this;
+        "emits event when capturing slave": function (done) {
             h.request({path: this.cs.capturePath}).end();
-            this.cs.bayeux.subscribe("/capture", function (slaveId) {
-                assert.defined(slaveId);
-                assert.equals(self.cs.slaves.length, 1);
+            this.cs.bayeux.subscribe("/capture", function (slave) {
+                assert.defined(slave);
                 done();
             });
         },
 
-        "gets slave by ID": function (done) {
-            var self = this;
-            h.request({path: this.cs.capturePath}).end();
-            this.cs.bayeux.subscribe("/capture", function (slaveId) {
-                assert.same(self.cs.slaves[0], self.cs.getSlave(slaveId));
-                done();
-            });
+        "with captured slave": {
+            setUp: function (done) {
+                var self = this;
+                h.request({path: this.cs.capturePath}).end();
+                this.cs.bayeux.subscribe("/capture", function (slave) {
+                    self.slave = slave;
+                    done();
+                });
+            },
+
+            "yields slave information": function () {
+                var s = this.cs.getSlave(this.slave.id);
+                assert.defined(s);
+                assert.defined(s.id);
+                assert.equals(s.id, this.slave.id);
+                assert.defined(s.url);
+                assert.equals(s.url, this.slave.url);
+            }
         }
     }
 });
