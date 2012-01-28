@@ -40,10 +40,12 @@ buster.testCase("Capture server", {
             setUp: function (done) {
                 var self = this;
                 h.request({path: this.cs.capturePath}).end();
-                this.cs.bayeux.subscribe("/capture", function (slave) {
+                var handler = function (slave) {
+                    self.cs.bayeux.unsubscribe("/capture", handler);
                     self.slave = slave;
                     done();
-                });
+                }
+                this.cs.bayeux.subscribe("/capture", handler);
             },
 
             "yields slave information": function () {
@@ -82,6 +84,24 @@ buster.testCase("Capture server", {
                         done();
                     }).end();
                 }).end();
+            },
+
+            "and another captured slave": {
+                setUp: function (done) {
+                    var self = this;
+                    h.request({path: this.cs.capturePath}).end();
+                    var handler = function (slave) {
+                        self.cs.bayeux.unsubscribe("/capture", handler);
+                        self.slave2 = slave;
+                        done();
+                    }
+                    this.cs.bayeux.subscribe("/capture", handler);
+                },
+
+                "has no common attributes between slaves": function () {
+                    refute.equals(this.slave.id, this.slave2.id);
+                    refute.equals(this.slave.url, this.slave2.url);
+                }
             }
         }
     }
