@@ -5,6 +5,7 @@ var refute = buster.refute;
 var bCapServ = require("./../lib/buster-capture-server");
 var bResourcesResourceSet = require("buster-resources").resourceSet;
 var faye = require("faye");
+var when = require("when");
 var http = require("http");
 var h = require("./test-helper");
 
@@ -254,6 +255,102 @@ buster.testCase("Capture server", {
                         done();
                     }).end();
                 }
+            },
+
+            "serves resource set for current session": function (done) {
+                this.cs.createSession({
+                    resourceSet: {
+                        resources: [
+                            {path: "/", content: "<p>test</p>"},
+                            {path: "/foo.js", content: "var foo = 5;"}
+                        ]
+                    }
+                });
+
+                this.cs.bayeux.subscribe("/session/start", function (sess) {
+                    h.request({path: sess.resourcesPath}, function (res, body) {
+                        assert.equals(res.statusCode, 200);
+                        assert.equals(body, "<p>test</p>");
+
+                        h.request(
+                            {path: sess.resourcesPath + "/foo.js"},
+                            function (res, body) {
+                                assert.equals(res.statusCode, 200);
+                                assert.equals(body, "var foo = 5;");
+                                done();
+                            }
+                        ).end();
+                    }).end();
+                });
+            },
+
+            "does not serve resource set for queued session": function (done) {
+                var self = this;
+
+                var s1 = this.cs.createSession({
+                    resourceSet: {
+                        resources: [{path: "/", content: "<p>a</p>"}]
+                    }
+                });
+                var s2 = this.cs.createSession({
+                    resourceSet: {
+                        resources: [{path: "/", content: "<p>b</p>"}]
+                    }
+                });
+
+                this.cs.bayeux.subscribe("/session/create", function (sess) {
+                    if (sess.id == s2.id) {
+                        h.request({path: sess.resourcesPath}, function (res, body) {
+                            assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
+                            done();
+                        }).end();
+                    }
+                });
+            },
+
+            "starts serving resource set when session is made current": function (done) {
+                var self = this;
+                var s1 = this.cs.createSession({});
+                var s2 = this.cs.createSession({
+                    resourceSet: {
+                        resources: [{path: "/", content: "<p>a</p>"},]
+                    }
+                });
+
+                bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function (sess) {
+                    self.cs.endSession(sess.id);
+
+                    bayeuxSubscribeOnce(self.cs.bayeux, "/session/start", function (sess) {
+                        assert.equals(s2.id, sess.id);
+
+                        h.request({path: s2.resourcesPath}, function (res, body) {
+                            assert.equals(res.statusCode, 200);
+                            assert.equals("<p>a</p>", body);
+                            done();
+                        }).end();
+                    });
+                });
+            },
+
+            "stores sessions in order of creation": function (done) {
+                var self = this;
+
+                // TODO: This test is broken. We should do something to the
+                // payload that guarantees that it is serialized to resolve
+                // s2 before s1.
+                var s1 = this.cs.createSession({});
+                var s2 = this.cs.createSession({});
+
+                var i = 0;
+                this.cs.bayeux.subscribe("/session/create", function () {
+                    if (++i == 2) {
+                        assert.equals(self.cs.sessions(), [s1, s2]);
+                        h.request({path: s1.resourcesPath + "/foo.js"}, function (r, body) {
+                            // ...
+                            done();
+                        }).end();
+                    }
+                });
             },
 
             "// stops providing messaging when session is no longer current": function () {
