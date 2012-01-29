@@ -186,15 +186,11 @@ buster.testCase("Capture server", {
             },
 
             "ending session emits event": function (done) {
-                var self = this;
                 var sess = this.cs.createSession({});
-
-                bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function () {
-                    self.cs.endSession(sess.id);
-                    self.cs.bayeux.subscribe("/session/end", function (session) {
-                        assert.equals(sess, session);
-                        done();
-                    });
+                this.cs.endSession(sess.id);
+                this.cs.bayeux.subscribe("/session/end", function (session) {
+                    assert.equals(sess, session);
+                    done();
                 });
             },
 
