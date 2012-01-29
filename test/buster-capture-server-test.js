@@ -195,6 +195,36 @@ buster.testCase("Capture server", {
                 });
             },
 
+            "gets current session programmatically": function (done) {
+                var self = this;
+                this.cs.createSession({});
+
+                this.cs.bayeux.subscribe("/session/create", function (sess) {
+                    assert.equals(sess, self.cs.currentSession());
+                    done();
+                });
+            },
+
+            "gets current session over HTTP": function (done) {
+                var sess = this.cs.createSession({});
+                h.request({path: "/sessions/current"}, function (res, body) {
+                    assert.equals(res.statusCode, 200);
+                    assert.equals(sess, JSON.parse(body));
+                    done();
+                }).end();
+            },
+
+            "gets current session programmatically when there is none": function () {
+                refute.defined(this.cs.currentSession());
+            },
+
+            "gets current session over HTTP when there is none": function (done) {
+                h.request({path: "/sessions/current"}, function (res, body) {
+                    assert.equals(res.statusCode, 404);
+                    done();
+                }).end();
+            },
+
             "// emits session start when subscribing while in progress": function (done) {
                 var self = this;
                 var sess = this.cs.createSession({});
