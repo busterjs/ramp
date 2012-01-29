@@ -4,6 +4,7 @@ var refute = buster.refute;
 
 var bCapServ = require("./../lib/buster-capture-server");
 var bResourcesResourceSet = require("buster-resources").resourceSet;
+var faye = require("faye");
 var http = require("http");
 var h = require("./test-helper");
 
@@ -40,12 +41,10 @@ buster.testCase("Capture server", {
             setUp: function (done) {
                 var self = this;
                 h.request({path: this.cs.capturePath}).end();
-                var handler = function (slave) {
-                    self.cs.bayeux.unsubscribe("/capture", handler);
+                bayeuxSubscribeOnce(this.cs.bayeux, "/capture", function (slave) {
                     self.slave = slave;
                     done();
-                }
-                this.cs.bayeux.subscribe("/capture", handler);
+                });
             },
 
             "yields slave information": function () {
@@ -86,16 +85,194 @@ buster.testCase("Capture server", {
                 }).end();
             },
 
+            "creating session returns serialized session": function () {
+                var sess = this.cs.createSession({});
+                assertIsSerializedSession(sess);
+            },
+
+            "creating session over HTTP responds with serialized session": function (done) {
+                h.request({path: "/sessions", method: "POST"}, function (res, body) {
+                    assertIsSerializedSession(JSON.parse(body));
+                    done();
+                }).end(JSON.stringify({}));
+            },
+
+            "emits event when session is created": function (done) {
+                var sess = this.cs.createSession({});
+                this.cs.bayeux.subscribe("/session/create", function (session) {
+                    assert.equals(sess, session);
+                    done();
+                });
+            },
+
+            "starts session immediately": function (done) {
+                var self = this;
+                var s = [];
+
+                var handler = function (sess) {
+                    s.push(sess);
+
+                    // Callback called twice, once for create, once for start,
+                    // with the same session?
+                    if (s.length == 2) {
+                        assert.defined(s[0]);
+                        assert.defined(s[1]);
+                        assert.equals(s[0].bayeuxClientPath, s[1].bayeuxClientPath);
+                        done();
+                    }
+                };
+                handler.timesCalled = 0;
+
+                this.cs.createSession({});
+                this.cs.bayeux.subscribe("/session/create", handler);
+                this.cs.bayeux.subscribe("/session/start", handler);
+            },
+
+            "queues new sessions created while a session is running": function (done) {
+                var self = this;
+                var s1 = this.cs.createSession({});
+                bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function () {
+                    var s2 = self.cs.createSession({});
+                    bayeuxSubscribeOnce(self.cs.bayeux, "/session/create", function (s) {
+                        assert.equals(s2, s);
+                        assert.equals(self.cs.sessions(), [s1, s2]);
+                        done();
+                    });
+                });
+            },
+
+            "starts next session when ending current session": function (done) {
+                var self = this;
+                var s1 = this.cs.createSession({});
+                var s2 = this.cs.createSession({});
+
+                bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function (sess) {
+                    assert.equals(sess.id, s1.id);
+                    self.cs.endSession(sess.id);
+
+                    bayeuxSubscribeOnce(self.cs.bayeux, "/session/start", function (sess) {
+                        assert.equals(sess.id, s2.id);
+                        done();
+                    });
+                });
+            },
+
+            "loads next session when ending current session over HTTP": function (done) {
+                var self = this;
+                var s1 = this.cs.createSession({});
+                var s2 = this.cs.createSession({});
+
+                var i = 0;
+                this.cs.bayeux.subscribe("/session/start", function (sess) {
+                    switch(++i) {
+                    case 1:
+                        assert.equals(sess.id, s1.id);
+                        h.request({path: sess.path, method: "DELETE"}).end();
+                        break;
+                    case 2:
+                        assert.equals(sess.id, s2.id);
+                        done();
+                        break;
+                    }
+                });
+            },
+
+            "ending session over HTTP": function (done) {
+                var sess = this.cs.createSession({});
+                h.request({path: sess.path, method: "DELETE"}, function (res, body) {
+                    assert.equals(res.statusCode, 200);
+                    done();
+                }).end();
+            },
+
+            "ending session emits event": function (done) {
+                var self = this;
+                var sess = this.cs.createSession({});
+
+                bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function () {
+                    self.cs.endSession(sess.id);
+                    self.cs.bayeux.subscribe("/session/end", function (session) {
+                        assert.equals(sess, session);
+                        done();
+                    });
+                });
+            },
+
+            "// emits session start when subscribing while in progress": function (done) {
+                var self = this;
+                var sess = this.cs.createSession({});
+
+                bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function (s) {
+                    assert.equals(sess.id, s.id);
+                    bayeuxSubscribeOnce(self.cs.bayeux, "/session/start", function (s) {
+                        assert.equals(sess.id, s.id);
+                        done();
+                    });
+                });
+            },
+
+            "provides messaging to currently running session": function (done) {
+                this.cs.createSession({});
+                this.cs.bayeux.subscribe("/session/start", function (session) {
+                    assertBayeuxMessagingAvailable(bayeuxForSession(session), done);
+                });
+            },
+
+            "provides messaging to session that isn't current": function (done) {
+                var s1 = this.cs.createSession({});
+                var s2 = this.cs.createSession({});
+
+                this.cs.bayeux.subscribe("/session/create", function (session) {
+                    if (session.id == s2.id) {
+                        assertBayeuxMessagingAvailable(bayeuxForSession(session), done);
+                    }
+                });
+            },
+
+            "provides list of sessions": {
+                setUp: function (done) {
+                    var self = this;
+                    this.sessions = [
+                        this.cs.createSession({}),
+                        this.cs.createSession({}),
+                        this.cs.createSession({})
+                    ];
+
+                    var i = 0;
+                    this.cs.bayeux.subscribe("/session/create", function (session) {
+                        if (++i == self.sessions.length) {
+                            done();
+                        }
+                    });
+                },
+
+                "programmatically": function () {
+                    assert.equals(this.cs.sessions(), this.sessions);
+                },
+
+                "over HTTP": function (done) {
+                    var self = this;
+                    h.request({path: "/sessions"}, function (res, body) {
+                        assert.equals(res.statusCode, 200);
+                        assert.equals(JSON.parse(body), self.sessions);
+                        done();
+                    }).end();
+                }
+            },
+
+            "// stops providing messaging when session is no longer current": function () {
+                var sess = this.cs.createSession({});
+                var bayeux = bayeuxForSession(sess);
+            },
+
             "and another captured slave": {
                 setUp: function (done) {
                     var self = this;
                     h.request({path: this.cs.capturePath}).end();
-                    var handler = function (slave) {
-                        self.cs.bayeux.unsubscribe("/capture", handler);
+                    bayeuxSubscribeOnce(this.cs.bayeux, "/capture", function (slave) {
                         self.slave2 = slave;
                         done();
-                    }
-                    this.cs.bayeux.subscribe("/capture", handler);
+                    });
                 },
 
                 "has no common attributes between slaves": function () {
@@ -103,6 +280,37 @@ buster.testCase("Capture server", {
                     refute.equals(this.slave.url, this.slave2.url);
                 }
             }
+        },
+
+        "//does not start session with no slaves available": function () {
         }
     }
 });
+
+function assertIsSerializedSession(sess) {
+    assert.defined(sess);
+    assert.defined(sess.id);
+    assert.defined(sess.bayeuxClientPath);
+}
+
+function assertBayeuxMessagingAvailable(bayeux, done) {
+    bayeux.subscribe("/foo", function (msg) {
+        assert.equals(msg, "123abc");
+        bayeux.disconnect();
+        done();
+    }).callback(function () {
+        bayeux.publish("/foo", "123abc");
+    });
+}
+
+function bayeuxForSession(s) {
+    return new faye.Client("http://127.0.0.1:" + h.SERVER_PORT + s.bayeuxClientPath);
+}
+
+function bayeuxSubscribeOnce(bayeux, url, handler) {
+    var wrapped = function () {
+        handler.apply(this, arguments);
+        bayeux.unsubscribe(url, wrapped);
+    };
+    return bayeux.subscribe(url, wrapped);
+}
