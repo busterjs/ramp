@@ -44,7 +44,8 @@ buster.testCase("Capture server", {
                 h.request({path: this.cs.capturePath}).end();
                 bayeuxSubscribeOnce(this.cs.bayeux, "/capture", function (slave) {
                     self.slave = slave;
-                    done();
+                    // TODO: find a less hacky way of pretending to be a browser.
+                    self.cs.bayeux.publish("/" + slave.id + "/ready", {}).callback(done);
                 });
             },
 
@@ -405,8 +406,15 @@ buster.testCase("Capture server", {
             }
         },
 
-        "//does not start session with no slaves available": function () {
-        }
+        "does not start session with no slaves available": function (done) {
+            this.cs.createSession({});
+            var self = this;
+
+            this.cs.bayeux.subscribe("/session/create", function (sess) {
+                refute.defined(self.cs.currentSession());
+                done();
+            });
+        },
     }
 });
 
