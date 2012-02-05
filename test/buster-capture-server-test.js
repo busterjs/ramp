@@ -406,15 +406,16 @@ buster.testCase("Capture server", {
             }
         },
 
-        "does not start session with no slaves available": function (done) {
-            this.cs.createSession({});
-            var self = this;
-
-            this.cs.bayeux.subscribe("/session/create", function (sess) {
-                refute.defined(self.cs.currentSession());
-                done();
-            });
+        "does not create session programmatically with no slaves available": function () {
+            refute.defined(this.cs.createSession({}));
         },
+
+        "does not create session over HTTP with no slaves available": function (done) {
+            h.request({path: "/sessions", method: "POST"}, function (res, body) {
+                assert.equals(res.statusCode, 403);
+                done();
+            }).end(JSON.stringify({}));
+        }
     }
 });
 
