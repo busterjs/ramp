@@ -42,9 +42,9 @@ buster.testCase("Capture server", {
             setUp: function (done) {
                 var self = this;
                 h.request({path: this.cs.capturePath}).end();
-                bayeuxSubscribeOnce(this.cs.bayeux, "/capture", function (slave) {
+                h.bayeuxSubscribeOnce(this.cs.bayeux, "/capture", function (slave) {
                     self.slave = slave;
-                    self.cs.bayeux.publish(slave.becomesIdlePath, {}).callback(done);
+                    self.cs.bayeux.publish(slave.becomesReadyPath, {}).callback(done);
                 });
             },
 
@@ -132,9 +132,9 @@ buster.testCase("Capture server", {
             "queues new sessions created while a session is running": function (done) {
                 var self = this;
                 var s1 = this.cs.createSession({});
-                bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function () {
+                h.bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function () {
                     var s2 = self.cs.createSession({});
-                    bayeuxSubscribeOnce(self.cs.bayeux, "/session/create", function (s) {
+                    h.bayeuxSubscribeOnce(self.cs.bayeux, "/session/create", function (s) {
                         assert.equals(s2, s);
                         assert.equals(self.cs.sessions(), [s1, s2]);
                         done();
@@ -147,11 +147,11 @@ buster.testCase("Capture server", {
                 var s1 = this.cs.createSession({});
                 var s2 = this.cs.createSession({});
 
-                bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function (sess) {
+                h.bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function (sess) {
                     assert.equals(sess.id, s1.id);
                     self.cs.endSession(sess.id);
 
-                    bayeuxSubscribeOnce(self.cs.bayeux, "/session/start", function (sess) {
+                    h.bayeuxSubscribeOnce(self.cs.bayeux, "/session/start", function (sess) {
                         assert.equals(sess.id, s2.id);
                         done();
                     });
@@ -229,9 +229,9 @@ buster.testCase("Capture server", {
                 var self = this;
                 var sess = this.cs.createSession({});
 
-                bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function (s) {
+                h.bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function (s) {
                     assert.equals(sess.id, s.id);
-                    bayeuxSubscribeOnce(self.cs.bayeux, "/session/start", function (s) {
+                    h.bayeuxSubscribeOnce(self.cs.bayeux, "/session/start", function (s) {
                         assert.equals(sess.id, s.id);
                         done();
                     });
@@ -241,7 +241,7 @@ buster.testCase("Capture server", {
             "provides messaging to currently running session": function (done) {
                 this.cs.createSession({});
                 this.cs.bayeux.subscribe("/session/start", function (session) {
-                    assertBayeuxMessagingAvailable(bayeuxForSession(session), done);
+                    assertBayeuxMessagingAvailable(h.bayeuxForSession(session), done);
                 });
             },
 
@@ -251,7 +251,7 @@ buster.testCase("Capture server", {
 
                 this.cs.bayeux.subscribe("/session/create", function (session) {
                     if (session.id == s2.id) {
-                        assertBayeuxMessagingAvailable(bayeuxForSession(session), done);
+                        assertBayeuxMessagingAvailable(h.bayeuxForSession(session), done);
                     }
                 });
             },
@@ -300,7 +300,7 @@ buster.testCase("Capture server", {
                 this.cs.bayeux.subscribe("/session/start", function (sess) {
                     h.request({path: sess.resourcesPath}, function (res, body) {
                         assert.equals(res.statusCode, 200);
-                        assert.equals(body, "<p>test</p>");
+                        assert.match(body, "<p>test</p>");
 
                         h.request(
                             {path: sess.resourcesPath + "/foo.js"},
@@ -347,15 +347,15 @@ buster.testCase("Capture server", {
                     }
                 });
 
-                bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function (sess) {
+                h.bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function (sess) {
                     self.cs.endSession(sess.id);
 
-                    bayeuxSubscribeOnce(self.cs.bayeux, "/session/start", function (sess) {
+                    h.bayeuxSubscribeOnce(self.cs.bayeux, "/session/start", function (sess) {
                         assert.equals(s2.id, sess.id);
 
                         h.request({path: s2.resourcesPath}, function (res, body) {
                             assert.equals(res.statusCode, 200);
-                            assert.equals("<p>a</p>", body);
+                            assert.match(body, "<p>a</p>");
                             done();
                         }).end();
                     });
@@ -385,14 +385,14 @@ buster.testCase("Capture server", {
 
             "// stops providing messaging when session is no longer current": function () {
                 var sess = this.cs.createSession({});
-                var bayeux = bayeuxForSession(sess);
+                var bayeux = h.bayeuxForSession(sess);
             },
 
             "and another captured slave": {
                 setUp: function (done) {
                     var self = this;
                     h.request({path: this.cs.capturePath}).end();
-                    bayeuxSubscribeOnce(this.cs.bayeux, "/capture", function (slave) {
+                    h.bayeuxSubscribeOnce(this.cs.bayeux, "/capture", function (slave) {
                         self.slave2 = slave;
                         done();
                     });
@@ -432,16 +432,4 @@ function assertBayeuxMessagingAvailable(bayeux, done) {
     }).callback(function () {
         bayeux.publish("/foo", "123abc");
     });
-}
-
-function bayeuxForSession(s) {
-    return new faye.Client("http://127.0.0.1:" + h.SERVER_PORT + s.bayeuxClientPath);
-}
-
-function bayeuxSubscribeOnce(bayeux, url, handler) {
-    var wrapped = function () {
-        handler.apply(this, arguments);
-        bayeux.unsubscribe(url, wrapped);
-    };
-    return bayeux.subscribe(url, wrapped);
 }

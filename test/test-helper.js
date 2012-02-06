@@ -44,6 +44,20 @@ module.exports = {
         return bayeuxClient;
     },
 
+    bayeuxSubscribeOnce: function(bayeux, url, handler) {
+        var wrapped = function () {
+            handler.apply(this, arguments);
+            bayeux.unsubscribe(url, wrapped);
+        };
+        return bayeux.subscribe(url, wrapped);
+    },
+
+    bayeuxForSession: function (s) {
+        return new faye.Client("http://127.0.0.1:"
+                               + module.exports.SERVER_PORT
+                               + s.bayeuxClientPath);
+    },
+
     // Opening and closing a faye client yields the same code paths as
     // opening and closing an actual browser.
     emulateCloseBrowser: function (slave) {
@@ -73,9 +87,6 @@ module.exports = {
         return select(dom, selector);
     },
 
-    Phantom: function (onready) {
-    },
-
     capture: function(srv, oncapture) {
         var captureUrl = "http://127.0.0.1:" + srv.httpServer.address().port + srv.captureServer.capturePath;
 
@@ -83,12 +94,11 @@ module.exports = {
             phantom.open(captureUrl, function () {});
         });
 
-        srv.captureServer.oncapture = function (req, res, slave) {
-            res.writeHead(302, {"Location": slave.url});
-            res.end();
-            srv.captureServer.oncapture = null;
+        var captureHandler = function (slave) {
+            srv.captureServer.bayeux.unsubscribe("/capture", captureHandler);
 
-            slave.on("ready", function () {
+            var readyHandler = function () {
+                srv.captureServer.bayeux.unsubscribe(slave.becomesReadyPath, readyHandler);
                 // TODO: Figure out why we need a timeout here.
                 // Without a timeout, the "disconnect" event will not
                 // trigger immediately after the browser dies, but wait
@@ -96,8 +106,10 @@ module.exports = {
                 setTimeout(function () {
                     oncapture(slave, phantom);
                 }, 50);
-            });
-        };
+            };
+            srv.captureServer.bayeux.subscribe(slave.becomesReadyPath, readyHandler);
+        }
+        srv.captureServer.bayeux.subscribe("/capture", captureHandler);
     }
 };
 

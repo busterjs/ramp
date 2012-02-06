@@ -3,6 +3,7 @@ var assert = buster.assert;
 var refute = buster.refute;
 
 var http = require("http");
+var faye = require("faye");
 var bCapServ = require("./../../lib/buster-capture-server");
 var h = require("./../test-helper");
 
@@ -47,9 +48,9 @@ buster.testCase("Integration", {
         var self = this;
 
         h.capture(this.srv, function (slave, phantom) {
-            assert.equals(self.captureServer.slaves.length, 1);
+            assert.equals(self.captureServer.slaves().length, 1);
             phantom.kill(function () {
-                assert.equals(self.captureServer.slaves.length, 0);
+                assert.equals(self.captureServer.slaves().length, 0);
                 done();
             });
         });
@@ -59,16 +60,16 @@ buster.testCase("Integration", {
         var self = this;
 
         h.capture(this.srv, function (slave, phantom) {
-            assert.equals(self.captureServer.slaves.length, 1);
+            assert.equals(self.captureServer.slaves().length, 1);
 
             h.capture(self.srv, function (slave, phantom2) {
-                assert.equals(self.captureServer.slaves.length, 2);
+                assert.equals(self.captureServer.slaves().length, 2);
 
                 phantom.kill(function () {
-                    assert.equals(self.captureServer.slaves.length, 1);
+                    assert.equals(self.captureServer.slaves().length, 1);
 
                     phantom2.kill(function () {
-                        assert.equals(self.captureServer.slaves.length, 0);
+                        assert.equals(self.captureServer.slaves().length, 0);
                         done();
                     });
                 });
@@ -81,16 +82,17 @@ buster.testCase("Integration", {
         h.capture(this.srv, function (slave, phantom) {
             var session = self.captureServer.createSession({
                 resourceSet: {
-                    resources: {
-                        "/test.js": {
+                    resources: [
+                        {
+                            path: "/test.js",
                             content: 'buster.publish("/some/event", 123);'
                         }
-                    },
-                    load: ["/test.js"]
+                    ],
+                    loadPath: ["/test.js"]
                 }
             });
 
-            session.subscribe("/some/event", function (data) {
+            h.bayeuxForSession(session).subscribe("/some/event", function (data) {
                 assert.equals(data, 123);
                 phantom.kill(done);
             });
@@ -102,24 +104,27 @@ buster.testCase("Integration", {
         h.capture(this.srv, function (slave, phantom) {
             var session = self.captureServer.createSession({
                 resourceSet: {
-                    resources: {
-                        "/test.js": {
+                    resources: [
+                        {
+                            path: "/test.js",
                             content: [
                                 'var subs = buster.subscribe("/some/event", function (data) {',
                                 '    buster.publish("/other/event", data);',
                                 '});'].join("\n")
                         }
-                    },
-                    load: ["/test.js"]
+                    ],
+                    loadPath: ["/test.js"]
                 }
             });
 
-            slave.on("sessionLoaded", function (s) {
-                var publ = session.publish("/some/event", 123);
-                assert.same(session, s);
+            var sessionBayeux = h.bayeuxForSession(session);
+
+            self.srv.captureServer.bayeux.subscribe("/session/loaded", function (s) {
+                sessionBayeux.publish("/some/event", 123);
+                assert.equals(session, s);
             });
 
-            session.subscribe("/other/event", function (data) {
+            sessionBayeux.subscribe("/other/event", function (data) {
                 assert.equals(data, 123);
                 phantom.kill(done);
             });
@@ -128,18 +133,20 @@ buster.testCase("Integration", {
 
     "test loading second session": function (done) {
         var self = this;
+        var bayeux = self.srv.captureServer.bayeux;
         h.capture(this.srv, function (slave, phantom) {
             var sess1 = self.captureServer.createSession({});
-            slave.once("sessionLoaded", function (s) {
-                assert.same(sess1, s);
-                sess1.on("end", function () {
+            h.bayeuxSubscribeOnce(bayeux, "/session/loaded", function (s) {
+                assert.equals(sess1, s);
+
+                h.bayeuxSubscribeOnce(bayeux, "/session/end", function (s) {
                     var sess2 = self.captureServer.createSession({});
-                    slave.once("sessionLoaded", function (s) {
-                        assert.same(sess2, s);
+                    h.bayeuxSubscribeOnce(bayeux, "/session/loaded", function (s) {
+                        assert.equals(sess2, s);
                         done();
                     });
                 });
-                sess1.end();
+                self.srv.captureServer.endSession(sess1.id);
             });
         });
     },
