@@ -44,8 +44,7 @@ buster.testCase("Capture server", {
                 h.request({path: this.cs.capturePath}).end();
                 bayeuxSubscribeOnce(this.cs.bayeux, "/capture", function (slave) {
                     self.slave = slave;
-                    // TODO: find a less hacky way of pretending to be a browser.
-                    self.cs.bayeux.publish("/" + slave.id + "/ready", {}).callback(done);
+                    self.cs.bayeux.publish(slave.becomesIdlePath, {}).callback(done);
                 });
             },
 
