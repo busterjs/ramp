@@ -205,7 +205,7 @@ buster.testCase("Buster Capture Server", {
                             {id: self.oncaptureSlaves[1].id},
                             {id: self.oncaptureSlaves[2].id}
                         ]);
-
+                        
                         done();
                     }).end(new Buffer(JSON.stringify({
                         resourceSet: {load: [],resources: {}}

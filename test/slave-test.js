@@ -63,11 +63,10 @@ buster.testCase("Slave", {
         },
 
         "serves frameset": function (done) {
-            var self = this;
             h.request({path: this.slave.url, method: "GET"}, function (res, body) {
                 buster.assert.equals(res.statusCode, 200);
-                buster.assert.match(body, 'src="' + self.slave.url + '/slaveHeader/"');
-                buster.assert.match(body, '<frameset rows="80px,*"');
+                buster.assert.match(body, '<frame src="/slaveHeader/" />');
+                buster.assert.match(body, '<frameset rows="0px,80px,*"');
                 done();
             }).end();
         },
@@ -126,13 +125,32 @@ buster.testCase("Slave", {
 
         },
 
-        "serves index page as text/html": function (done) {
-            var self = this;
-            h.request({path: this.slave.url}, function (res, body) {
-                assert.equals(res.statusCode, 200);
-                assert.equals(res.headers["content-type"], "text/html");
-                done();
-            }).end();
+        "index page": {
+            setUp: function (done) {
+                var self = this;
+                h.request({path: this.slave.url}, function (res, body) {
+                    self.res = res;
+                    self.body = body;
+                    done();
+                }).end();
+            },
+
+            "is served as text/html": function () {
+                assert.equals(this.res.statusCode, 200);
+                assert.equals(this.res.headers["content-type"], "text/html");
+            },
+
+            "serves frameset": function () {
+                assert.match(this.body, "<frameset");
+            },
+
+            "serves control frame": function () {
+                assert.match(this.body, '<frame src="' + this.slave.url + '/control_frame.html" id="control_frame" />');
+            },
+
+            "serves session frame with no session loaded": function () {
+                assert.match(this.body, '<frame id="slave_frame" />');
+            },
         },
 
         "serving env.js": {
@@ -174,6 +192,24 @@ buster.testCase("Slave", {
                 var scope = {buster: {}};
                 require("vm").runInNewContext(body, scope);
                 assert.equals("bar", scope.buster.env.foo);
+                done();
+            }).end();
+        },
+
+        "loads all scripts in control_frame.html": function (done) {
+            var self = this;
+            this.slave.resourceSet.load = [
+                "/foo.js",
+                "/bar.js",
+                "/baz/maz.js"
+            ];
+
+            h.request({path: this.slave.url + "/control_frame.html"}, function (res, body) {
+                assert.equals(res.statusCode, 200);
+                assert.equals(res.headers["content-type"], "text/html");
+                assert.match(body, self.slave.url + "/foo.js");
+                assert.match(body, self.slave.url + "/bar.js");
+                assert.match(body, self.slave.url + "/baz/maz.js");
                 done();
             }).end();
         },
