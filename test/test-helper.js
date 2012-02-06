@@ -2,6 +2,8 @@ var http = require("http");
 var faye = require("faye");
 var CP = require("child_process");
 var EventEmitter = require("events").EventEmitter;
+var htmlparser = require("htmlparser");
+var select = require("soupselect").select;
 
 module.exports = {
     NO_RESPONSE_STATUS_CODE: 418,
@@ -16,7 +18,7 @@ module.exports = {
         var req = http.request(options, function (res) {
             var body = "";
             res.on("data", function (chunk) { body += chunk; });
-            res.on("end", function () { callback(res, body); });
+            res.on("end", function () { callback && callback(res, body); });
         });
         return req;
     },
@@ -42,6 +44,20 @@ module.exports = {
         return bayeuxClient;
     },
 
+    bayeuxSubscribeOnce: function(bayeux, url, handler) {
+        var wrapped = function () {
+            handler.apply(this, arguments);
+            bayeux.unsubscribe(url, wrapped);
+        };
+        return bayeux.subscribe(url, wrapped);
+    },
+
+    bayeuxForSession: function (s) {
+        return new faye.Client("http://127.0.0.1:"
+                               + module.exports.SERVER_PORT
+                               + s.bayeuxClientPath);
+    },
+
     // Opening and closing a faye client yields the same code paths as
     // opening and closing an actual browser.
     emulateCloseBrowser: function (slave) {
@@ -60,7 +76,15 @@ module.exports = {
         }
     },
 
-    Phantom: function (onready) {
+    parseDOM: function (html) {
+        var handler = new htmlparser.DefaultHandler();
+        var parser = new htmlparser.Parser(handler);
+        parser.parseComplete(html);
+        return handler.dom;
+    },
+
+    domSelect: function (dom, selector) {
+        return select(dom, selector);
     },
 
     capture: function(srv, oncapture) {
@@ -70,12 +94,11 @@ module.exports = {
             phantom.open(captureUrl, function () {});
         });
 
-        srv.captureServer.oncapture = function (req, res, slave) {
-            res.writeHead(302, {"Location": slave.url});
-            res.end();
-            srv.captureServer.oncapture = null;
+        var captureHandler = function (slave) {
+            srv.captureServer.bayeux.unsubscribe("/capture", captureHandler);
 
-            slave.on("ready", function () {
+            var readyHandler = function () {
+                srv.captureServer.bayeux.unsubscribe(slave.becomesReadyPath, readyHandler);
                 // TODO: Figure out why we need a timeout here.
                 // Without a timeout, the "disconnect" event will not
                 // trigger immediately after the browser dies, but wait
@@ -83,8 +106,10 @@ module.exports = {
                 setTimeout(function () {
                     oncapture(slave, phantom);
                 }, 50);
-            });
-        };
+            };
+            srv.captureServer.bayeux.subscribe(slave.becomesReadyPath, readyHandler);
+        }
+        srv.captureServer.bayeux.subscribe("/capture", captureHandler);
     }
 };
 

@@ -20,13 +20,15 @@
     },
     "dependencies": {
         "buster-core": "~0.5",
-        "buster-promise": "~0.4",
-        "buster-resources": "~0.1",
+        "buster-resources": "~0.2",
         "faye": "~0.7",
         "ejs": "~0.4",
-        "node-uuid": "~1"
+        "node-uuid": "~1",
+        "when": "https://github.com/cujojs/when/tarball/v0.11.1"
     },
     "devDependencies": {
-        "buster": ""
+        "buster": "",
+        "htmlparser": "~1.7",
+        "soupselect": "~0.2"
     }
 }
