@@ -44,6 +44,12 @@ buster.testCase("Capture server", {
                 h.request({path: this.cs.capturePath}).end();
                 h.bayeuxSubscribeOnce(this.cs.bayeux, "/capture", function (slave) {
                     self.slave = slave;
+
+                    // A slave is required to emit unloaded when a session ends
+                    self.cs.bayeux.subscribe("/" + slave.id + "/session/end", function () {
+                        self.cs.bayeux.publish("/" + slave.id + "/session/unloaded", {});
+                    });
+
                     self.cs.bayeux.publish(slave.becomesReadyPath, {}).callback(done);
                 });
             },
