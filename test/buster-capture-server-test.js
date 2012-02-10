@@ -55,7 +55,8 @@ buster.testCase("Capture server", {
             },
 
             "yields slave information": function () {
-                var s = this.cs.getSlave(this.slave.id);
+                var self = this;
+                var s = this.cs.slaves().filter(function (s) { return s.id == self.slave.id })[0];
                 assert.defined(s);
                 assert.defined(s.id);
                 assert.equals(s.id, this.slave.id);
