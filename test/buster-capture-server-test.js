@@ -94,7 +94,7 @@ buster.testCase("Capture server", {
                 this.cs.header(80, rs);
                 h.request({path: this.slave.url}, function (res, body) {
                     var dom = h.parseDOM(body);
-                    var headerSrc = h.domSelect(dom, "frame")[0].attribs.src
+                    var headerSrc = h.domSelect(dom, "frame")[0].attribs.src;
                     h.request({path: headerSrc}, function (res, body) {
                         assert.equals(res.statusCode, 200);
                         assert.equals(body, "<p>Hello, World.</p>");
