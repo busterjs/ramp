@@ -119,7 +119,7 @@ buster.testCase("Integration", {
 
             var sessionBayeux = h.bayeuxForSession(session);
 
-            self.srv.captureServer.bayeux.subscribe("/session/loaded", function (s) {
+            self.srv.captureServer.bayeux.subscribe("/session/start", function (s) {
                 sessionBayeux.publish("/some/event", 123);
                 assert.equals(session, s);
             });
@@ -136,12 +136,12 @@ buster.testCase("Integration", {
         var bayeux = self.srv.captureServer.bayeux;
         h.capture(this.srv, function (slave, phantom) {
             var sess1 = self.captureServer.createSession({});
-            h.bayeuxSubscribeOnce(bayeux, "/session/loaded", function (s) {
+            h.bayeuxSubscribeOnce(bayeux, "/session/start", function (s) {
                 assert.equals(sess1, s);
 
                 h.bayeuxSubscribeOnce(bayeux, "/session/end", function (s) {
                     var sess2 = self.captureServer.createSession({});
-                    h.bayeuxSubscribeOnce(bayeux, "/session/loaded", function (s) {
+                    h.bayeuxSubscribeOnce(bayeux, "/session/start", function (s) {
                         assert.equals(sess2, s);
                         phantom.kill(done);
                     });
@@ -182,7 +182,7 @@ buster.testCase("Integration", {
             }
         });
         var bayeux = this.srv.captureServer.bayeux;
-        h.bayeuxSubscribeOnce(bayeux, "/session/loaded", function (s) {
+        h.bayeuxSubscribeOnce(bayeux, "/session/start", function (s) {
             var phantom;
             h.capture(self.srv, function (slave, p) { phantom = p; });
             h.bayeuxForSession(sess).subscribe("/some/event", function (data) {

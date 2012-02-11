@@ -53,6 +53,11 @@ buster.testCase("Capture server", {
                         self.cs.bayeux.publish("/" + slave.id + "/session/unloaded", {});
                     });
 
+                    // A slave is required to notify when session has loaded
+                    self.cs.bayeux.subscribe("/" + slave.id + "/session/start", function (sess) {
+                        self.cs.bayeux.publish("/" + slave.id + "/session/" + sess.id + "/ready", {});
+                    });
+
                     self.cs.bayeux.publish(slave.becomesReadyPath, {}).callback(done);
                 });
             },
