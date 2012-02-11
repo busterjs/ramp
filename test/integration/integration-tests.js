@@ -143,7 +143,7 @@ buster.testCase("Integration", {
                     var sess2 = self.captureServer.createSession({});
                     h.bayeuxSubscribeOnce(bayeux, "/session/loaded", function (s) {
                         assert.equals(sess2, s);
-                        done();
+                        phantom.kill(done);
                     });
                 });
                 self.srv.captureServer.endSession(sess1.id);
@@ -155,17 +155,39 @@ buster.testCase("Integration", {
         var port = h.SERVER_PORT + 1;
         var srv1 = createServer(port, function () {
             h.capture(srv1, function (slave1, phantom) {
-
                 srv1.kill(function () {
                     var srv2 = createServer(port, function () {
                         srv2.captureServer.oncapture = function (req, res, slave2) {
                             refute.same(slave1, slave2);
-                            res.writeHead(302, {"Location": slave2.url});
+                            res.writeHead(200);
                             res.end();
-                            srv2.kill(done);
+                            srv2.kill(function () {
+                                phantom.kill(done);
+                            });
                         };
                     });
                 });
+            });
+        });
+    },
+
+    "test loads session when slave is captured": function (done) {
+        var self = this;
+        var sess = this.captureServer.createSession({
+            resourceSet: {
+                resources: [
+                    {path: "/test.js", content: 'buster.publish("/some/event", 123);'}
+                ],
+                loadPath: ["/test.js"]
+            }
+        });
+        var bayeux = this.srv.captureServer.bayeux;
+        h.bayeuxSubscribeOnce(bayeux, "/session/loaded", function (s) {
+            var phantom;
+            h.capture(self.srv, function (slave, p) { phantom = p; });
+            h.bayeuxForSession(sess).subscribe("/some/event", function (data) {
+                assert.equals(data, 123);
+                phantom.kill(done);
             });
         });
     }
