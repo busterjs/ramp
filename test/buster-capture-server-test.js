@@ -41,7 +41,10 @@ buster.testCase("Capture server", {
         "with captured slave": {
             setUp: function (done) {
                 var self = this;
-                h.request({path: this.cs.capturePath}).end();
+                h.request({
+                    path: this.cs.capturePath,
+                    headers: { "User-Agent": "Mozilla/5.0 (Android; Linux armv7l; rv:10.0) Gecko/20120129 Firefox/10.0 Fennec/10.0" }
+                }).end();
                 h.bayeuxSubscribeOnce(this.cs.bayeux, "/capture", function (slave) {
                     self.slave = slave;
 
@@ -61,6 +64,14 @@ buster.testCase("Capture server", {
                 assert.equals(s.id, this.slave.id);
                 assert.defined(s.url);
                 assert.equals(s.url, this.slave.url);
+            },
+
+            "slave has user agent": function () {
+                var s = this.cs.getSlave(this.slave.id);
+                var serialized = s.serialize();
+
+                assert.match(s.userAgent, "Firefox");
+                assert.match(serialized.userAgent, "Firefox");
             },
 
             "serves slave page": function (done) {
