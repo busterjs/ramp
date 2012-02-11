@@ -41,13 +41,21 @@ buster.testCase("Capture server", {
         "with captured slave": {
             setUp: function (done) {
                 var self = this;
-                h.request({path: this.cs.capturePath}).end();
+                h.request({
+                    path: this.cs.capturePath,
+                    headers: { "User-Agent": "Mozilla/5.0 (Android; Linux armv7l; rv:10.0) Gecko/20120129 Firefox/10.0 Fennec/10.0" }
+                }).end();
                 h.bayeuxSubscribeOnce(this.cs.bayeux, "/capture", function (slave) {
                     self.slave = slave;
 
                     // A slave is required to emit unloaded when a session ends
                     self.cs.bayeux.subscribe("/" + slave.id + "/session/end", function () {
                         self.cs.bayeux.publish("/" + slave.id + "/session/unloaded", {});
+                    });
+
+                    // A slave is required to notify when session has loaded
+                    self.cs.bayeux.subscribe("/" + slave.id + "/session/start", function (sess) {
+                        self.cs.bayeux.publish("/" + slave.id + "/session/" + sess.id + "/ready", {});
                     });
 
                     self.cs.bayeux.publish(slave.becomesReadyPath, {}).callback(done);
@@ -62,6 +70,14 @@ buster.testCase("Capture server", {
                 assert.equals(s.id, this.slave.id);
                 assert.defined(s.url);
                 assert.equals(s.url, this.slave.url);
+            },
+
+            "slave has user agent": function () {
+                var s = this.cs.getSlave(this.slave.id);
+                var serialized = s.serialize();
+
+                assert.match(s.userAgent, "Firefox");
+                assert.match(serialized.userAgent, "Firefox");
             },
 
             "serves slave page": function (done) {
@@ -84,7 +100,7 @@ buster.testCase("Capture server", {
                 this.cs.header(80, rs);
                 h.request({path: this.slave.url}, function (res, body) {
                     var dom = h.parseDOM(body);
-                    var headerSrc = h.domSelect(dom, "frame")[0].attribs.src
+                    var headerSrc = h.domSelect(dom, "frame")[0].attribs.src;
                     h.request({path: headerSrc}, function (res, body) {
                         assert.equals(res.statusCode, 200);
                         assert.equals(body, "<p>Hello, World.</p>");
@@ -294,31 +310,46 @@ buster.testCase("Capture server", {
                 }
             },
 
-            "serves resource set for current session": function (done) {
-                this.cs.createSession({
-                    resourceSet: {
-                        resources: [
-                            {path: "/", content: "<p>test</p>"},
-                            {path: "/foo.js", content: "var foo = 5;"}
-                        ]
-                    }
-                });
+            "resource sets": {
+                setUp: function (done) {
+                    this.cs.createSession({
+                        resourceSet: {
+                            resources: [
+                                {path: "/", content: "<p>test</p>", etag: "1234"},
+                                {path: "/foo.js", content: "var foo = 5;", etag: "2345"}
+                            ]
+                        }
+                    });
 
-                this.cs.bayeux.subscribe("/session/start", function (sess) {
-                    h.request({path: sess.resourcesPath}, function (res, body) {
+                    this.cs.bayeux.subscribe("/session/start", done(function (sess) {
+                        this.sess = sess;
+                    }.bind(this)));
+                },
+
+                "serves resource set for current session": function (done) {
+                    h.request({path: this.sess.resourcesPath}, function (res, body) {
                         assert.equals(res.statusCode, 200);
                         assert.match(body, "<p>test</p>");
 
                         h.request(
-                            {path: sess.resourcesPath + "/foo.js"},
-                            function (res, body) {
+                            {path: this.sess.resourcesPath + "/foo.js"},
+                            done(function (res, body) {
                                 assert.equals(res.statusCode, 200);
                                 assert.equals(body, "var foo = 5;");
-                                done();
-                            }
+                            })
                         ).end();
-                    }).end();
-                });
+                    }.bind(this)).end();
+                },
+
+                "serves resource set cache manifests": function (done) {
+                    h.request({path: "/resources"}, done(function (res, body) {
+                        assert.equals(res.statusCode, 200);
+                        assert.match(JSON.parse(body), {
+                            "/": ["1234"],
+                            "/foo.js": ["2345"]
+                        });
+                    })).end();
+                }
             },
 
             "does not serve resource set for queued session": function (done) {
@@ -350,7 +381,7 @@ buster.testCase("Capture server", {
                 var s1 = this.cs.createSession({});
                 var s2 = this.cs.createSession({
                     resourceSet: {
-                        resources: [{path: "/", content: "<p>a</p>"},]
+                        resources: [{path: "/", content: "<p>a</p>"}]
                     }
                 });
 
@@ -412,13 +443,25 @@ buster.testCase("Capture server", {
             }
         },
 
-        "does not create session programmatically with no slaves available": function () {
-            refute.defined(this.cs.createSession({}));
+        "does not create unjoinable session programmatically with no slaves available": function () {
+            refute.defined(this.cs.createSession({joinable: false}));
         },
 
-        "does not create session over HTTP with no slaves available": function (done) {
+        "does not create unjoinable session over HTTP with no slaves available": function (done) {
             h.request({path: "/sessions", method: "POST"}, function (res, body) {
                 assert.equals(res.statusCode, 403);
+                done();
+            }).end(JSON.stringify({joinable: false}));
+        },
+
+        "creates session programmatically with no slaves available": function () {
+            assertIsSerializedSession(this.cs.createSession({}));
+        },
+
+        "creates session over HTTP with no slaves available": function (done) {
+            h.request({path: "/sessions", method: "POST"}, function (res, body) {
+                assert.equals(res.statusCode, 201);
+                assertIsSerializedSession(JSON.parse(body));
                 done();
             }).end(JSON.stringify({}));
         }

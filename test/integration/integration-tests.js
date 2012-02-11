@@ -119,7 +119,7 @@ buster.testCase("Integration", {
 
             var sessionBayeux = h.bayeuxForSession(session);
 
-            self.srv.captureServer.bayeux.subscribe("/session/loaded", function (s) {
+            self.srv.captureServer.bayeux.subscribe("/session/start", function (s) {
                 sessionBayeux.publish("/some/event", 123);
                 assert.equals(session, s);
             });
@@ -136,14 +136,14 @@ buster.testCase("Integration", {
         var bayeux = self.srv.captureServer.bayeux;
         h.capture(this.srv, function (slave, phantom) {
             var sess1 = self.captureServer.createSession({});
-            h.bayeuxSubscribeOnce(bayeux, "/session/loaded", function (s) {
+            h.bayeuxSubscribeOnce(bayeux, "/session/start", function (s) {
                 assert.equals(sess1, s);
 
                 h.bayeuxSubscribeOnce(bayeux, "/session/end", function (s) {
                     var sess2 = self.captureServer.createSession({});
-                    h.bayeuxSubscribeOnce(bayeux, "/session/loaded", function (s) {
+                    h.bayeuxSubscribeOnce(bayeux, "/session/start", function (s) {
                         assert.equals(sess2, s);
-                        done();
+                        phantom.kill(done);
                     });
                 });
                 self.srv.captureServer.endSession(sess1.id);
@@ -155,15 +155,86 @@ buster.testCase("Integration", {
         var port = h.SERVER_PORT + 1;
         var srv1 = createServer(port, function () {
             h.capture(srv1, function (slave1, phantom) {
-
                 srv1.kill(function () {
                     var srv2 = createServer(port, function () {
                         srv2.captureServer.oncapture = function (req, res, slave2) {
                             refute.same(slave1, slave2);
-                            res.writeHead(302, {"Location": slave2.url});
+                            res.writeHead(200);
                             res.end();
-                            srv2.kill(done);
+                            srv2.kill(function () {
+                                phantom.kill(done);
+                            });
                         };
+                    });
+                });
+            });
+        });
+    },
+
+    "test loads session when slave is captured": function (done) {
+        var self = this;
+        var sess = this.captureServer.createSession({
+            resourceSet: {
+                resources: [
+                    {path: "/test.js", content: 'buster.publish("/some/event", 123);'}
+                ],
+                loadPath: ["/test.js"]
+            }
+        });
+        var bayeux = this.srv.captureServer.bayeux;
+        h.bayeuxSubscribeOnce(bayeux, "/session/start", function (s) {
+            var phantom;
+            h.capture(self.srv, function (slave, p) { phantom = p; });
+            h.bayeuxForSession(sess).subscribe("/some/event", function (data) {
+                assert.equals(data, 123);
+                phantom.kill(done);
+            });
+        });
+    },
+
+    "test is able to relative path lookups in slaves": function (done) {
+        var session = this.captureServer.createSession({
+            resourceSet: {
+                resources: [
+                    {
+                        path: "/",
+                        content: [
+                            '<!DOCTYPE html>',
+                            '<html>',
+                            '  <head>',
+                            '    <script src="foo.js"></script>',
+                            '  </head>',
+                            '  <body></body>',
+                            '</html>'].join("\n")
+                    },
+                    {
+                        path: "/foo.js",
+                        content: [
+                            'window.addEventListener("load", function () {',
+                            '  buster.publish("/some/event", 123);',
+                            '});'].join("\n")
+                    }
+                ]
+            }
+        });
+
+        h.capture(this.srv, function (slave, phantom) {
+            h.bayeuxForSession(session).subscribe("/some/event", function (data) {
+                assert.equals(data, 123);
+                phantom.kill(done);
+            });
+        });
+    },
+
+    "test refreshing slave URL": function (done) {
+        var self = this;
+        h.capture(this.srv, function (slave, phantom) {
+            var slaveUrl = "http://127.0.0.1:" + self.srv.httpServer.address().port + slave.url;
+            phantom.kill(function () {
+                var phantom2 = h.Phantom(function () {
+                    phantom2.open(slaveUrl, function () {
+                        assert(true);
+                        phantom2.kill(done);
                     });
                 });
             });

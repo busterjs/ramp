@@ -1,6 +1,6 @@
 {
     "name": "buster-capture-server",
-    "version": "0.3.1",
+    "version": "0.4.0",
     "description": "Buster capture server",
     "homepage": "http://busterjs.org/docs/buster-capture-server",
     "author": {
@@ -19,15 +19,15 @@
         "url": "git://gitorious.org/buster/buster-capture-server.git"
     },
     "dependencies": {
-        "buster-core": "~0.5",
-        "buster-resources": "~0.2",
+        "buster-core": ">=0.5.1",
+        "buster-resources": ">=0.2",
         "faye": "~0.7",
         "ejs": "~0.4",
         "node-uuid": "~1",
         "when": "https://github.com/cujojs/when/tarball/v0.11.1"
     },
     "devDependencies": {
-        "buster": "",
+        "buster": "*",
         "htmlparser": "~1.7",
         "soupselect": "~0.2"
     }
