@@ -234,7 +234,7 @@ buster.testCase("Integration", {
                 var phantom2 = h.Phantom(function () {
                     phantom2.open(slaveUrl, function () {
                         assert(true);
-                        done();
+                        phantom2.kill(done);
                     });
                 });
             });
