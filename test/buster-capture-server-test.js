@@ -437,13 +437,25 @@ buster.testCase("Capture server", {
             }
         },
 
-        "does not create session programmatically with no slaves available": function () {
-            refute.defined(this.cs.createSession({}));
+        "does not create unjoinable session programmatically with no slaves available": function () {
+            refute.defined(this.cs.createSession({joinable: false}));
         },
 
-        "does not create session over HTTP with no slaves available": function (done) {
+        "does not create unjoinable session over HTTP with no slaves available": function (done) {
             h.request({path: "/sessions", method: "POST"}, function (res, body) {
                 assert.equals(res.statusCode, 403);
+                done();
+            }).end(JSON.stringify({joinable: false}));
+        },
+
+        "creates session programmatically with no slaves available": function () {
+            assertIsSerializedSession(this.cs.createSession({}));
+        },
+
+        "creates session over HTTP with no slaves available": function (done) {
+            h.request({path: "/sessions", method: "POST"}, function (res, body) {
+                assert.equals(res.statusCode, 201);
+                assertIsSerializedSession(JSON.parse(body));
                 done();
             }).end(JSON.stringify({}));
         }
