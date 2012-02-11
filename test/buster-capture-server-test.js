@@ -73,11 +73,7 @@ buster.testCase("Capture server", {
             },
 
             "slave has user agent": function () {
-                var s = this.cs.getSlave(this.slave.id);
-                var serialized = s.serialize();
-
-                assert.match(s.userAgent, "Firefox");
-                assert.match(serialized.userAgent, "Firefox");
+                assert.match(this.slave.userAgent, "Firefox");
             },
 
             "serves slave page": function (done) {
