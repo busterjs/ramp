@@ -190,5 +190,39 @@ buster.testCase("Integration", {
                 phantom.kill(done);
             });
         });
+    },
+
+    "test is able to relative path lookups in slaves": function (done) {
+        var session = this.captureServer.createSession({
+            resourceSet: {
+                resources: [
+                    {
+                        path: "/",
+                        content: [
+                            '<!DOCTYPE html>',
+                            '<html>',
+                            '  <head>',
+                            '    <script src="foo.js"></script>',
+                            '  </head>',
+                            '  <body></body>',
+                            '</html>'].join("\n")
+                    },
+                    {
+                        path: "/foo.js",
+                        content: [
+                            'window.addEventListener("load", function () {',
+                            '  buster.publish("/some/event", 123);',
+                            '});'].join("\n")
+                    }
+                ]
+            }
+        });
+
+        h.capture(this.srv, function (slave, phantom) {
+            h.bayeuxForSession(session).subscribe("/some/event", function (data) {
+                assert.equals(data, 123);
+                phantom.kill(done);
+            });
+        });
     }
 });
