@@ -304,31 +304,46 @@ buster.testCase("Capture server", {
                 }
             },
 
-            "serves resource set for current session": function (done) {
-                this.cs.createSession({
-                    resourceSet: {
-                        resources: [
-                            {path: "/", content: "<p>test</p>"},
-                            {path: "/foo.js", content: "var foo = 5;"}
-                        ]
-                    }
-                });
+            "resource sets": {
+                setUp: function (done) {
+                    this.cs.createSession({
+                        resourceSet: {
+                            resources: [
+                                {path: "/", content: "<p>test</p>", etag: "1234"},
+                                {path: "/foo.js", content: "var foo = 5;", etag: "2345"}
+                            ]
+                        }
+                    });
 
-                this.cs.bayeux.subscribe("/session/start", function (sess) {
-                    h.request({path: sess.resourcesPath}, function (res, body) {
+                    this.cs.bayeux.subscribe("/session/start", done(function (sess) {
+                        this.sess = sess;
+                    }.bind(this)));
+                },
+
+                "serves resource set for current session": function (done) {
+                    h.request({path: this.sess.resourcesPath}, function (res, body) {
                         assert.equals(res.statusCode, 200);
                         assert.match(body, "<p>test</p>");
 
                         h.request(
-                            {path: sess.resourcesPath + "/foo.js"},
-                            function (res, body) {
+                            {path: this.sess.resourcesPath + "/foo.js"},
+                            done(function (res, body) {
                                 assert.equals(res.statusCode, 200);
                                 assert.equals(body, "var foo = 5;");
-                                done();
-                            }
+                            })
                         ).end();
-                    }).end();
-                });
+                    }.bind(this)).end();
+                },
+
+                "serves resource set cache manifests": function (done) {
+                    h.request({path: "/resources"}, done(function (res, body) {
+                        assert.equals(res.statusCode, 200);
+                        assert.match(JSON.parse(body), {
+                            "/": ["1234"],
+                            "/foo.js": ["2345"]
+                        });
+                    })).end();
+                }
             },
 
             "does not serve resource set for queued session": function (done) {
@@ -360,7 +375,7 @@ buster.testCase("Capture server", {
                 var s1 = this.cs.createSession({});
                 var s2 = this.cs.createSession({
                     resourceSet: {
-                        resources: [{path: "/", content: "<p>a</p>"},]
+                        resources: [{path: "/", content: "<p>a</p>"}]
                     }
                 });
 
