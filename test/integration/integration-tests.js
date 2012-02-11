@@ -224,5 +224,20 @@ buster.testCase("Integration", {
                 phantom.kill(done);
             });
         });
+    },
+
+    "test refreshing slave URL": function (done) {
+        var self = this;
+        h.capture(this.srv, function (slave, phantom) {
+            var slaveUrl = "http://127.0.0.1:" + self.srv.httpServer.address().port + slave.url;
+            phantom.kill(function () {
+                var phantom2 = h.Phantom(function () {
+                    phantom2.open(slaveUrl, function () {
+                        assert(true);
+                        done();
+                    });
+                });
+            });
+        });
     }
 });

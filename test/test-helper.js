@@ -87,6 +87,10 @@ module.exports = {
         return select(dom, selector);
     },
 
+    Phantom: function () {
+        return Phantom.apply(Phantom, arguments);
+    },
+
     capture: function(srv, oncapture) {
         var captureUrl = "http://127.0.0.1:" + srv.httpServer.address().port + srv.captureServer.capturePath;
 
