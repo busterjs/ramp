@@ -396,6 +396,23 @@ buster.testCase("Capture server", {
                 });
             },
 
+            "stops serving resource set when current session ends": function (done) {
+                var self = this;
+                var s1 = this.cs.createSession({});
+                var s2 = this.cs.createSession({});
+                h.bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function (sess) {
+                    assert.equals(s1, sess);
+                    self.cs.endSession(sess.id);
+
+                    h.bayeuxSubscribeOnce(self.cs.bayeux, "/session/start", function (sess) {
+                        h.request({path: s1.resourcesPath + "/"}, function (res, body) {
+                            assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
+                            done();
+                        }).end();
+                    });
+                });
+            },
+
             "stores sessions in order of creation": function (done) {
                 var self = this;
 
