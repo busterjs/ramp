@@ -120,6 +120,34 @@ buster.testCase("Capture server", {
                 }).end(JSON.stringify({}));
             },
 
+            "creating session programmatically with invalid resource set": function (done) {
+                var promise = this.cs.createSession({
+                    resourceSet: {
+                        resources: [
+                            {noPathHere: "/foo"}
+                        ]
+                    }
+                });
+                promise.then(function () {}, function (err) {
+                    assert.defined(err);
+                    done();
+                });
+            },
+
+            "creating session over HTTP with invalid resource set": function (done) {
+                h.request({path: "/sessions", method: "POST"}, function (res, body) {
+                    assert.equals(res.statusCode, 403);
+                    assert.defined(body);
+                    done();
+                }).end(JSON.stringify({
+                    resourceSet: {
+                        resources: [
+                            {noPathHere: "/foo"}
+                        ]
+                    }
+                }));
+            },
+
             "emits event when session is created": function (done) {
                 this.cs.createSession({});
                 this.cs.bayeux.subscribe("/session/create", function (session) {
