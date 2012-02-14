@@ -479,6 +479,16 @@ buster.testCase("Capture server", {
                 "has no common attributes between slaves": function () {
                     refute.equals(this.slave.id, this.slave2.id);
                     refute.equals(this.slave.url, this.slave2.url);
+                },
+
+                "HTTP session lists slaves": function (done) {
+                    var self = this;
+                    h.request({path: "/sessions", method: "POST"}, function (res, body) {
+                        var sess = JSON.parse(body);
+                        assert("slaves" in sess);
+                        assert.equals(sess.slaves.length, 2);
+                        done();
+                    }).end(JSON.stringify({}));
                 }
             }
         },
