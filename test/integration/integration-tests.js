@@ -269,5 +269,27 @@ buster.testCase("Integration", {
                 });
             });
         });
+    },
+
+    "provides buster.env.id": function (done) {
+        var self = this;
+        this.captureServer.createSession({
+            resourceSet: {
+                resources: [
+                    {
+                        path: "/foo.js",
+                        content: 'buster.publish("/some/event", buster.env.id);'
+                    },
+                ],
+                loadPath: ["/foo.js"]
+            }
+        }).then(function (session) {
+            h.capture(self.srv, function (slave, phantom) {
+                h.bayeuxForSession(session).subscribe("/some/event", function (data) {
+                    assert.equals(data, slave.id);
+                    phantom.kill(done);
+                });
+            });
+        });
     }
 });
