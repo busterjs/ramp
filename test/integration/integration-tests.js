@@ -80,7 +80,7 @@ buster.testCase("Integration", {
     "test posting events from session": function (done) {
         var self = this;
         h.capture(this.srv, function (slave, phantom) {
-            var session = self.captureServer.createSession({
+            self.captureServer.createSession({
                 resourceSet: {
                     resources: [
                         {
@@ -90,11 +90,11 @@ buster.testCase("Integration", {
                     ],
                     loadPath: ["/test.js"]
                 }
-            });
-
-            h.bayeuxForSession(session).subscribe("/some/event", function (data) {
-                assert.equals(data, 123);
-                phantom.kill(done);
+            }).then(function (session) {
+                h.bayeuxForSession(session).subscribe("/some/event", function (data) {
+                    assert.equals(data, 123);
+                    phantom.kill(done);
+                });
             });
         });
     },
@@ -102,7 +102,7 @@ buster.testCase("Integration", {
     "test subscribing to events from session": function (done) {
         var self = this;
         h.capture(this.srv, function (slave, phantom) {
-            var session = self.captureServer.createSession({
+            self.captureServer.createSession({
                 resourceSet: {
                     resources: [
                         {
@@ -115,18 +115,18 @@ buster.testCase("Integration", {
                     ],
                     loadPath: ["/test.js"]
                 }
-            });
+            }).then(function (session) {
+                var sessionBayeux = h.bayeuxForSession(session);
 
-            var sessionBayeux = h.bayeuxForSession(session);
+                self.srv.captureServer.bayeux.subscribe("/session/start", function (s) {
+                    sessionBayeux.publish("/some/event", 123);
+                    assert.equals(session, s);
+                });
 
-            self.srv.captureServer.bayeux.subscribe("/session/start", function (s) {
-                sessionBayeux.publish("/some/event", 123);
-                assert.equals(session, s);
-            });
-
-            sessionBayeux.subscribe("/other/event", function (data) {
-                assert.equals(data, 123);
-                phantom.kill(done);
+                sessionBayeux.subscribe("/other/event", function (data) {
+                    assert.equals(data, 123);
+                    phantom.kill(done);
+                });
             });
         });
     },
@@ -135,18 +135,20 @@ buster.testCase("Integration", {
         var self = this;
         var bayeux = self.srv.captureServer.bayeux;
         h.capture(this.srv, function (slave, phantom) {
-            var sess1 = self.captureServer.createSession({});
-            h.bayeuxSubscribeOnce(bayeux, "/session/start", function (s) {
-                assert.equals(sess1, s);
+            self.captureServer.createSession({}).then(function (sess1) {
+                h.bayeuxSubscribeOnce(bayeux, "/session/start", function (s) {
+                    assert.equals(sess1, s);
 
-                h.bayeuxSubscribeOnce(bayeux, "/session/end", function (s) {
-                    var sess2 = self.captureServer.createSession({});
-                    h.bayeuxSubscribeOnce(bayeux, "/session/start", function (s) {
-                        assert.equals(sess2, s);
-                        phantom.kill(done);
+                    h.bayeuxSubscribeOnce(bayeux, "/session/end", function (s) {
+                        self.captureServer.createSession({}).then(function (sess2) {
+                            h.bayeuxSubscribeOnce(bayeux, "/session/start", function (s) {
+                                assert.equals(sess2, s);
+                                phantom.kill(done);
+                            });
+                        });
                     });
+                    self.srv.captureServer.endSession(sess1.id);
                 });
-                self.srv.captureServer.endSession(sess1.id);
             });
         });
     },
@@ -173,27 +175,29 @@ buster.testCase("Integration", {
 
     "test loads session when slave is captured": function (done) {
         var self = this;
-        var sess = this.captureServer.createSession({
+        var bayeux = this.srv.captureServer.bayeux;
+        this.captureServer.createSession({
             resourceSet: {
                 resources: [
                     {path: "/test.js", content: 'buster.publish("/some/event", 123);'}
                 ],
                 loadPath: ["/test.js"]
             }
-        });
-        var bayeux = this.srv.captureServer.bayeux;
-        h.bayeuxSubscribeOnce(bayeux, "/session/start", function (s) {
-            var phantom;
-            h.capture(self.srv, function (slave, p) { phantom = p; });
-            h.bayeuxForSession(sess).subscribe("/some/event", function (data) {
-                assert.equals(data, 123);
-                phantom.kill(done);
+        }).then(function (sess) {
+            h.bayeuxSubscribeOnce(bayeux, "/session/start", function (s) {
+                var phantom;
+                h.capture(self.srv, function (slave, p) { phantom = p; });
+                h.bayeuxForSession(sess).subscribe("/some/event", function (data) {
+                    assert.equals(data, 123);
+                    phantom.kill(done);
+                });
             });
         });
     },
 
     "test is able to relative path lookups in slaves": function (done) {
-        var session = this.captureServer.createSession({
+        var self = this;
+        this.captureServer.createSession({
             resourceSet: {
                 resources: [
                     {
@@ -216,12 +220,12 @@ buster.testCase("Integration", {
                     }
                 ]
             }
-        });
-
-        h.capture(this.srv, function (slave, phantom) {
-            h.bayeuxForSession(session).subscribe("/some/event", function (data) {
-                assert.equals(data, 123);
-                phantom.kill(done);
+        }).then(function (session) {
+            h.capture(self.srv, function (slave, phantom) {
+                h.bayeuxForSession(session).subscribe("/some/event", function (data) {
+                    assert.equals(data, 123);
+                    phantom.kill(done);
+                });
             });
         });
     },
@@ -236,6 +240,32 @@ buster.testCase("Integration", {
                         assert(true);
                         phantom2.kill(done);
                     });
+                });
+            });
+        });
+    },
+
+    "test provides buster.env.contextPath": function (done) {
+        var self = this;
+        this.captureServer.createSession({
+            resourceSet: {
+                resources: [
+                    {
+                        path: "/foo.js",
+                        content: 'var e = document.createElement("script"); e.src = buster.env.contextPath + "/bar.js"; document.body.appendChild(e);'
+                    },
+                    {
+                        path: "/bar.js",
+                        content: 'buster.publish("/some/event", 123);'
+                    }
+                ],
+                loadPath: ["/foo.js"]
+            }
+        }).then(function (session) {
+            h.capture(self.srv, function (slave, phantom) {
+                h.bayeuxForSession(session).subscribe("/some/event", function (data) {
+                    assert.equals(data, 123);
+                    phantom.kill(done);
                 });
             });
         });
