@@ -33,7 +33,7 @@ var createServer = function (port, cb) {
     }
 };
 
-buster.testRunner.timeout = 1000;
+buster.testRunner.timeout = 4000;
 buster.testCase("Integration", {
     setUp: function (done) {
         this.srv = createServer(h.SERVER_PORT, done);
