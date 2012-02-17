@@ -490,6 +490,60 @@ buster.testCase("Capture server", {
                         done();
                     }).end(JSON.stringify({}));
                 }
+            },
+
+            "with shared resource sessions": {
+                setUp: function (done) {
+                    var self = this;
+                    when.all([
+                        this.cs.createSession({
+                            sharedResourcePath: true,
+                            resourceSet: {
+                                resources: [
+                                    {path: "/foo", content: "a"}
+                                ]
+                            }
+                        }),
+                        this.cs.createSession({
+                            sharedResourcePath: true,
+                            resourceSet: {
+                                resources: [
+                                    {path: "/foo", content: "b"}
+                                ]
+                            }
+                        })
+                    ]).then(function (sessions) {
+                        self.s1 = sessions[0];
+                        self.s2 = sessions[1];
+                        done();
+                    });
+                },
+
+                "shares only resource path": function () {
+                    assert.defined(this.s1.resourcesPath);
+                    assert.equals(this.s1.resourcesPath, this.s2.resourcesPath);
+                    refute.equals(this.s1.id, this.s2.id);
+                    refute.equals(this.s1.path, this.s2.path);
+                    refute.equals(this.s1.bayeuxClientPath, this.s2.bayeuxClientPath);
+                },
+
+                "serves resources for current resource set": function (done) {
+                    var self = this;
+                    h.request({
+                        path: this.s1.resourcesPath + "/foo"
+                    }, function (res, body) {
+                        assert.equals("a", body);
+                        self.cs.endSession(self.s1.id);
+                        h.bayeuxSubscribeOnce(self.cs.bayeux, "/session/start", function () {
+                            h.request({
+                                path: self.s2.resourcesPath + "/foo"
+                            }, function (res, body) {
+                                assert.equals("b", body);
+                                done();
+                            }).end();
+                        });
+                    }).end();
+                }
             }
         },
 
