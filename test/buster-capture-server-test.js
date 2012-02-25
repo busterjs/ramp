@@ -523,7 +523,7 @@ buster.testCase("Capture server", {
                     assert.equals(this.s1.resourcesPath, this.s2.resourcesPath);
                     refute.equals(this.s1.id, this.s2.id);
                     refute.equals(this.s1.path, this.s2.path);
-                    refute.equals(this.s1.bayeuxClientPath, this.s2.bayeuxClientPath);
+                    refute.equals(this.s1.bayeuxContextPath, this.s2.bayeuxContextPath);
                 },
 
                 "serves resources for current resource set": function (done) {
@@ -577,7 +577,9 @@ buster.testCase("Capture server", {
 function assertIsSerializedSession(sess) {
     assert.defined(sess);
     assert.defined(sess.id);
-    assert.defined(sess.bayeuxClientPath);
+    assert.defined(sess.path);
+    assert.defined(sess.bayeuxContextPath);
+    assert.defined(sess.resourcesPath);
 }
 
 function assertBayeuxMessagingAvailable(bayeux, done) {

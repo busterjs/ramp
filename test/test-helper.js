@@ -53,9 +53,22 @@ module.exports = {
     },
 
     bayeuxForSession: function (s) {
-        return new faye.Client("http://127.0.0.1:"
-                               + module.exports.SERVER_PORT
-                               + s.bayeuxClientPath);
+        var bayeux = new faye.Client("http://127.0.0.1:"
+                                     + module.exports.SERVER_PORT
+                                     + "/messaging");
+        return {
+            publish: function (path, data) {
+                return bayeux.publish(s.bayeuxContextPath + path, data);
+            },
+
+            subscribe: function (path, cb) {
+                return bayeux.subscribe(s.bayeuxContextPath + path, cb);
+            },
+
+            disconnect: function () {
+                return bayeux.disconnect();
+            }
+        }
     },
 
     // Opening and closing a faye client yields the same code paths as
@@ -111,7 +124,7 @@ module.exports = {
                     oncapture(slave, phantom);
                 }, 50);
             };
-            srv.captureServer.bayeux.subscribe(slave.becomesReadyPath, readyHandler);
+            srv.captureServer.bayeux.subscribe(slave.becomesReadyPath, readyHandler)
         }
         srv.captureServer.bayeux.subscribe("/capture", captureHandler);
     }
