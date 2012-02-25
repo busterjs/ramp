@@ -4,7 +4,6 @@ var refute = buster.refute;
 
 var bCapServ = require("./../lib/buster-capture-server");
 var bResourcesResourceSet = require("buster-resources").resourceSet;
-var faye = require("faye");
 var when = require("when");
 var http = require("http");
 var h = require("./test-helper");

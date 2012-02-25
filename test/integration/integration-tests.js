@@ -3,7 +3,6 @@ var assert = buster.assert;
 var refute = buster.refute;
 
 var http = require("http");
-var faye = require("faye");
 var bCapServ = require("./../../lib/buster-capture-server");
 var h = require("./../test-helper");
 
