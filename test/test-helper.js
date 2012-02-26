@@ -4,6 +4,7 @@ var CP = require("child_process");
 var EventEmitter = require("events").EventEmitter;
 var htmlparser = require("htmlparser");
 var select = require("soupselect").select;
+var bCapServ = require("../lib/buster-capture-server");
 
 module.exports = {
     NO_RESPONSE_STATUS_CODE: 418,
@@ -52,23 +53,11 @@ module.exports = {
         return bayeux.subscribe(url, wrapped);
     },
 
-    bayeuxForSession: function (s) {
-        var bayeux = new faye.Client("http://127.0.0.1:"
-                                     + module.exports.SERVER_PORT
-                                     + "/messaging");
-        return {
-            publish: function (path, data) {
-                return bayeux.publish(s.bayeuxContextPath + path, data);
-            },
-
-            subscribe: function (path, cb) {
-                return bayeux.subscribe(s.bayeuxContextPath + path, cb);
-            },
-
-            disconnect: function () {
-                return bayeux.disconnect();
-            }
-        }
+    bayeuxForSession: function (session) {
+        var url = "http://127.0.0.1:"
+            + module.exports.SERVER_PORT
+            + "/messaging";
+        return bCapServ.createSessionMessenger(url, session);
     },
 
     // Opening and closing a faye client yields the same code paths as
