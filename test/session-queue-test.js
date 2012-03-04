@@ -235,5 +235,32 @@ buster.testCase("Session queue", {
         slave2.loadSessionDeferred.resolve();
 
         assert.calledTwice(loadedSpy);
+    },
+
+    "emits event when session is unloaded": function () {
+        var sess = mockSession();
+
+        var unloadedSpy = this.spy();
+        this.sq.on("unloaded", unloadedSpy);
+
+        this.sq.enqueue(sess);
+        this.sq.dequeue(sess);
+
+        assert.calledOnce(unloadedSpy);
+        assert.same(unloadedSpy.getCall(0).args[0].session, sess);
+    },
+
+    "does not emit event when dequeuing unloaded session": function () {
+        var sess1 = mockSession();
+        var sess2 = mockSession();
+
+        var unloadedSpy = this.spy();
+        this.sq.on("unloaded", unloadedSpy);
+
+        this.sq.enqueue(sess1);
+        this.sq.enqueue(sess2);
+        this.sq.dequeue(sess2);
+
+        refute.called(unloadedSpy);
     }
 });
