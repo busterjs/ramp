@@ -182,5 +182,26 @@ buster.testCase("Session queue", {
 
         assert.calledOnce(slave2.loadSession);
         assert.same(slave2.loadSession.getCall(0).args[0], sess);
+    },
+
+    "emits event on session when it is loaded into a slave": function () {
+        var sess = mockSession();
+
+        var slave1 = mockSlave();
+        this.sq.addSlave(slave1);
+
+        var loadedSpy = this.spy();
+        sess.on("loaded", loadedSpy);
+        this.sq.enqueue(sess);
+
+        refute.called(loadedSpy);
+
+        var slave2 = mockSlave();
+        this.sq.addSlave(slave2);
+
+        slave1.loadSessionDeferred.resolve();
+        slave2.loadSessionDeferred.resolve();
+
+        assert.calledTwice(loadedSpy);
     }
 });
