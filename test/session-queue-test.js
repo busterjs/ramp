@@ -34,8 +34,8 @@ buster.testCase("Session queue", {
     },
 
     "should have return based on whether session will be current immediately": function () {
-        assert.isTrue(this.sq.enqueue(mockSession()));
-        assert.isFalse(this.sq.enqueue(mockSession()));
+        assert.equals(this.sq.enqueue(mockSession()), bCapServSessionQueue.ENQUEUE_STARTED);
+        assert.equals(this.sq.enqueue(mockSession()), bCapServSessionQueue.ENQUEUE_QUEUED);
     },
 
     "should start first session immediately with slaves": function (done) {
@@ -141,17 +141,19 @@ buster.testCase("Session queue", {
     "should not notify new slave of non-joinable session in progress": function () {
         var sess = mockSession();
         sess.joinable = false;
-
         var slave = mockSlave();
+        this.sq.enqueue(sess);
+        this.sq.addSlave(slave);
+        refute.called(slave.loadSession);
+    },
 
+    "should not queue session at all if has no slaves and is not joinable": function () {
+        var sess = mockSession();
+        sess.joinable = false;
         var queueLoadedSpy = this.spy();
         this.sq.on("loaded", queueLoadedSpy);
         this.sq.enqueue(sess);
-
-        this.sq.addSlave(slave);
-
-        assert.calledOnce(queueLoadedSpy);
-        refute.called(slave.loadSession);
+        refute.called(queueLoadedSpy);
     },
 
     "removes slave from list of slaves when slave ends": function () {
