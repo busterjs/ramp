@@ -33,6 +33,11 @@ buster.testCase("Session queue", {
         this.sq.enqueue(sess);
     },
 
+    "should have return based on whether session will be current immediately": function () {
+        assert.isTrue(this.sq.enqueue(mockSession()));
+        assert.isFalse(this.sq.enqueue(mockSession()));
+    },
+
     "should start first session immediately with slaves": function (done) {
         var sess = mockSession();
         var slave1 = mockSlave();
