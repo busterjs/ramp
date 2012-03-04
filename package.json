@@ -28,6 +28,7 @@
     },
     "devDependencies": {
         "buster": "*",
+        "sinon": "*",
         "htmlparser": "~1.7",
         "soupselect": "~0.2"
     }
