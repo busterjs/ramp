@@ -71,6 +71,31 @@ buster.testCase("Session queue", {
         this.sq.dequeue(sess1);
     },
 
+    "should load enqueued sessions": function () {
+        var loadedSpy = this.spy();
+        this.sq.on("loaded", loadedSpy);
+
+        var s1 = mockSession();
+        this.sq.enqueue(s1);
+
+        var s2 = mockSession();
+        this.sq.enqueue(s2);
+
+        var s3 = mockSession();
+        this.sq.enqueue(s3);
+
+        assert.calledOnce(loadedSpy);
+        assert.same(loadedSpy.getCall(0).args[0].session, s1);
+
+        this.sq.dequeue(s1);
+        assert.calledTwice(loadedSpy);
+        assert.same(loadedSpy.getCall(1).args[0].session, s2);
+
+        this.sq.dequeue(s2);
+        assert.calledThrice(loadedSpy);
+        assert.same(loadedSpy.getCall(2).args[0].session, s3);
+    },
+
     "should start queued session when current session ends": function (done) {
         var sess1 = mockSession();
         var sess2 = mockSession();
