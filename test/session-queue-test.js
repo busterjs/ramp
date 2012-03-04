@@ -11,7 +11,12 @@ function mockSlave() {
     var slave = buster.eventEmitter.create();
     slave.loadSession = sinon.spy(function (session) {
         return this.loadSessionDeferred = when.defer();
-    })
+    });
+    slave.mockEnd = sinon.spy(function () {
+        this.ended = true;
+        this.loadSessionDeferred && this.loadSessionDeferred.resolve();
+        this.emit("end");
+    });
     return slave;
 }
 
@@ -22,8 +27,8 @@ buster.testCase("Session queue", {
 
     "should start first session immediately with no slaves": function (done) {
         var sess = mockSession();
-        this.sq.on("loaded", done(function (session) {
-            assert.same(session, sess);
+        this.sq.on("loaded", done(function (e) {
+            assert.same(e.session, sess);
         }));
         this.sq.enqueue(sess);
     },
@@ -32,8 +37,8 @@ buster.testCase("Session queue", {
         var sess = mockSession();
         var slave1 = mockSlave();
         var slave2 = mockSlave();
-        this.sq.on("loaded", done(function (session) {
-            assert.same(session, sess);
+        this.sq.on("loaded", done(function (e) {
+            assert.same(e.session, sess);
 
             assert.calledOnce(slave1.loadSession);
             assert.same(slave1.loadSession.getCall(0).args[0], sess);
@@ -55,8 +60,8 @@ buster.testCase("Session queue", {
         this.sq.enqueue(sess1);
         this.sq.enqueue(sess2);
 
-        this.sq.on("loaded", done(function (session) {
-            assert.same(session, sess2);
+        this.sq.on("loaded", done(function (e) {
+            assert.same(e.session, sess2);
         }));
         this.sq.dequeue(sess1);
     },
@@ -67,8 +72,8 @@ buster.testCase("Session queue", {
         this.sq.enqueue(sess1);
         this.sq.enqueue(sess2);
 
-        this.sq.on("loaded", done(function (session) {
-            assert.same(session, sess2);
+        this.sq.on("loaded", done(function (e) {
+            assert.same(e.session, sess2);
         }));
         sess1.emit("end");
     },
@@ -76,11 +81,11 @@ buster.testCase("Session queue", {
     "should start session in slave that joins joinable session": function (done) {
         var self = this;
         var sess = mockSession();
-        this.sq.on("loaded", done(function (sess) {
+        this.sq.on("loaded", done(function (e) {
             var slave = mockSlave();
             self.sq.addSlave(slave);
             assert.calledOnce(slave.loadSession);
-            assert.same(slave.loadSession.getCall(0).args[0], sess);
+            assert.same(slave.loadSession.getCall(0).args[0], e.session);
         }));
         this.sq.enqueue(sess);
     },
@@ -127,8 +132,55 @@ buster.testCase("Session queue", {
         assert.equals(this.sq.slaves.length, 3);
         refute(this.sq.slaves.indexOf(slave) < 0);
 
-        slave.emit("end");
+        slave.mockEnd();
         assert.equals(this.sq.slaves.length, 2);
         assert(this.sq.slaves.indexOf(slave) < 0);
+    },
+
+    "slave ends while loading is in progress": function () {
+        var slave1 = mockSlave();
+        this.sq.addSlave(slave1);
+        var slave2 = mockSlave();
+        this.sq.addSlave(slave2);
+        var slave3 = mockSlave();
+        this.sq.addSlave(slave3);
+
+        var sess = mockSession();
+        var queueLoadedSpy = this.spy();
+        this.sq.on("loaded", queueLoadedSpy);
+        this.sq.enqueue(sess);
+
+        slave1.loadSessionDeferred.resolve();
+        slave3.loadSessionDeferred.resolve();
+        slave2.mockEnd();
+
+        assert.calledOnce(queueLoadedSpy);
+        var emittedSlaves = queueLoadedSpy.getCall(0).args[0].slaves;
+        assert.equals(emittedSlaves.length, 2);
+        assert.same(emittedSlaves[0], slave1);
+        assert.same(emittedSlaves[1], slave3);
+    },
+
+    "slave joins while loading": function () {
+        var slave1 = mockSlave();
+        this.sq.addSlave(slave1);
+
+        var sess = mockSession();
+        var queueLoadedSpy = this.spy();
+        this.sq.on("loaded", queueLoadedSpy);
+        this.sq.enqueue(sess);
+
+        slave1.loadSessionDeferred.resolve();
+
+        var slave2 = mockSlave();
+        this.sq.addSlave(slave2);
+
+        assert.calledOnce(queueLoadedSpy);
+        var emittedSlaves = queueLoadedSpy.getCall(0).args[0].slaves;
+        assert.equals(emittedSlaves.length, 1);
+        assert.same(emittedSlaves[0], slave1);
+
+        assert.calledOnce(slave2.loadSession);
+        assert.same(slave2.loadSession.getCall(0).args[0], sess);
     }
 });
