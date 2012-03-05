@@ -105,13 +105,7 @@ module.exports = {
 
             var readyHandler = function () {
                 srv.captureServer.bayeux.unsubscribe(slave.becomesReadyPath, readyHandler);
-                // TODO: Figure out why we need a timeout here.
-                // Without a timeout, the "disconnect" event will not
-                // trigger immediately after the browser dies, but wait
-                // for a timeout.
-                setTimeout(function () {
-                    oncapture(slave, phantom);
-                }, 50);
+                oncapture(slave, phantom);
             };
             srv.captureServer.bayeux.subscribe(slave.becomesReadyPath, readyHandler)
         }
