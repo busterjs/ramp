@@ -23,6 +23,11 @@ function mockSlave() {
 buster.testCase("Session queue", {
     setUp: function () {
         this.sq = bCapServSessionQueue.create();
+        this.sq.prepare = function () {
+            var deferred = when.defer();
+            deferred.resolve();
+            return deferred.promise;
+        };
     },
 
     "should start first session immediately with no slaves": function (done) {
@@ -262,5 +267,23 @@ buster.testCase("Session queue", {
         this.sq.dequeue(sess2);
 
         refute.called(unloadedSpy);
+    },
+
+    "waits for prepare before loading the session into slaves": function (done) {
+        var didIt = false;
+        this.sq.prepare = function () {
+            var deferred = when.defer();
+            setTimeout(function () {
+                didIt = true;
+                deferred.resolve();
+            }, 10);
+            return deferred.promise;
+        };
+
+        this.sq.on("loaded", done(function () {
+            assert(didIt);
+        }));
+
+        this.sq.enqueue(mockSession());
     }
 });
