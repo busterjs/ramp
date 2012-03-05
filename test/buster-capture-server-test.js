@@ -155,83 +155,6 @@ buster.testCase("Capture server", {
                 });
             },
 
-            "starts session immediately": function (done) {
-                var self = this;
-                var s = [];
-
-                var handler = function (e) {
-                    s.push(e);
-
-                    // Callback called twice, once for create, once for start,
-                    // with the same session?
-                    if (s.length == 2) {
-                        assert.defined(s[0]);
-                        assert.defined(s[1]);
-                        assert.equals(s[0].session.bayeuxClientPath, s[1].session.bayeuxClientPath);
-                        done();
-                    }
-                };
-                handler.timesCalled = 0;
-
-                this.cs.createSession({});
-                this.cs.bayeux.subscribe("/session/create", handler);
-                this.cs.bayeux.subscribe("/session/start", handler);
-            },
-
-            "queues new sessions created while a session is running": function (done) {
-                var self = this;
-                this.cs.createSession({});
-                h.bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function (e1) {
-                    self.cs.createSession({});
-                    h.bayeuxSubscribeOnce(self.cs.bayeux, "/session/create", function (e2) {
-                        refute.equals(e1.session, e2.session);
-                        assert.equals(self.cs.sessions(), [e1.session, e2.session]);
-                        refute.equals(e2.session, self.cs.currentSession());
-                        done();
-                    });
-                });
-            },
-
-            "starts next session when ending current session": function (done) {
-                var self = this;
-                this.cs.createSession({});
-
-                h.bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function (e1) {
-                    assert.equals(self.cs.sessions().length, 1);
-                    assert.equals(self.cs.currentSession(), e1.session);
-                    self.cs.endSession(e1.session.id);
-                    self.cs.createSession({});
-
-                    h.bayeuxSubscribeOnce(self.cs.bayeux, "/session/start", function (e2) {
-                        refute.equals(e1.session, e2.session);
-                        assert.equals(self.cs.currentSession(), e2.session);
-                        done();
-                    });
-                });
-            },
-
-            "loads next session when ending current session over HTTP": function (done) {
-                var self = this;
-                this.cs.createSession({});
-                this.cs.createSession({});
-                var sessions = [];
-
-                var i = 0;
-                this.cs.bayeux.subscribe("/session/start", function (e) {
-                    sessions.push(e.session);
-                    switch(++i) {
-                    case 1:
-                        assert.equals(e.session.id, sessions[0].id);
-                        h.request({path: e.session.path, method: "DELETE"}).end();
-                        break;
-                    case 2:
-                        assert.equals(e.session.id, sessions[1].id);
-                        done();
-                        break;
-                    }
-                });
-            },
-
             "ending session over HTTP": function (done) {
                 this.cs.createSession({}).then(function (session) {
                     h.request({path: session.path, method: "DELETE"}, function (res, body) {
@@ -444,23 +367,6 @@ buster.testCase("Capture server", {
                 });
             },
 
-            "stores sessions in order of creation": function (done) {
-                var self = this;
-
-                // TODO: This test is broken. We should do something to the
-                // payload that guarantees that it is serialized to resolve
-                // s2 before s1.
-                this.cs.createSession({}).then(function (s1) {
-                    self.cs.createSession({}).then(function (s2) {
-                        assert.equals(self.cs.sessions(), [s1, s2]);
-                        h.request({path: s1.resourcesPath + "/foo.js"}, function (r, body) {
-                            // ...
-                            done();
-                        }).end();
-                    });
-                });
-            },
-
             "// stops providing messaging when session is no longer current": function () {
                 var sess = this.cs.createSession({});
                 var bayeux = h.bayeuxForSession(sess);
@@ -537,38 +443,6 @@ buster.testCase("Capture server", {
                     }).end();
                 }
             }
-        },
-
-        "does not create unjoinable session programmatically with no slaves available": function (done) {
-            this.cs.createSession({joinable: false}).then(
-                function () {},
-                done(function (err) {
-                    assert.match(err, "no slaves captured");
-                    assert(true);
-                })
-            );
-        },
-
-        "does not create unjoinable session over HTTP with no slaves available": function (done) {
-            h.request({path: "/sessions", method: "POST"}, function (res, body) {
-                assert.equals(res.statusCode, 403);
-                done();
-            }).end(JSON.stringify({joinable: false}));
-        },
-
-        "creates session programmatically with no slaves available": function (done) {
-            this.cs.createSession({}).then(function (session) {
-                assertIsSerializedSession(session);
-                done();
-            });
-        },
-
-        "creates session over HTTP with no slaves available": function (done) {
-            h.request({path: "/sessions", method: "POST"}, function (res, body) {
-                assert.equals(res.statusCode, 201);
-                assertIsSerializedSession(JSON.parse(body));
-                done();
-            }).end(JSON.stringify({}));
         }
     }
 });
