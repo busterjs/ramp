@@ -53,8 +53,8 @@ buster.testCase("Capture server", {
                     });
 
                     // A slave is required to notify when session has loaded
-                    self.cs.bayeux.subscribe("/" + slave.id + "/session/start", function (sess) {
-                        self.cs.bayeux.publish("/" + slave.id + "/session/" + sess.id + "/ready", {});
+                    self.cs.bayeux.subscribe("/" + slave.id + "/session/start", function (s) {
+                        self.cs.bayeux.publish("/" + slave.id + "/session/" + s.id + "/ready", {});
                     });
 
                     self.cs.bayeux.publish(slave.becomesReadyPath, {}).callback(done);
@@ -159,15 +159,15 @@ buster.testCase("Capture server", {
                 var self = this;
                 var s = [];
 
-                var handler = function (sess) {
-                    s.push(sess);
+                var handler = function (e) {
+                    s.push(e);
 
                     // Callback called twice, once for create, once for start,
                     // with the same session?
                     if (s.length == 2) {
                         assert.defined(s[0]);
                         assert.defined(s[1]);
-                        assert.equals(s[0].bayeuxClientPath, s[1].bayeuxClientPath);
+                        assert.equals(s[0].session.bayeuxClientPath, s[1].session.bayeuxClientPath);
                         done();
                     }
                 };
@@ -181,12 +181,12 @@ buster.testCase("Capture server", {
             "queues new sessions created while a session is running": function (done) {
                 var self = this;
                 this.cs.createSession({});
-                h.bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function (s1) {
+                h.bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function (e1) {
                     self.cs.createSession({});
-                    h.bayeuxSubscribeOnce(self.cs.bayeux, "/session/create", function (s2) {
-                        refute.equals(s1, s2);
-                        assert.equals(self.cs.sessions(), [s1, s2]);
-                        refute.equals(s2, self.cs.currentSession());
+                    h.bayeuxSubscribeOnce(self.cs.bayeux, "/session/create", function (e2) {
+                        refute.equals(e1.session, e2.session);
+                        assert.equals(self.cs.sessions(), [e1.session, e2.session]);
+                        refute.equals(e2.session, self.cs.currentSession());
                         done();
                     });
                 });
@@ -196,15 +196,15 @@ buster.testCase("Capture server", {
                 var self = this;
                 this.cs.createSession({});
 
-                h.bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function (s1) {
+                h.bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function (e1) {
                     assert.equals(self.cs.sessions().length, 1);
-                    assert.equals(self.cs.currentSession(), s1);
-                    self.cs.endSession(s1.id);
+                    assert.equals(self.cs.currentSession(), e1.session);
+                    self.cs.endSession(e1.session.id);
                     self.cs.createSession({});
 
-                    h.bayeuxSubscribeOnce(self.cs.bayeux, "/session/start", function (s2) {
-                        refute.equals(s1, s2);
-                        assert.equals(self.cs.currentSession(), s2);
+                    h.bayeuxSubscribeOnce(self.cs.bayeux, "/session/start", function (e2) {
+                        refute.equals(e1.session, e2.session);
+                        assert.equals(self.cs.currentSession(), e2.session);
                         done();
                     });
                 });
@@ -217,15 +217,15 @@ buster.testCase("Capture server", {
                 var sessions = [];
 
                 var i = 0;
-                this.cs.bayeux.subscribe("/session/start", function (sess) {
-                    sessions.push(sess);
+                this.cs.bayeux.subscribe("/session/start", function (e) {
+                    sessions.push(e.session);
                     switch(++i) {
                     case 1:
-                        assert.equals(sess.id, sessions[0].id);
-                        h.request({path: sess.path, method: "DELETE"}).end();
+                        assert.equals(e.session.id, sessions[0].id);
+                        h.request({path: e.session.path, method: "DELETE"}).end();
                         break;
                     case 2:
-                        assert.equals(sess.id, sessions[1].id);
+                        assert.equals(e.session.id, sessions[1].id);
                         done();
                         break;
                     }
@@ -243,13 +243,15 @@ buster.testCase("Capture server", {
 
             "ending session emits event": function (done) {
                 var self = this;
-                this.cs.createSession({}).then(function (session) {
-                    self.cs.endSession(session.id);
+                this.cs.createSession({});
 
-                    self.cs.bayeux.subscribe("/session/end", function (s) {
-                        assert.equals(s, session);
+                h.bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function (e1) {
+                    self.cs.bayeux.subscribe("/session/end", function (e2) {
+                        assert.equals(e1.session, e2.session);
                         done();
                     });
+
+                    self.cs.endSession(e1.session.id);
                 });
             },
 
@@ -257,8 +259,8 @@ buster.testCase("Capture server", {
                 var self = this;
                 this.cs.createSession({});
 
-                this.cs.bayeux.subscribe("/session/create", function (sess) {
-                    assert.equals(sess, self.cs.currentSession());
+                this.cs.bayeux.subscribe("/session/create", function (e) {
+                    assert.equals(e.session, self.cs.currentSession());
                     done();
                 });
             },
@@ -288,10 +290,10 @@ buster.testCase("Capture server", {
                 var self = this;
                 var sess = this.cs.createSession({});
 
-                h.bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function (s) {
-                    assert.equals(sess.id, s.id);
-                    h.bayeuxSubscribeOnce(self.cs.bayeux, "/session/start", function (s) {
-                        assert.equals(sess.id, s.id);
+                h.bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function (e) {
+                    assert.equals(sess.id, e.session.id);
+                    h.bayeuxSubscribeOnce(self.cs.bayeux, "/session/start", function (e) {
+                        assert.equals(sess.id, e.session.id);
                         done();
                     });
                 });
@@ -299,8 +301,8 @@ buster.testCase("Capture server", {
 
             "provides messaging to currently running session": function (done) {
                 this.cs.createSession({});
-                this.cs.bayeux.subscribe("/session/start", function (session) {
-                    assertBayeuxMessagingAvailable(h.bayeuxForSession(session), done);
+                this.cs.bayeux.subscribe("/session/start", function (e) {
+                    assertBayeuxMessagingAvailable(h.bayeuxForSession(e.session), done);
                 });
             },
 
@@ -321,8 +323,8 @@ buster.testCase("Capture server", {
                     this.cs.createSession({}),
                     this.cs.createSession({})
 
-                    this.cs.bayeux.subscribe("/session/create", function (session) {
-                        self.sessions.push(session);
+                    this.cs.bayeux.subscribe("/session/create", function (e) {
+                        self.sessions.push(e.session);
                         if (self.sessions.length == 3) {
                             done();
                         }
@@ -354,8 +356,8 @@ buster.testCase("Capture server", {
                         }
                     });
 
-                    this.cs.bayeux.subscribe("/session/start", done(function (sess) {
-                        this.sess = sess;
+                    this.cs.bayeux.subscribe("/session/start", done(function (e) {
+                        this.sess = e.session;
                     }.bind(this)));
                 },
 
@@ -414,13 +416,13 @@ buster.testCase("Capture server", {
                     resourceSet: {
                         resources: [{path: "/", content: "<p>a</p>"}]
                     }
-                }).then(function (sessA) {
-                    self.cs.endSession(self.cs.currentSession().id);
+                });
 
-                    h.bayeuxSubscribeOnce(self.cs.bayeux, "/session/start", function (sessB) {
-                        assert.equals(sessA.id, sessB.id);
+                h.bayeuxSubscribeOnce(self.cs.bayeux, "/session/start", function (e1) {
+                    self.cs.endSession(e1.session.id);
 
-                        h.request({path: sessA.resourcesPath}, function (res, body) {
+                    h.bayeuxSubscribeOnce(self.cs.bayeux, "/session/start", function (e2) {
+                        h.request({path: e2.session.resourcesPath}, function (res, body) {
                             assert.equals(res.statusCode, 200);
                             assert.match(body, "<p>a</p>");
                             done();
@@ -431,15 +433,14 @@ buster.testCase("Capture server", {
 
             "stops serving resource set when current session ends": function (done) {
                 var self = this;
-                this.cs.createSession({}).then(function (s1) {
-                    self.cs.endSession(s1.id);
+                this.cs.createSession({});
 
-                    self.cs.createSession({}).then(function (s2) {
-                        h.request({path: s1.resourcesPath + "/"}, function (res, body) {
-                            assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
-                            done();
-                        }).end();
-                    });
+                h.bayeuxSubscribeOnce(this.cs.bayeux, "/session/start", function (e) {
+                    self.cs.endSession(e.session.id);
+                    h.request({path: e.session.resourcesPath + "/"}, function (res, body) {
+                        assert.equals(h.NO_RESPONSE_STATUS_CODE, res.statusCode);
+                        done();
+                    }).end();
                 });
             },
 
@@ -478,16 +479,6 @@ buster.testCase("Capture server", {
                 "has no common attributes between slaves": function () {
                     refute.equals(this.slave.id, this.slave2.id);
                     refute.equals(this.slave.url, this.slave2.url);
-                },
-
-                "HTTP session lists slaves": function (done) {
-                    var self = this;
-                    h.request({path: "/sessions", method: "POST"}, function (res, body) {
-                        var sess = JSON.parse(body);
-                        assert("slaves" in sess);
-                        assert.equals(sess.slaves.length, 2);
-                        done();
-                    }).end(JSON.stringify({}));
                 }
             },
 
@@ -531,12 +522,14 @@ buster.testCase("Capture server", {
                     h.request({
                         path: this.s1.resourcesPath + "/foo"
                     }, function (res, body) {
+                        assert.equals(res.statusCode, 200);
                         assert.equals("a", body);
                         self.cs.endSession(self.s1.id);
                         h.bayeuxSubscribeOnce(self.cs.bayeux, "/session/start", function () {
                             h.request({
                                 path: self.s2.resourcesPath + "/foo"
                             }, function (res, body) {
+                                assert.equals(res.statusCode, 200);
                                 assert.equals("b", body);
                                 done();
                             }).end();
@@ -546,8 +539,14 @@ buster.testCase("Capture server", {
             }
         },
 
-        "does not create unjoinable session programmatically with no slaves available": function () {
-            refute.defined(this.cs.createSession({joinable: false}));
+        "does not create unjoinable session programmatically with no slaves available": function (done) {
+            this.cs.createSession({joinable: false}).then(
+                function () {},
+                done(function (err) {
+                    assert.match(err, "no slaves captured");
+                    assert(true);
+                })
+            );
         },
 
         "does not create unjoinable session over HTTP with no slaves available": function (done) {
