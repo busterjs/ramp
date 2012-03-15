@@ -1,5 +1,5 @@
 var http = require("http");
-var faye = require("buster-faye");
+var faye = require("faye");
 var CP = require("child_process");
 var EventEmitter = require("events").EventEmitter;
 var htmlparser = require("htmlparser");
