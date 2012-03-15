@@ -7,6 +7,8 @@ var bResourcesResourceSet = require("buster-resources").resourceSet;
 var when = require("when");
 var http = require("http");
 var h = require("./test-helper");
+var htmlparser = require("htmlparser");
+var select = require("soupselect").select;
 
 buster.testCase("Capture server", {
     setUp: function (done) {
@@ -94,8 +96,8 @@ buster.testCase("Capture server", {
                 });
                 this.cs.header(80, rs);
                 h.request({path: this.slave.url}, function (res, body) {
-                    var dom = h.parseDOM(body);
-                    var headerSrc = h.domSelect(dom, "frame")[0].attribs.src;
+                    var dom = parseDOM(body);
+                    var headerSrc = domSelect(dom, "frame")[0].attribs.src;
                     h.request({path: headerSrc}, function (res, body) {
                         assert.equals(res.statusCode, 200);
                         assert.equals(body, "<p>Hello, World.</p>");
@@ -463,4 +465,15 @@ function assertBayeuxMessagingAvailable(bayeux, done) {
     }).callback(function () {
         bayeux.publish("/foo", "123abc");
     });
+}
+
+function parseDOM (html) {
+    var handler = new htmlparser.DefaultHandler();
+    var parser = new htmlparser.Parser(handler);
+    parser.parseComplete(html);
+    return handler.dom;
+}
+
+function domSelect (dom, selector) {
+    return select(dom, selector);
 }

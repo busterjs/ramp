@@ -2,8 +2,6 @@ var http = require("http");
 var faye = require("faye");
 var CP = require("child_process");
 var EventEmitter = require("events").EventEmitter;
-var htmlparser = require("htmlparser");
-var select = require("soupselect").select;
 var bCapServ = require("../lib/buster-capture-server");
 
 module.exports = {
@@ -47,17 +45,6 @@ module.exports = {
             info: test.spy(),
             debug: test.spy()
         }
-    },
-
-    parseDOM: function (html) {
-        var handler = new htmlparser.DefaultHandler();
-        var parser = new htmlparser.Parser(handler);
-        parser.parseComplete(html);
-        return handler.dom;
-    },
-
-    domSelect: function (dom, selector) {
-        return select(dom, selector);
     },
 
     Phantom: function () {
