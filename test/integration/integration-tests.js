@@ -2,40 +2,13 @@ var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
 
-var http = require("http");
-var bCapServ = require("./../../lib/buster-capture-server");
 var h = require("./../test-helper");
-
-var createServer = function (port, cb) {
-    var httpServer = http.createServer(function (req, res) {
-        res.writeHead(h.NO_RESPONSE_STATUS_CODE);
-        res.end();
-    });
-    httpServer.listen(port, cb);
-
-    var reqConns = [];
-    httpServer.on("connection", function (sock) { reqConns.push(sock); });
-
-    var captureServer = bCapServ.create();
-    captureServer.attach(httpServer);
-
-    return {
-        httpServer: httpServer,
-        captureServer: captureServer,
-        kill: function (cb) {
-            // Ensure all connections are nuked out of orbit
-            reqConns.forEach(function (c) { c.destroy(); });
-
-            httpServer.on("close", cb);
-            httpServer.close();
-        }
-    }
-};
+var ih = require("./test-helper");
 
 buster.testRunner.timeout = 4000;
 buster.testCase("Integration", {
     setUp: function (done) {
-        this.srv = createServer(h.SERVER_PORT, done);
+        this.srv = ih.createServer(h.SERVER_PORT, done);
         this.captureServer = this.srv.captureServer;
     },
 
@@ -46,7 +19,7 @@ buster.testCase("Integration", {
     "test one browser": function (done) {
         var self = this;
 
-        h.capture(this.srv, function (slave, phantom) {
+        ih.capture(this.srv, function (slave, phantom) {
             assert.equals(self.captureServer.slaves().length, 1);
             phantom.kill(function () {
                 assert.equals(self.captureServer.slaves().length, 0);
@@ -58,10 +31,10 @@ buster.testCase("Integration", {
     "test multiple browsers": function (done) {
         var self = this;
 
-        h.capture(this.srv, function (slave, phantom) {
+        ih.capture(this.srv, function (slave, phantom) {
             assert.equals(self.captureServer.slaves().length, 1);
 
-            h.capture(self.srv, function (slave, phantom2) {
+            ih.capture(self.srv, function (slave, phantom2) {
                 assert.equals(self.captureServer.slaves().length, 2);
 
                 phantom.kill(function () {
@@ -78,7 +51,7 @@ buster.testCase("Integration", {
 
     "test posting events from session": function (done) {
         var self = this;
-        h.capture(this.srv, function (slave, phantom) {
+        ih.capture(this.srv, function (slave, phantom) {
             self.captureServer.createSession({
                 resourceSet: {
                     resources: [
@@ -100,7 +73,7 @@ buster.testCase("Integration", {
 
     "test subscribing to events from session": function (done) {
         var self = this;
-        h.capture(this.srv, function (slave, phantom) {
+        ih.capture(this.srv, function (slave, phantom) {
             self.captureServer.createSession({
                 resourceSet: {
                     resources: [
@@ -133,7 +106,7 @@ buster.testCase("Integration", {
     "test loading second session": function (done) {
         var self = this;
         var bayeux = self.srv.captureServer.bayeux;
-        h.capture(this.srv, function (slave, phantom) {
+        ih.capture(this.srv, function (slave, phantom) {
             self.captureServer.createSession({}).then(function (sess1) {
                 h.bayeuxSubscribeOnce(bayeux, "/session/start", function (e) {
                     assert.equals(sess1, e.session);
@@ -155,10 +128,10 @@ buster.testCase("Integration", {
     // TODO: Figure out why this test causes errors in node's http.js
     "//test recaptures when server restarts": function (done) {
         var port = h.SERVER_PORT + 1;
-        var srv1 = createServer(port, function () {
-            h.capture(srv1, function (slave1, phantom) {
+        var srv1 = ih.createServer(port, function () {
+            ih.capture(srv1, function (slave1, phantom) {
                 srv1.kill(function () {
-                    var srv2 = createServer(port, function () {
+                    var srv2 = ih.createServer(port, function () {
                         srv2.captureServer.oncapture = function (req, res, slave2) {
                             refute.same(slave1, slave2);
                             res.writeHead(200);
@@ -186,7 +159,7 @@ buster.testCase("Integration", {
         }).then(function (sess) {
             h.bayeuxSubscribeOnce(bayeux, "/session/start", function (e) {
                 var phantom;
-                h.capture(self.srv, function (slave, p) { phantom = p; });
+                ih.capture(self.srv, function (slave, p) { phantom = p; });
                 h.bayeuxForSession(sess).subscribe("/some/event", function (data) {
                     assert.equals(data, 123);
                     phantom.kill(done);
@@ -221,7 +194,7 @@ buster.testCase("Integration", {
                 ]
             }
         }).then(function (session) {
-            h.capture(self.srv, function (slave, phantom) {
+            ih.capture(self.srv, function (slave, phantom) {
                 h.bayeuxForSession(session).subscribe("/some/event", function (data) {
                     assert.equals(data, 123);
                     phantom.kill(done);
@@ -232,10 +205,10 @@ buster.testCase("Integration", {
 
     "test refreshing slave URL": function (done) {
         var self = this;
-        h.capture(this.srv, function (slave, phantom) {
+        ih.capture(this.srv, function (slave, phantom) {
             var slaveUrl = "http://127.0.0.1:" + self.srv.httpServer.address().port + slave.url;
             phantom.kill(function () {
-                var phantom2 = h.Phantom(function () {
+                var phantom2 = ih.Phantom(function () {
                     phantom2.open(slaveUrl, function () {
                         assert(true);
                         phantom2.kill(done);
@@ -262,7 +235,7 @@ buster.testCase("Integration", {
                 loadPath: ["/foo.js"]
             }
         }).then(function (session) {
-            h.capture(self.srv, function (slave, phantom) {
+            ih.capture(self.srv, function (slave, phantom) {
                 h.bayeuxForSession(session).subscribe("/some/event", function (data) {
                     assert.equals(data, 123);
                     phantom.kill(done);
@@ -284,7 +257,7 @@ buster.testCase("Integration", {
                 loadPath: ["/foo.js"]
             }
         }).then(function (session) {
-            h.capture(self.srv, function (slave, phantom) {
+            ih.capture(self.srv, function (slave, phantom) {
                 h.bayeuxForSession(session).subscribe("/some/event", function (data) {
                     assert.equals(data, slave.id);
                     phantom.kill(done);
