@@ -135,7 +135,7 @@ buster.testCase("Capture server", {
 
             "creating session over HTTP with invalid resource set": function (done) {
                 h.request({path: "/sessions", method: "POST"}, function (res, body) {
-                    assert.equals(res.statusCode, 403);
+                    assert.equals(res.statusCode, 400);
                     assert.defined(body);
                     done();
                 }).end(JSON.stringify({
