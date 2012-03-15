@@ -151,7 +151,7 @@ buster.testCase("Capture server", {
 
             "emits event when session is created": function (done) {
                 this.cs.createSession({});
-                this.cs.bayeux.subscribe("/session/create", function (session) {
+                this.cs.bayeux.subscribe("/session/created", function (session) {
                     assert(true);
                     done();
                 });
@@ -184,7 +184,7 @@ buster.testCase("Capture server", {
                 var self = this;
                 this.cs.createSession({});
 
-                this.cs.bayeux.subscribe("/session/create", function (e) {
+                this.cs.bayeux.subscribe("/session/created", function (e) {
                     assert.equals(e.session, self.cs.currentSession());
                     done();
                 });
@@ -248,7 +248,7 @@ buster.testCase("Capture server", {
                     this.cs.createSession({}),
                     this.cs.createSession({})
 
-                    this.cs.bayeux.subscribe("/session/create", function (e) {
+                    this.cs.bayeux.subscribe("/session/created", function (e) {
                         self.sessions.push(e.session);
                         if (self.sessions.length == 3) {
                             done();
