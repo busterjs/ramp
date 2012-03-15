@@ -1,6 +1,6 @@
 {
     "name": "buster-capture-server",
-    "version": "0.4.1",
+    "version": "0.5.0",
     "description": "Buster capture server",
     "homepage": "http://busterjs.org/docs/buster-capture-server",
     "author": {
