@@ -45,6 +45,7 @@ var mockSession = function () {
         loaded: sinon.spy(),
         ended: sinon.spy(),
         unloaded: sinon.spy(),
+        aborted: sinon.spy(),
         capturedSlave: sinon.spy(),
         freedSlave: sinon.spy(),
         mockEnd: function () {
@@ -342,6 +343,44 @@ buster.testCase("Session queue", {
             sess.mockEnd();
             this.slave.unloadSessionComplete();
             assert.calledOnce(sess.ended);
+        }
+    },
+
+    "non-joinable session with no slaves": {
+        "gets aborted immediately": function () {
+            var sess = mockSession();
+            sess.joinable = false;
+            this.sq.enqueueSession(sess);
+
+            assert.calledOnce(sess.aborted);
+            assert.calledWithExactly(sess.aborted, {message: bsq.ERR_NO_SLAVES});
+            assert.equals(this.sq.sessions.length, 0);
+        },
+
+        "gets queued if session is already running": function () {
+            var sess1 = mockSession();
+            this.sq.enqueueSession(sess1);
+
+            var sess2 = mockSession();
+            sess2.joinable = false;
+            this.sq.enqueueSession(sess2);
+
+            assert.equals(this.sq.sessions.length, 2);
+        },
+
+        "gets aborted when moved to top of queue": function () {
+            var sess1 = mockSession();
+            this.sq.enqueueSession(sess1);
+
+            var sess2 = mockSession();
+            sess2.joinable = false;
+            this.sq.enqueueSession(sess2);
+
+            sess1.mockEnd();
+
+            assert.calledOnce(sess2.aborted);
+            assert.calledWithExactly(sess2.aborted, {message: bsq.ERR_NO_SLAVES});
+            assert.equals(this.sq.sessions.length, 0);
         }
     },
 
