@@ -3,10 +3,11 @@ var assert = buster.assert;
 var refute = buster.refute;
 
 var bCaptureServer = require("../lib/buster-capture-server");
+var bCaptureServerSess = require("../lib/session");
 var http = require("http");
 var h = require("./test-helper");
 
-buster.testCase("server and client", {
+buster.testCase("server", {
     setUp: function (done) {
         this.httpServer = http.createServer(function (req, res) {
             res.writeHead(h.NO_RESPONSE_STATUS_CODE); res.end();
@@ -39,6 +40,12 @@ buster.testCase("server and client", {
                 assert.match(err.message, "unknown property");
             })
         );
+    },
+
+    "// should fail if attempting to load uncached items": function () {
+    },
+
+    "// should not send cached resources to server": function (done) {
     }
 });
 
