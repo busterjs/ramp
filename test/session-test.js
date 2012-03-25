@@ -139,6 +139,74 @@ buster.testCase("Session", {
 
             assert(true);
             this.session.on("end", done);
-        }
+        },
+
+        "notifies when session starts": function (done) {
+            var self = this;
+            var path = this.session.userMessagingPath + "/session/started";
+            this.fayeClient.subscribe(path, done(function (e) {
+                assert.equals(e.session, self.sessionData);
+            }));
+            this.session.started();
+        },
+
+        "notifies when session is loaded": function (done) {
+            var self = this;
+            var path = this.session.userMessagingPath + "/session/loaded";
+            this.fayeClient.subscribe(path, done(function (e) {
+                assert.equals(e.session, self.sessionData);
+            }));
+            this.session.loaded();
+        },
+
+        "notifies when session is aborted": function (done) {
+            var self = this;
+            var path = this.session.userMessagingPath + "/session/aborted";
+            this.fayeClient.subscribe(path, done(function (e) {
+                assert.equals(e.session, self.sessionData);
+                assert.equals(e.error.message, "Some reason");
+            }));
+            this.session.aborted({message: "Some reason"});
+        },
+
+        "notifies when session is ended": function (done) {
+            var self = this;
+            var path = this.session.userMessagingPath + "/session/ended";
+            this.fayeClient.subscribe(path, done(function (e) {
+                assert.equals(e.session, self.sessionData);
+            }));
+            this.session.ended();
+        },
+
+        "notifies when session is unloaded": function (done) {
+            var self = this;
+            var path = this.session.userMessagingPath + "/session/unloaded";
+            this.fayeClient.subscribe(path, done(function (e) {
+                assert.equals(e.session, self.sessionData);
+            }));
+            this.session.unloaded();
+        },
+
+        "notifies when slave is captured": function (done) {
+            var self = this;
+            var slave = {foo: "bar"};
+            var path = this.session.userMessagingPath + "/slave/captured";
+            this.fayeClient.subscribe(path, done(function (e) {
+                assert.equals(e.session, self.sessionData);
+                assert.equals(e.slave, slave);
+            }));
+            this.session.capturedSlave({serialize: function () { return slave; }});
+        },
+
+        "notifies when slave is freed": function (done) {
+            var self = this;
+            var slave = {foo: "bar"};
+            var path = this.session.userMessagingPath + "/slave/freed";
+            this.fayeClient.subscribe(path, done(function (e) {
+                assert.equals(e.session, self.sessionData);
+                assert.equals(e.slave, slave);
+            }));
+            this.session.freedSlave({serialize: function () { return slave; }});
+        },
     }
 });
