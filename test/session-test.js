@@ -16,6 +16,7 @@ var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
 
+var bCaptureServer = require("../lib/buster-capture-server");
 var bSession = require("../lib/session");
 var busterResources = require("buster-resources");
 var http = require("http");
@@ -122,6 +123,19 @@ buster.testCase("Session", {
         "should end session when receiving event": function (done) {
             assert(true);
             this.fayeClient.publish(this.session.messagingPath + "/end", {});
+            this.session.on("end", done);
+        },
+
+        "should end when session owner disconnects": function (done) {
+            bCaptureServer.createSessionClient(
+                "0.0.0.0",
+                h.SERVER_PORT,
+                {session: this.sessionData, owner: true}
+            ).then(function (sc) {
+                sc.disconnect();
+            });
+
+            assert(true);
             this.session.on("end", done);
         }
     }

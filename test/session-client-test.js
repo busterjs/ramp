@@ -71,6 +71,19 @@ buster.testCase("session client", {
             }));
 
             this.sc.end();
-        }
+        },
+    },
+
+    "initializing with session owner": function (done) {
+        bCaptureServer.createSessionClient(
+            "0.0.0.0",
+            h.SERVER_PORT,
+            {session: this.sessionData, owner: true}
+        ).then(function (sc) { sc.disconnect(); });
+
+        var path = this.session.messagingPath + "/initialize";
+        this.fayeClient.subscribe(path, done(function (data) {
+            assert(data.isOwner);
+        }));
     }
 });
