@@ -1,5 +1,6 @@
 var http = require("http");
 var bCapServ = require("../lib/buster-capture-server");
+var sinon = require("sinon");
 
 module.exports = {
     NO_RESPONSE_STATUS_CODE: 418,
@@ -41,6 +42,23 @@ module.exports = {
             log: test.spy(),
             info: test.spy(),
             debug: test.spy()
+        }
+    },
+
+    mockFayeAdapter: function () {
+        return {
+            getClient: function () { return module.exports.mockFayeClient() },
+            addExtension: sinon.spy(),
+            removeExtension: sinon.spy(),
+            bind: sinon.spy(),
+            unbind: sinon.spy()
+        }
+    },
+
+    mockFayeClient: function () {
+        return {
+            publish: sinon.spy(),
+            subscribe: sinon.spy()
         }
     }
 };

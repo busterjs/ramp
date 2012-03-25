@@ -15,7 +15,7 @@ buster.testCase("session client", {
 
         this.httpServer = http.createServer();
         this.httpServer.listen(h.SERVER_PORT, function () {
-            bSession.create({}).then(done(function (session) {
+            bSession.create({}, self.fayeAdapter).then(done(function (session) {
                 self.session = session;
                 self.sessionData = session.serialize();
             }));
@@ -71,7 +71,7 @@ buster.testCase("session client", {
             }));
 
             this.sc.end();
-        },
+        }
     },
 
     "initializing with session owner": function (done) {

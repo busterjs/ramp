@@ -35,7 +35,7 @@ buster.testCase("Session", {
     "should create with resource set": function (done) {
         var sessionData = {resourceSet: this.rsSrl};
 
-        bSession.create(sessionData).then(done(function (session) {
+        bSession.create(sessionData, h.mockFayeAdapter()).then(done(function (session) {
             assert(bSession.isPrototypeOf(session));
         }.bind(this)));
     },
@@ -43,13 +43,16 @@ buster.testCase("Session", {
     "should create non-joinable": function (done) {
         var sessionData = {resourceSet: {}, joinable: false};
 
-        bSession.create(sessionData).then(done(function (session) {
+        bSession.create(sessionData, h.mockFayeAdapter()).then(done(function (session) {
             assert.isFalse(session.joinable);
         }.bind(this)));
     },
 
     "should not share resource paths": function (done) {
-        var sessions = [bSession.create({}), bSession.create({})];
+        var sessions = [
+            bSession.create({}, h.mockFayeAdapter()),
+            bSession.create({}, h.mockFayeAdapter())
+        ];
         when.all(sessions).then(done(function (sessions) {
             var s1 = sessions[0];
             var s2 = sessions[1];
@@ -63,8 +66,8 @@ buster.testCase("Session", {
 
     "should have static resource paths when specified": function (done) {
         var sessions = [
-            bSession.create({staticResourcePath: true}),
-            bSession.create({staticResourcePath: true})
+            bSession.create({staticResourcePath: true}, h.mockFayeAdapter()),
+            bSession.create({staticResourcePath: true}, h.mockFayeAdapter())
         ];
         when.all(sessions).then(done(function (sessions) {
             var s1 = sessions[0];
@@ -75,7 +78,7 @@ buster.testCase("Session", {
     },
 
     "should reject when creation fails": function (done) {
-        bSession.create({unknownProp: true}).then(
+        bSession.create({unknownProp: true}, h.mockFayeAdapter()).then(
             function () {},
             done(function (err) {
                 assert.equals(err.message, "Unknown property 'unknownProp'.");
@@ -89,7 +92,7 @@ buster.testCase("Session", {
         busterResources.resourceSet.deserialize.returns(deferred.promise);
         deferred.reject({message: "Foo"});
 
-        bSession.create({resourceSet: {}}).then(
+        bSession.create({resourceSet: {}}, h.mockFayeAdapter()).then(
             function () {},
             done(function (err) {
                 assert.equals(err.message, "Foo");
@@ -103,8 +106,7 @@ buster.testCase("Session", {
 
             this.httpServer = http.createServer();
             this.httpServer.listen(h.SERVER_PORT, function () {
-                bSession.create({}).then(done(function (session) {
-                    session.attach(self.fayeAdapter);
+                bSession.create({}, self.fayeAdapter).then(done(function (session) {
                     self.session = session;
                     self.sessionData = session.serialize();
                 }));
