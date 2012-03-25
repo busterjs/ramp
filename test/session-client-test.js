@@ -37,7 +37,7 @@ buster.testCase("session client", {
             bCaptureServer.createSessionClient(
                 "0.0.0.0",
                 h.SERVER_PORT,
-                this.sessionData
+                {session: this.sessionData}
             ).then(done(function (sessionClient) {
                 self.sc = sessionClient;
             }));
