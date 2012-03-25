@@ -15,7 +15,7 @@ buster.testCase("session client", {
 
         this.httpServer = http.createServer();
         this.httpServer.listen(h.SERVER_PORT, function () {
-            bSession.create({}, self.fayeAdapter).then(done(function (session) {
+            bSession.create({}).then(done(function (session) {
                 self.session = session;
                 self.sessionData = session.serialize();
             }));
@@ -49,7 +49,7 @@ buster.testCase("session client", {
 
         "publishes messages scoped to messaging path": function (done) {
             this.fayeClient.subscribe(
-                this.session.messagingPath + "/foo",
+                this.session.messagingPath + "/user/foo",
                 done(function (e) {
                     assert.equals(e, "foo");
                 })
@@ -63,6 +63,14 @@ buster.testCase("session client", {
             }));
 
             this.sc.publish("/foo", "foo");
+        },
+
+        "ending the session": function (done) {
+            this.fayeClient.subscribe(this.session.messagingPath + "/end", done(function () {
+                assert(true);
+            }));
+
+            this.sc.end();
         }
     }
 });

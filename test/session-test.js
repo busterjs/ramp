@@ -18,7 +18,10 @@ var refute = buster.refute;
 
 var bSession = require("../lib/session");
 var busterResources = require("buster-resources");
+var http = require("http");
+var faye = require("faye");
 var when = require("when");
+var h = require("./test-helper");
 
 buster.testCase("Session", {
     setUp: function (done) {
@@ -91,5 +94,35 @@ buster.testCase("Session", {
                 assert.equals(err.message, "Foo");
             })
         );
+    },
+
+    "instance": {
+        setUp: function (done) {
+            var self = this;
+
+            this.httpServer = http.createServer();
+            this.httpServer.listen(h.SERVER_PORT, function () {
+                bSession.create({}).then(done(function (session) {
+                    session.attach(self.fayeAdapter);
+                    self.session = session;
+                    self.sessionData = session.serialize();
+                }));
+            });
+
+            this.fayeAdapter = new faye.NodeAdapter({mount: "/messaging"});
+            this.fayeAdapter.attach(this.httpServer);
+            this.fayeClient = this.fayeAdapter.getClient();
+        },
+
+        tearDown: function (done) {
+            this.httpServer.on("close", done);
+            this.httpServer.close();
+        },
+
+        "should end session when receiving event": function (done) {
+            assert(true);
+            this.fayeClient.publish(this.session.messagingPath + "/end", {});
+            this.session.on("end", done);
+        }
     }
 });
