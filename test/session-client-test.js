@@ -31,59 +31,90 @@ buster.testCase("session client", {
         this.httpServer.close();
     },
 
-    "instance": {
+    "connected": {
         setUp: function (done) {
             var self = this;
-            bCaptureServer.createSessionClient(
-                "0.0.0.0",
-                h.SERVER_PORT,
-                {session: this.sessionData}
-            ).then(done(function (sessionClient) {
-                self.sc = sessionClient;
-            }));
+            this.sc = bCaptureServer.createSessionClient({
+                host: "0.0.0.0",
+                port: h.SERVER_PORT,
+                session: this.sessionData
+            });
+            this.sc.connect().then(done);
         },
 
         tearDown: function () {
             this.sc.disconnect();
         },
 
-        "publishes messages scoped to messaging path": function (done) {
-            this.fayeClient.subscribe(
-                this.session.messagingPath + "/user/foo",
-                done(function (e) {
-                    assert.equals(e, "foo");
-                })
-            );
-            this.sc.publish("/foo", "foo");
+        "should publish": function () {
+            this.stub(this.sc._pubsubClient, "emit");
+            this.sc.emit("foo", "bar");
+            assert.calledOnce(this.sc._pubsubClient.emit);
+            assert.calledWithExactly(this.sc._pubsubClient.emit, "foo", "bar");
         },
 
-        "subscribing to messages scoped to messaging path": function (done) {
-            this.sc.subscribe("/foo", done(function (e) {
-                assert.equals(e, "foo");
-            }));
-
-            this.sc.publish("/foo", "foo");
+        "should subscribe": function () {
+            this.stub(this.sc._pubsubClient, "on");
+            var handler = function () {};
+            this.sc.on("foo", handler);
+            assert.calledOnce(this.sc._pubsubClient.on);
+            assert.calledWithExactly(this.sc._pubsubClient.on, "foo", handler);
         },
 
-        "ending the session": function (done) {
-            this.fayeClient.subscribe(this.session.messagingPath + "/end", done(function () {
-                assert(true);
-            }));
-
+        "should end": function () {
+            this.stub(this.sc._pubsubClient, "emit");
             this.sc.end();
+            assert.calledOnce(this.sc._pubsubClient.emit);
+            assert.calledWithExactly(this.sc._pubsubClient.emit, "end");
         }
     },
 
-    "initializing with session owner": function (done) {
-        bCaptureServer.createSessionClient(
-            "0.0.0.0",
-            h.SERVER_PORT,
-            {session: this.sessionData, owner: true}
-        ).then(function (sc) { sc.disconnect(); });
+    "connecting publishes init event": function (done) {
+        var sc = bCaptureServer.createSessionClient({
+            host: "0.0.0.0",
+            port: h.SERVER_PORT,
+            session: this.sessionData
+        });
 
-        var path = this.session.messagingPath + "/initialize";
-        this.fayeClient.subscribe(path, done(function (data) {
-            assert(data.isOwner);
+        var initStub = this.stub(sc, "_onInitialize");
+        sc.connect().then(done(function () {
+            assert.calledOnce(initStub);
+            sc.disconnect();
         }));
+    },
+
+    "publishing init event emits init data": function () {
+        var sc = bCaptureServer.createSessionClient({
+            host: "0.0.0.0",
+            port: h.SERVER_PORT,
+            session: this.sessionData
+        });
+
+        sc._pubsubClient = {emit: this.spy()};
+        this.stub(sc, "_getInitData").returns({foo: "bar"});
+        sc._onInitialize();
+        assert.calledOnce(sc._pubsubClient.emit);
+        assert.calledWithExactly(sc._pubsubClient.emit, "initialize", {foo: "bar"});
+    },
+
+    "init data as owner": function () {
+        var sc = bCaptureServer.createSessionClient({
+            host: "0.0.0.0",
+            port: h.SERVER_PORT,
+            session: this.sessionData,
+            owner: true
+        });
+
+        assert.match(sc._getInitData(), {isOwner: true});
+    },
+
+    "init data as non-owner": function () {
+        var sc = bCaptureServer.createSessionClient({
+            host: "0.0.0.0",
+            port: h.SERVER_PORT,
+            session: this.sessionData
+        });
+
+        assert.match(sc._getInitData(), {isOwner: false});
     }
 });
