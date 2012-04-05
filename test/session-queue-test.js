@@ -35,7 +35,13 @@ var mockSlave = function () {
 
         mockEnd: function () {
             this.emit("end");
-        }
+        },
+
+        serialize: function () {
+            return this.serialized;
+        },
+
+        serialized: {foo: Math.random().toString()}
     })
 }
 
@@ -408,5 +414,31 @@ buster.testCase("Session queue", {
 
             assert.same(this.sq.currentSession, this.sess1);
         }
+    },
+
+    "emits event when slave is added": function () {
+        var spy = this.spy();
+        this.sq.on("slave:captured", spy);
+
+        var slave = mockSlave();
+        this.sq.addSlave(slave);
+        slave.readyDeferred.resolve();
+
+        assert.calledOnce(spy);
+        assert.calledWithExactly(spy, slave.serialized);
+    },
+
+    "emits event when slave is removed": function () {
+        var slave = mockSlave();
+        this.sq.addSlave(slave);
+        slave.readyDeferred.resolve();
+
+        var spy = this.spy();
+        this.sq.on("slave:freed", spy);
+
+        slave.mockEnd();
+
+        assert.calledOnce(spy);
+        assert.calledWithExactly(spy, slave.serialized);
     }
 });
