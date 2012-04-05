@@ -196,5 +196,20 @@ buster.testCase("pubsub-client", {
             assert.calledOnce(this.mockFaye2.publish);
             assert.calledWith(this.mockFaye2.publish, "/foo/boom");
         },
+    },
+
+    "providing faye client": {
+        setUp: function () {
+            this.ps2 = pubsubClient.create({
+                fayeClient: this.fayeClient
+            });
+        },
+
+        "should connect to provided faye client": function (done) {
+            var self = this;
+            this.ps2.connect().then(done(function () {
+                assert.same(self.fayeClient, self.ps2._fayeClient);
+            }));
+        }
     }
 });
