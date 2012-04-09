@@ -215,33 +215,11 @@ buster.testCase("pubsub-client", {
 
     "extending": function () {
         var obj = {};
-        var arg = "foo";
-        this.stub(this.ps, "connect");
-        this.stub(this.ps, "disconnect");
-        this.stub(this.ps, "on");
-        this.stub(this.ps, "emit");
-
         this.ps.extend(obj);
-
-        obj.connect(arg);
-        assert.calledOnce(this.ps.connect);
-        assert.same(this.ps.connect.getCall(0).args[0], arg);
-        assert.same(this.ps.connect.getCall(0).thisValue, this.ps);
-
-        obj.disconnect(arg);
-        assert.calledOnce(this.ps.disconnect);
-        assert.same(this.ps.disconnect.getCall(0).args[0], arg);
-        assert.same(this.ps.disconnect.getCall(0).thisValue, this.ps);
-
-        obj.on(arg);
-        assert.calledOnce(this.ps.on);
-        assert.same(this.ps.on.getCall(0).args[0], arg);
-        assert.same(this.ps.on.getCall(0).thisValue, this.ps);
-
-        obj.emit(arg);
-        assert.calledOnce(this.ps.emit);
-        assert.same(this.ps.emit.getCall(0).args[0], arg);
-        assert.same(this.ps.emit.getCall(0).thisValue, this.ps);
+        assert.same(this.ps.connect, obj.connect);
+        assert.same(this.ps.disconnect, obj.disconnect);
+        assert.same(this.ps.emit, obj.emit);
+        assert.same(this.ps.on, obj.on);
     },
 
     "should call onConnect when donnecting": function (done) {
