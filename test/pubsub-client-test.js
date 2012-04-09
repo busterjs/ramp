@@ -242,5 +242,18 @@ buster.testCase("pubsub-client", {
         assert.calledOnce(this.ps.emit);
         assert.same(this.ps.emit.getCall(0).args[0], arg);
         assert.same(this.ps.emit.getCall(0).thisValue, this.ps);
+    },
+
+    "should call onConnect when donnecting": function (done) {
+        var spy = this.spy();
+
+        var ps2 = pubsubClient.create({
+            fayeClient: this.fayeClient,
+            onConnect: spy
+        });
+
+        ps2.connect().then(done(function () {
+            assert.calledOnce(spy);
+        }));
     }
 });
