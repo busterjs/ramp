@@ -5,6 +5,7 @@ var refute = buster.refute;
 var bCaptureServer = require("../lib/buster-capture-server");
 var bResources = require("buster-resources");
 var http = require("http");
+var faye = require("faye");
 var when = require("when");
 var h = require("./test-helper");
 
@@ -126,6 +127,27 @@ buster.testCase("server client", {
         this.spy(this.rs, "serialize");
         this.c.createSession({resourceSet: this.rs, cache: true});
     },
+
+    "connected": {
+        setUp: function (done) {
+            this.fayeAdapter = new faye.NodeAdapter({mount: "/messaging"});
+            this.fayeAdapter.attach(this.httpServer);
+            this.fayeClient = this.fayeAdapter.getClient();
+
+            this.c.connect().then(done);
+        },
+
+        tearDown: function () {
+            this.c.disconnect()
+        },
+
+        "test has evnets": function (done) {
+            this.c.on("foo", done(function (e) {
+                assert.equals(e, "bar");
+            }));
+            this.c.emit("foo", "bar");
+        }
+    }
 });
 
 function onRequest(httpServer, cb) {
