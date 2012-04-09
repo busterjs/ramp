@@ -17,6 +17,7 @@ var assert = buster.assert;
 var refute = buster.refute;
 
 var bCaptureServer = require("../lib/buster-capture-server");
+var bCaptureServerPubsubClient = require("../lib/pubsub-client");
 var bSession = require("../lib/session");
 var busterResources = require("buster-resources");
 var http = require("http");
@@ -109,6 +110,11 @@ buster.testCase("Session", {
                 bSession.create({}, self.fayeAdapter).then(done(function (session) {
                     self.session = session;
                     self.sessionData = session.serialize();
+
+                    self.pubsubClient = bCaptureServerPubsubClient.create({
+                        contextPath: self.session.messagingPath,
+                        fayeClient: self.fayeClient
+                    });
                 }));
             });
 
@@ -124,16 +130,20 @@ buster.testCase("Session", {
 
         "should end session when receiving event": function (done) {
             assert(true);
-            this.fayeClient.publish(this.session.messagingPath + "/end", {});
+            this.pubsubClient.emit("end");
             this.session.on("end", done);
         },
 
         "should end when session owner disconnects": function (done) {
-            bCaptureServer.createSessionClient(
-                "0.0.0.0",
-                h.SERVER_PORT,
-                {session: this.sessionData, owner: true}
-            ).then(function (sc) {
+            var sc = bCaptureServer.createSessionClient(
+                {
+                    host: "0.0.0.0",
+                    port: h.SERVER_PORT,
+                    session: this.sessionData,
+                    owner: true
+                }
+            );
+            sc.connect().then(function () {
                 sc.disconnect();
             });
 
@@ -141,10 +151,9 @@ buster.testCase("Session", {
             this.session.on("end", done);
         },
 
-        "notifies when session starts": function (done) {
+        "// notifies when session starts": function (done) {
             var self = this;
-            var path = this.session.userMessagingPath + "/session/started";
-            this.fayeClient.subscribe(path, done(function (e) {
+            this.pubsubClient.on("session:started", done(function (e) {
                 assert.equals(e.session, self.sessionData);
             }));
             this.session.started();
@@ -152,8 +161,7 @@ buster.testCase("Session", {
 
         "notifies when session is loaded": function (done) {
             var self = this;
-            var path = this.session.userMessagingPath + "/session/loaded";
-            this.fayeClient.subscribe(path, done(function (e) {
+            this.pubsubClient.on("session:loaded", done(function (e) {
                 assert.equals(e.session, self.sessionData);
             }));
             this.session.loaded();
@@ -161,8 +169,7 @@ buster.testCase("Session", {
 
         "notifies when session is aborted": function (done) {
             var self = this;
-            var path = this.session.userMessagingPath + "/session/aborted";
-            this.fayeClient.subscribe(path, done(function (e) {
+            this.pubsubClient.on("session:aborted", done(function (e) {
                 assert.equals(e.session, self.sessionData);
                 assert.equals(e.error.message, "Some reason");
             }));
@@ -171,8 +178,7 @@ buster.testCase("Session", {
 
         "notifies when session is ended": function (done) {
             var self = this;
-            var path = this.session.userMessagingPath + "/session/ended";
-            this.fayeClient.subscribe(path, done(function (e) {
+            this.pubsubClient.on("session:ended", done(function (e) {
                 assert.equals(e.session, self.sessionData);
             }));
             this.session.ended();
@@ -180,8 +186,7 @@ buster.testCase("Session", {
 
         "notifies when session is unloaded": function (done) {
             var self = this;
-            var path = this.session.userMessagingPath + "/session/unloaded";
-            this.fayeClient.subscribe(path, done(function (e) {
+            this.pubsubClient.on("session:unloaded", done(function (e) {
                 assert.equals(e.session, self.sessionData);
             }));
             this.session.unloaded();
@@ -190,8 +195,7 @@ buster.testCase("Session", {
         "notifies when slave is captured": function (done) {
             var self = this;
             var slave = {foo: "bar"};
-            var path = this.session.userMessagingPath + "/slave/captured";
-            this.fayeClient.subscribe(path, done(function (e) {
+            this.pubsubClient.on("slave:captured", done(function (e) {
                 assert.equals(e.session, self.sessionData);
                 assert.equals(e.slave, slave);
             }));
@@ -201,8 +205,7 @@ buster.testCase("Session", {
         "notifies when slave is freed": function (done) {
             var self = this;
             var slave = {foo: "bar"};
-            var path = this.session.userMessagingPath + "/slave/freed";
-            this.fayeClient.subscribe(path, done(function (e) {
+            this.pubsubClient.on("slave:freed", done(function (e) {
                 assert.equals(e.session, self.sessionData);
                 assert.equals(e.slave, slave);
             }));

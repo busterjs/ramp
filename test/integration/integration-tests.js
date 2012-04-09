@@ -7,24 +7,27 @@ var ih = require("./test-helper");
 
 buster.testRunner.timeout = 4000;
 buster.testCase("Integration", {
-    setUp: function (done) {
-        this.srv = ih.createServer(h.SERVER_PORT, done);
-        this.captureServer = this.srv.captureServer;
+    setUp: function () {
+        this.httpServer = http.createServer(function (req, res) {
+            res.writeHead(h.NO_RESPONSE_STATUS_CODE); res.end();
+        });
+        this.httpServer.listen(h.SERVER_PORT, done);
+
+        this.s = bCaptureServer.createServer();
+        this.s.attach(this.httpServer);
+
+        // this.c = bCaptureServer.createServerClient("0.0.0.0", h.SERVER_PORT);
     },
 
-    tearDown: function (done) {
-        this.srv.kill(done);
+    tearDown: function () {
+        this.httpServer.on("close", done);
+        this.httpServer.close();
     },
 
     "test one browser": function (done) {
-        var self = this;
-
-        ih.capture(this.srv, function (slave, phantom) {
-            assert.equals(self.captureServer.slaves().length, 1);
-            phantom.kill(function () {
-                assert.equals(self.captureServer.slaves().length, 0);
-                done();
-            });
+        ih.capture(function () {
+            buster.log("yo");
+            done();
         });
     },
 
