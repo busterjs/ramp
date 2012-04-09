@@ -46,21 +46,6 @@ buster.testCase("session client", {
             this.sc.disconnect();
         },
 
-        "should publish": function () {
-            this.stub(this.sc._pubsubClient, "emit");
-            this.sc.emit("foo", "bar");
-            assert.calledOnce(this.sc._pubsubClient.emit);
-            assert.calledWithExactly(this.sc._pubsubClient.emit, "foo", "bar");
-        },
-
-        "should subscribe": function () {
-            this.stub(this.sc._pubsubClient, "on");
-            var handler = function () {};
-            this.sc.on("foo", handler);
-            assert.calledOnce(this.sc._pubsubClient.on);
-            assert.calledWithExactly(this.sc._pubsubClient.on, "foo", handler);
-        },
-
         "should end": function () {
             this.stub(this.sc._pubsubClient, "emit");
             this.sc.end();
