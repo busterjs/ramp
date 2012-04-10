@@ -5,6 +5,7 @@ var refute = buster.refute;
 var bCaptureServer = require("../lib/buster-capture-server");
 var bCaptureServerSess = require("../lib/session");
 var http = require("http");
+var when = require("when");
 var h = require("./test-helper");
 
 buster.testCase("server", {
@@ -96,6 +97,24 @@ buster.testCase("server", {
             assert.equals(res.statusCode, 200);
             assert.equals(JSON.parse(body), resources);
         })).end();
+    },
+
+    "preparing session inflates and mounts": function () {
+        var session = {resourceSet: {}, resourcesPath: "/foo"};
+
+        var rs = {};
+        var inflateDeferred = when.defer();
+        inflateDeferred.resolve(rs);
+
+        this.stub(this.s._resourceCache, "inflate").returns(inflateDeferred.promise);
+        this.stub(this.s._resourceMiddleware, "mount");
+
+        this.s.sessionQueue.prepareSession(session);
+
+        assert.calledOnce(this.s._resourceMiddleware.mount)
+        var args = this.s._resourceMiddleware.mount.getCall(0).args;
+        assert.equals(args[0], session.resourcesPath)
+        assert.same(args[1], rs)
     },
 
     "// should fail if attempting to load uncached items": function () {

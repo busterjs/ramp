@@ -211,5 +211,17 @@ buster.testCase("Session", {
             }));
             this.session.freedSlave({serialize: function () { return slave; }});
         },
+    },
+
+    "should create with resource set": function (done) {
+        var self = this;
+        var sessionData = {resourceSet: this.rsSrl};
+
+        bSession.create(sessionData, h.mockFayeAdapter()).then(function (session) {
+            assert(session.resourceSet);
+            session.resourceSet.serialize().then(done(function (rs) {
+                assert.equals(self.rsSrl, rs);
+            }));
+        });
     }
 });
