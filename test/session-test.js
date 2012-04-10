@@ -151,7 +151,7 @@ buster.testCase("Session", {
             this.session.on("end", done);
         },
 
-        "// notifies when session starts": function (done) {
+        "notifies when session starts": function (done) {
             var self = this;
             this.pubsubClient.on("session:started", done(function (e) {
                 assert.equals(e.session, self.sessionData);
