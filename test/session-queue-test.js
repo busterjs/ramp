@@ -63,6 +63,11 @@ var mockSession = function () {
 buster.testCase("Session queue", {
     setUp: function () {
         this.sq = bsq.create();
+        this.sq.prepareSession = function (session) {
+            var deferred = when.defer();
+            deferred.resolve(session);
+            return deferred.promise;
+        };
     },
 
     "adds slave when slave is prepared": function () {
@@ -206,6 +211,21 @@ buster.testCase("Session queue", {
             assert.calledOnce(sess1.freedSlave);
             assert.same(sess1.freedSlave.getCall(0).args[0], newSlave);
             refute.called(sess2.freedSlave);
+        },
+
+        "prepares session when callback is set": function () {
+            this.sq.prepareSession = function (session) {
+                var deferred = when.defer();
+                deferred.resolve({foo: "bar", session: session});
+                return deferred.promise;
+            };
+
+            var sess = mockSession();
+            this.sq.enqueueSession(sess);
+            this.slave.loadSessionComplete();
+
+            assert.same(this.sq.currentSession.session, sess);
+            assert.equals(this.sq.currentSession.foo, "bar");
         }
      },
 
