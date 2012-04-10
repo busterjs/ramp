@@ -31,7 +31,7 @@ buster.testCase("server", {
     },
 
     "should create new session successfully": function (done) {
-        this.c.createSession({}, h.mockFayeAdapter()).then(
+        this.c.createSession({}).then(
             done(function (sess) {
                 assertIsSerializedSession(sess);
             })
@@ -39,7 +39,7 @@ buster.testCase("server", {
     },
 
     "should not create invalid session": function (done) {
-        this.c.createSession({unknownProperty: true}, h.mockFayeAdapter()).then(
+        this.c.createSession({unknownProperty: true}).then(
             function () {},
             done(function (err) {
                 assert.match(err.message, "unknown property");
