@@ -35,6 +35,10 @@ buster.testCase("slave", {
         assert(this.slave.prisonPath);
     },
 
+    "has prison resource set": function () {
+        assert(this.slave.prisonResourceSet);
+    },
+
     "attached": {
         setUp: function () {
             this.slave.attach(this.httpServer, this._pubsubClient);

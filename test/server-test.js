@@ -48,20 +48,60 @@ buster.testCase("server", {
         );
     },
 
-    "emits event when session queue emits slave:captured": function (done) {
-        this.c.on("slave:captured", done(function (e) {
-            assert.equals(e, "foo");
-        }));
-
+    "listens to slave:captured on session queue": function () {
+        this.stub(this.s, "_onSlaveCaptured");
         this.s.sessionQueue.emit("slave:captured", "foo");
+        assert.calledOnce(this.s._onSlaveCaptured);
+        assert.calledWithExactly(this.s._onSlaveCaptured, "foo");
     },
 
-    "emits event when session queue emits slave:freed": function (done) {
-        this.c.on("slave:freed", done(function (e) {
-            assert.equals(e, "foo");
+    "listens to slave:freed on session queue": function () {
+        this.stub(this.s, "_onSlaveFreed");
+        this.s.sessionQueue.emit("slave:freed", "foo");
+        assert.calledOnce(this.s._onSlaveFreed);
+        assert.calledWithExactly(this.s._onSlaveFreed, "foo");
+    },
+
+    "capturing slave emits event and mounts resource set": function (done) {
+        var slave = {
+            prisonResourceSet: {},
+            prisonPath: "/foo123",
+            serialize: function () {
+                return {foo: "bar"}
+            }
+        };
+
+        this.c.on("slave:captured", done(function (e) {
+            assert.equals(e, {foo: "bar"});
         }));
 
-        this.s.sessionQueue.emit("slave:freed", "foo");
+        this.stub(this.s._resourceMiddleware, "mount");
+        this.s._onSlaveCaptured(slave);
+
+        assert.calledOnce(this.s._resourceMiddleware.mount);
+        var args = this.s._resourceMiddleware.mount.getCall(0).args;
+        assert.same(args[0], slave.prisonPath);
+        assert.same(args[1], slave.prisonResourceSet);
+    },
+
+    "freeing slave emits event and unmounts resource set": function (done) {
+        var slave = {
+            prisonPath: "/foo123",
+            serialize: function () {
+                return {foo: "bar"}
+            }
+        };
+
+        this.c.on("slave:freed", done(function (e) {
+            assert.equals(e, {foo: "bar"});
+        }));
+
+        this.stub(this.s._resourceMiddleware, "unmount");
+        this.s._onSlaveFreed(slave);
+
+        assert.calledOnce(this.s._resourceMiddleware.unmount);
+        var args = this.s._resourceMiddleware.unmount.getCall(0).args;
+        assert.same(args[0], slave.prisonPath);
     },
 
     "should create new slave via HTTP": function (done) {
