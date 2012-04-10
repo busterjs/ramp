@@ -89,10 +89,6 @@ buster.testCase("pubsub-client", {
             }, "TypeError");
 
             assert.exception(function () {
-                self.ps._getEventName("foo-bar");
-            }, "TypeError");
-
-            assert.exception(function () {
                 self.ps._getEventName(":foo");
             }, "TypeError");
 
