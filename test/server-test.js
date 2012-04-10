@@ -88,6 +88,16 @@ buster.testCase("server", {
         assert.same(slave.attach.getCall(0).args[0], this.s._httpServer);
     },
 
+    "should list cache via HTTP": function (done) {
+        var resources = [{foo: "bar"}]
+        this.stub(this.s._resourceCache, "resourceVersions").returns(resources);
+
+        h.request({path: "/resources"}, done(function (res, body) {
+            assert.equals(res.statusCode, 200);
+            assert.equals(JSON.parse(body), resources);
+        })).end();
+    },
+
     "// should fail if attempting to load uncached items": function () {
     },
 
