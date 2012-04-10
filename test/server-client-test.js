@@ -26,7 +26,10 @@ buster.testCase("server client", {
             });
         });
 
-        this.c = bCaptureServer.createServerClient("0.0.0.0", h.SERVER_PORT);
+        this.c = bCaptureServer.createServerClient({
+            host: "0.0.0.0",
+            port: h.SERVER_PORT
+        });
     },
 
     tearDown: function (done) {

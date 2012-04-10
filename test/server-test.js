@@ -12,13 +12,16 @@ buster.testCase("server", {
         this.httpServer = http.createServer(function (req, res) {
             res.writeHead(h.NO_RESPONSE_STATUS_CODE); res.end();
         });
-        this.httpServer.listen(h.SERVER_PORT, function () {
-            this.c = bCaptureServer.createServerClient("0.0.0.0", h.SERVER_PORT);
-            this.c.connect().then(done);
-        }.bind(this));
+        this.httpServer.listen(h.SERVER_PORT, done);
 
         this.s = bCaptureServer.createServer();
         this.s.attach(this.httpServer);
+
+        this.c = bCaptureServer.createServerClient({
+            host: "0.0.0.0",
+            port: h.SERVER_PORT,
+            fayeClient: this.s.bayeuxServer.getClient()
+        });
     },
 
     tearDown: function (done) {
@@ -49,10 +52,7 @@ buster.testCase("server", {
             assert.equals(e, "foo");
         }));
 
-        // TODO: Meh, timeout
-        setTimeout(function () {
-            this.s.sessionQueue.emit("slave:captured", "foo");
-        }.bind(this), 100);
+        this.s.sessionQueue.emit("slave:captured", "foo");
     },
 
     "emits event when session queue emits slave:freed": function (done) {
@@ -60,10 +60,7 @@ buster.testCase("server", {
             assert.equals(e, "foo");
         }));
 
-        // TODO: Meh, timeout
-        setTimeout(function () {
-            this.s.sessionQueue.emit("slave:freed", "foo");
-        }.bind(this), 100);
+        this.s.sessionQueue.emit("slave:freed", "foo");
     },
 
     "// should fail if attempting to load uncached items": function () {
