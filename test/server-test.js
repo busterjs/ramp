@@ -63,6 +63,22 @@ buster.testCase("server", {
         this.s.sessionQueue.emit("slave:freed", "foo");
     },
 
+    "should create new slave via HTTP": function (done) {
+        var slave = {prisonPath: "/foo"};
+        this.stub(this.s, "_createSlave").returns(slave);
+
+        h.request({path: "/capture", method: "GET"}, done(function (res, body) {
+            assert.equals(res.statusCode, 302);
+            assert.equals(res.headers["location"], "/foo");
+        })).end();
+    },
+
+    "creating new slave adds it to queue": function () {
+        this.stub(this.s.sessionQueue, "addSlave");
+        this.s._createSlave();
+        assert.calledOnce(this.s.sessionQueue.addSlave);
+    },
+
     "// should fail if attempting to load uncached items": function () {
     },
 
