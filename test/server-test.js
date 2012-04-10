@@ -73,10 +73,19 @@ buster.testCase("server", {
         })).end();
     },
 
-    "creating new slave adds it to queue": function () {
+    "creating new slave adds it to queue and attaches it": function () {
         this.stub(this.s.sessionQueue, "addSlave");
+        this.stub(this.s, "_attachSlave");
         this.s._createSlave();
         assert.calledOnce(this.s.sessionQueue.addSlave);
+        assert.calledOnce(this.s._attachSlave);
+    },
+
+    "attaching slave": function () {
+        var slave = {attach: this.spy()};
+        this.s._attachSlave(slave);
+        assert.calledOnce(slave.attach);
+        assert.same(slave.attach.getCall(0).args[0], this.s._httpServer);
     },
 
     "// should fail if attempting to load uncached items": function () {
