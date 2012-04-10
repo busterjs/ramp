@@ -84,7 +84,7 @@ buster.testCase("server", {
     "attaching slave": function () {
         var slave = {attach: this.spy()};
         this.s._attachSlave(slave);
-        assert.calledOnce(slave.attach);
+        assert(slave.attach.calledOnce);
         assert.same(slave.attach.getCall(0).args[0], this.s._httpServer);
     },
 
