@@ -67,6 +67,22 @@ buster.testCase("slave", {
             });
 
             this.slave.unloadSession().then(done);
+        },
+
+        "preparing when ready": function (done) {
+            assert(true);
+            this.slave._isReady = true;
+            this.slave.prepare().then(done);
+        },
+
+        "defaults to not ready": function () {
+            assert.isFalse(this.slave._isReady);
+        },
+
+        "preparing when not ready": function (done) {
+            assert(true);
+            this.slave.prepare().then(done);
+            this._pubsubClient.emit("slave:" + this.slave._id + ":imprisoned");
         }
     },
 
