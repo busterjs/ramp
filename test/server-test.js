@@ -117,6 +117,18 @@ buster.testCase("server", {
         assert.same(args[1], rs)
     },
 
+    "serves resources middleware": function () {
+        var req = {url: "/foo", method: "GET"};
+        var res = {};
+        this.stub(this.s._resourceMiddleware, "respond");
+        this.s._respond(req, res);
+
+        assert.calledOnce(this.s._resourceMiddleware.respond);
+        var args = this.s._resourceMiddleware.respond.getCall(0).args;
+        assert.same(args[0], req);
+        assert.same(args[1], res);
+    },
+
     "// should fail if attempting to load uncached items": function () {
     },
 
