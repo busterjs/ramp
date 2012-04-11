@@ -64,8 +64,6 @@ buster.testCase("server", {
 
     "capturing slave emits event and mounts resource set": function (done) {
         var slave = {
-            prisonResourceSet: {},
-            prisonPath: "/foo123",
             serialize: function () {
                 return {foo: "bar"}
             }
@@ -75,13 +73,7 @@ buster.testCase("server", {
             assert.equals(e, {foo: "bar"});
         }));
 
-        this.stub(this.s._resourceMiddleware, "mount");
         this.s._onSlaveCaptured(slave);
-
-        assert.calledOnce(this.s._resourceMiddleware.mount);
-        var args = this.s._resourceMiddleware.mount.getCall(0).args;
-        assert.same(args[0], slave.prisonPath);
-        assert.same(args[1], slave.prisonResourceSet);
     },
 
     "freeing slave emits event and unmounts resource set": function (done) {
@@ -114,12 +106,22 @@ buster.testCase("server", {
         })).end();
     },
 
-    "creating new slave adds it to queue and attaches it": function () {
+    "creating new slave adds it to queue and attaches and mounts it": function () {
+        this.stub(this.s._resourceMiddleware, "mount");
         this.stub(this.s.sessionQueue, "addSlave");
         this.stub(this.s, "_attachSlave");
-        this.s._createSlave();
+        var slave = this.s._createSlave();
+
         assert.calledOnce(this.s.sessionQueue.addSlave);
+        assert.same(this.s.sessionQueue.addSlave.getCall(0).args[0], slave);
+
         assert.calledOnce(this.s._attachSlave);
+        assert.same(this.s._attachSlave.getCall(0).args[0], slave);
+
+        assert.calledOnce(this.s._resourceMiddleware.mount);
+        var args = this.s._resourceMiddleware.mount.getCall(0).args;
+        assert.same(args[0], slave.prisonPath);
+        assert.same(args[1], slave.prisonResourceSet);
     },
 
     "attaching slave": function () {
