@@ -63,14 +63,10 @@ buster.testCase("server", {
     },
 
     "capturing slave emits event and mounts resource set": function (done) {
-        var slave = {
-            serialize: function () {
-                return {foo: "bar"}
-            }
-        };
+        var slave = {foo: "bar"};
 
         this.c.on("slave:captured", done(function (e) {
-            assert.equals(e, {foo: "bar"});
+            assert.equals(e, slave);
         }));
 
         this.s._onSlaveCaptured(slave);
@@ -78,14 +74,12 @@ buster.testCase("server", {
 
     "freeing slave emits event and unmounts resource set": function (done) {
         var slave = {
+            foo: "bar",
             prisonPath: "/foo123",
-            serialize: function () {
-                return {foo: "bar"}
-            }
         };
 
         this.c.on("slave:freed", done(function (e) {
-            assert.equals(e, {foo: "bar"});
+            assert.equals(e, slave);
         }));
 
         this.stub(this.s._resourceMiddleware, "unmount");
