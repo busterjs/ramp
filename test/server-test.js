@@ -157,6 +157,15 @@ buster.testCase("server", {
         assert.same(args[1], rs)
     },
 
+    "teardown session unmounts": function () {
+        var session = {resourcesPath: "/fofoafo"};
+        this.stub(this.s._resourceMiddleware, "unmount");
+        this.s.sessionQueue.teardownSession(session);
+
+        assert.calledOnce(this.s._resourceMiddleware.unmount);
+        assert.calledWithExactly(this.s._resourceMiddleware.unmount, "/fofoafo");
+    },
+
     "serves resources middleware": function () {
         var req = {url: "/foo", method: "GET"};
         var res = {};
