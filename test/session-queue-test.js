@@ -68,6 +68,7 @@ buster.testCase("Session queue", {
             deferred.resolve(session);
             return deferred.promise;
         };
+        this.sq.teardownSession = function () {};
     },
 
     "adds slave when slave is prepared": function () {
@@ -226,6 +227,19 @@ buster.testCase("Session queue", {
 
             assert.same(this.sq.currentSession.session, sess);
             assert.equals(this.sq.currentSession.foo, "bar");
+        },
+
+        "tears down session when unloaded": function () {
+            var session = mockSession();
+            this.sq.teardownSession = this.spy();
+
+            this.sq.enqueueSession(session);
+            this.slave.loadSessionComplete();
+            session.mockEnd();
+            this.slave.unloadSessionComplete();
+
+            assert.calledOnce(this.sq.teardownSession);
+            assert.same(this.sq.teardownSession.getCall(0).args[0], session);
         }
      },
 
