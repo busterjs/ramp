@@ -1,5 +1,6 @@
 var http = require("http");
-var bCapServ = require("./../../lib/buster-capture-server");
+// var bCapServ = require("./../../lib/buster-capture-server");
+var bCaptureServer = require("../../lib/buster-capture-server");
 var EventEmitter = require("events").EventEmitter;
 var CP = require("child_process");
 var faye = require("faye");
@@ -7,54 +8,34 @@ var phantomPort = 12000;
 var h = require("./../test-helper");
 
 module.exports = {
-    createServer: function (port, cb) {
-        var httpServer = http.createServer(function (req, res) {
-            res.writeHead(h.NO_RESPONSE_STATUS_CODE);
-            res.end();
-        });
-        httpServer.listen(port, cb);
-
-        var reqConns = [];
-        httpServer.on("connection", function (sock) { reqConns.push(sock); });
-
-        var captureServer = bCapServ.create();
-        captureServer.attach(httpServer);
-
-        return {
-            httpServer: httpServer,
-            captureServer: captureServer,
-            kill: function (cb) {
-                // Ensure all connections are nuked out of orbit
-                reqConns.forEach(function (c) { c.destroy(); });
-
-                httpServer.on("close", cb);
-                httpServer.close();
-            }
-        }
-    },
-
-
     Phantom: function () {
         return Phantom.apply(Phantom, arguments);
     },
 
-    capture: function(srv, oncapture) {
-        var captureUrl = "http://127.0.0.1:" + srv.httpServer.address().port + srv.captureServer.capturePath;
+    openCapture: function (ready) {
+        var captureUrl = "http://0.0.0.0:" + h.SERVER_PORT + "/capture";
 
         var phantom = Phantom(function () {
-            phantom.open(captureUrl, function () {});
+            phantom.open(captureUrl, function () {
+                ready(phantom);
+            });
         });
+    },
 
-        var captureHandler = function (slave) {
-            srv.captureServer.bayeux.unsubscribe("/capture", captureHandler);
+    capture: function(ready) {
+        module.exports.openCapture(function (phantom) {
+            var c = bCaptureServer.createServerClient({
+                host: "0.0.0.0",
+                port: h.SERVER_PORT
+            });
 
-            var readyHandler = function () {
-                srv.captureServer.bayeux.unsubscribe(slave.becomesReadyPath, readyHandler);
-                oncapture(slave, phantom);
-            };
-            srv.captureServer.bayeux.subscribe(slave.becomesReadyPath, readyHandler)
-        }
-        srv.captureServer.bayeux.subscribe("/capture", captureHandler);
+            c.connect().then(function () {
+                c.on("slave:captured", function (slave) {
+                    c.disconnect();
+                    ready(slave, phantom);
+                });
+            });
+        });
     }
 };
 
