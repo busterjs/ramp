@@ -4,6 +4,7 @@ var refute = buster.refute;
 var sinon = require("sinon");
 
 var bayeuxServer = require("./../lib/bayeux-server");
+var pubsubClient = require("./../lib/pubsub-client");
 var http = require("http");
 var faye = require("faye");
 var when = require("when");
@@ -14,12 +15,10 @@ buster.testCase("bayeux server", {
         this.httpServer = http.createServer();
         this.httpServer.listen(h.SERVER_PORT, done);
 
-        this.fayeAdapter = new faye.NodeAdapter({mount: "/messaging"});
-        this.fayeAdapter.attach(this.httpServer);
-        this.fayeClient = this.fayeAdapter.getClient();
-
-        var logger = {};
-        this.bs = bayeuxServer.create(logger, "/messaging");
+        var NOOP = function(){};
+        var NOOP_LOGGER = {error:NOOP,warn:NOOP,log:NOOP,info:NOOP,debug:NOOP};
+        this.bs = bayeuxServer.create(NOOP_LOGGER, "/messaging");
+        this.bs.attach(this.httpServer);
     },
 
     tearDown: function (done) {
@@ -42,4 +41,29 @@ buster.testCase("bayeux server", {
         assert.calledOnce(this.bs._fayeAdapter.attach);
         assert.same(this.bs._fayeAdapter.attach.getCall(0).args[0], httpServer);
     },
+
+    "stores list of pubsub clients": function (done) {
+        var self = this;
+
+        var c1 = pubsubClient.create({
+            host: "0.0.0.0",
+            port: h.SERVER_PORT
+        })
+        c1.connect().then(function () {
+            var c2 = pubsubClient.create({
+                host: "0.0.0.0",
+                port: h.SERVER_PORT
+            })
+            c2.connect().then(done(function () {
+                c1.disconnect();
+                c2.disconnect();
+
+                var clients = self.bs._pubsubClients;
+                assert.equals(Object.keys(clients).length, 2);
+
+                assert(clients[c1._id].fayeClientId);
+                assert(clients[c2._id].fayeClientId);
+            }));
+        });
+    }
 });
