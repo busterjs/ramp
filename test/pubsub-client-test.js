@@ -26,7 +26,7 @@ buster.testCase("pubsub-client", {
         this.fayeAdapter.attach(this.httpServer);
         this.fayeClient = this.fayeAdapter.getClient();
 
-        this.ps = pubsubClient.create({
+        this.pc = pubsubClient.create({
             host: "0.0.0.0",
             port: h.SERVER_PORT
         });
@@ -35,30 +35,30 @@ buster.testCase("pubsub-client", {
     tearDown: function (done) {
         this.httpServer.on("close", done);
         this.httpServer.close();
-        this.ps.disconnect();
+        this.pc.disconnect();
     },
 
     "should create faye client with provided host and port": function () {
         var spy = this.stub(faye, "Client");
-        var client = this.ps._createFayeClient();
+        var client = this.pc._createFayeClient();
         assert.calledOnce(spy);
 
-        var url = "http://" + this.ps._serverHost + ":" + this.ps._serverPort + "/messaging";
+        var url = "http://" + this.pc._serverHost + ":" + this.pc._serverPort + "/messaging";
         assert.calledWithExactly(faye.Client, url);
     },
 
     "should connect": function (done) {
         assert(true);
-        this.ps.connect().then(done);
+        this.pc.connect().then(done);
     },
 
     "should not subscribe to connection event when connected": function (done) {
         var self = this;
         assert(true);
 
-        this.ps.connect().then(function () {
+        this.pc.connect().then(function () {
             // Will throw uncaught exception due to double resolve if not handled
-            self.ps._fayeClient.publish("/" + self.ps._id + "-initialize", {})
+            self.pc._fayeClient.publish("/initialie/" + self.pc._id, {})
                 .callback(done);
         });
     },
@@ -66,128 +66,128 @@ buster.testCase("pubsub-client", {
     "mock connection": {
         setUp: function () {
             this.mockFaye = mockFaye();
-            this.ps._fayeClient = this.mockFaye;
+            this.pc._fayeClient = this.mockFaye;
         },
 
         "should get faye event name": function ( ){
-            assert.equals(this.ps._getEventName("foo"), "/user-foo");
+            assert.equals(this.pc._getEventName("foo"), "/user-foo");
         },
 
         "should get namespaced faye event name": function ( ){
-            assert.equals(this.ps._getEventName("foo:bar:baz"), "/user-foo-bar-baz");
+            assert.equals(this.pc._getEventName("foo:bar:baz"), "/user-foo-bar-baz");
         },
 
         "should fail when getting invalid event name": function () {
             var self = this;
 
             assert.exception(function () {
-                self.ps._getEventName("/foo");
+                self.pc._getEventName("/foo");
             }, "TypeError");
 
             assert.exception(function () {
-                self.ps._getEventName("foo/bar");
+                self.pc._getEventName("foo/bar");
             }, "TypeError");
 
             assert.exception(function () {
-                self.ps._getEventName(":foo");
+                self.pc._getEventName(":foo");
             }, "TypeError");
 
             assert.exception(function () {
-                self.ps._getEventName("foo:");
+                self.pc._getEventName("foo:");
             }, "TypeError");
 
             assert.exception(function () {
-                self.ps._getEventName(":foo:bar:baz");
+                self.pc._getEventName(":foo:bar:baz");
             }, "TypeError");
 
             assert.exception(function () {
-                self.ps._getEventName("foo:bar:baz:");
+                self.pc._getEventName("foo:bar:baz:");
             }, "TypeError");
 
             assert.exception(function () {
-                self.ps._getEventName(":");
+                self.pc._getEventName(":");
             }, "TypeError");
 
             assert.exception(function () {
-                self.ps._getEventName("::");
+                self.pc._getEventName("::");
             }, "TypeError");
 
             assert.exception(function () {
-                self.ps._getEventName(":f:");
+                self.pc._getEventName(":f:");
             }, "TypeError");
 
             assert.exception(function () {
-                self.ps._getEventName("");
+                self.pc._getEventName("");
             }, "TypeError");
         },
 
         "should listen to event": function () {
-            this.stub(this.ps, "_getEventName").returns("/boom");
-            this.ps.on("foo", function () {});
+            this.stub(this.pc, "_getEventName").returns("/boom");
+            this.pc.on("foo", function () {});
 
             assert.calledOnce(this.mockFaye.subscribe);
             assert.calledWith(this.mockFaye.subscribe, "/boom");
 
-            assert.calledOnce(this.ps._getEventName);
-            assert.calledWithExactly(this.ps._getEventName, "foo");
+            assert.calledOnce(this.pc._getEventName);
+            assert.calledWithExactly(this.pc._getEventName, "foo");
         },
 
         "should emit event": function () {
-            this.stub(this.ps, "_getEventName").returns("/boom");
-            this.ps.emit("foo", "some data");
+            this.stub(this.pc, "_getEventName").returns("/boom");
+            this.pc.emit("foo", "some data");
 
             assert.calledOnce(this.mockFaye.publish);
             assert.calledWith(this.mockFaye.publish, "/boom");
 
-            assert.calledOnce(this.ps._getEventName);
-            assert.calledWithExactly(this.ps._getEventName, "foo");
+            assert.calledOnce(this.pc._getEventName);
+            assert.calledWithExactly(this.pc._getEventName, "foo");
         }
     },
 
     "actual connection": {
         setUp: function (done) {
-            this.ps.connect().then(done);
+            this.pc.connect().then(done);
         },
 
         "event cycle with data": function (done) {
-            this.ps.on("foo", done(function (data) {
+            this.pc.on("foo", done(function (data) {
                 assert.equals(data, "some data");
             }));
 
-            this.ps.emit("foo", "some data");
+            this.pc.emit("foo", "some data");
         },
 
         "event cycle with no data": function (done) {
-            this.ps.on("foo", done(function (data) {
+            this.pc.on("foo", done(function (data) {
                 refute(data);
             }));
 
-            this.ps.emit("foo");
+            this.pc.emit("foo");
         }
     },
 
     "context path": {
         setUp: function () {
-            this.ps2 = pubsubClient.create({
+            this.pc2 = pubsubClient.create({
                 host: "0.0.0.0",
                 port: h.SERVER_PORT,
                 contextPath: "/foo"
             });
             this.mockFaye2 = mockFaye();
-            this.ps2._fayeClient = this.mockFaye2;
+            this.pc2._fayeClient = this.mockFaye2;
         },
 
         "should listen": function () {
-            this.stub(this.ps2, "_getEventName").returns("/boom");
-            this.ps2.on("foo", function () {});
+            this.stub(this.pc2, "_getEventName").returns("/boom");
+            this.pc2.on("foo", function () {});
 
             assert.calledOnce(this.mockFaye2.subscribe);
             assert.calledWith(this.mockFaye2.subscribe, "/foo/boom");
         },
 
         "should emit": function () {
-            this.stub(this.ps2, "_getEventName").returns("/boom");
-            this.ps2.emit("foo", "some data");
+            this.stub(this.pc2, "_getEventName").returns("/boom");
+            this.pc2.emit("foo", "some data");
 
             assert.calledOnce(this.mockFaye2.publish);
             assert.calledWith(this.mockFaye2.publish, "/foo/boom");
@@ -196,37 +196,37 @@ buster.testCase("pubsub-client", {
 
     "providing faye client": {
         setUp: function () {
-            this.ps2 = pubsubClient.create({
+            this.pc2 = pubsubClient.create({
                 fayeClient: this.fayeClient
             });
         },
 
         "should connect to provided faye client": function (done) {
             var self = this;
-            this.ps2.connect().then(done(function () {
-                assert.same(self.fayeClient, self.ps2._fayeClient);
+            this.pc2.connect().then(done(function () {
+                assert.same(self.fayeClient, self.pc2._fayeClient);
             }));
         }
     },
 
     "extending": function () {
         var obj = {};
-        this.ps.extend(obj);
-        assert.same(this.ps.connect, obj.connect);
-        assert.same(this.ps.disconnect, obj.disconnect);
-        assert.same(this.ps.emit, obj.emit);
-        assert.same(this.ps.on, obj.on);
+        this.pc.extend(obj);
+        assert.same(this.pc.connect, obj.connect);
+        assert.same(this.pc.disconnect, obj.disconnect);
+        assert.same(this.pc.emit, obj.emit);
+        assert.same(this.pc.on, obj.on);
     },
 
     "should call onConnect when donnecting": function (done) {
         var spy = this.spy();
 
-        var ps2 = pubsubClient.create({
+        var pc2 = pubsubClient.create({
             fayeClient: this.fayeClient,
             onConnect: spy
         });
 
-        ps2.connect().then(done(function () {
+        pc2.connect().then(done(function () {
             assert.calledOnce(spy);
         }));
     }
