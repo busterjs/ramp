@@ -93,9 +93,12 @@ var Phantom = function (onready) {
         },
 
         kill: function (onkill) {
+            if (this.isKilled) return;
+            this.isKilled = true;
+
             // Loading a blank page ensures beforeunload callback gets called
             this.open(blankPageUrl, function () {
-                phantom.on("exit", onkill);
+                phantom.on("exit", onkill || function () {});
                 phantom.kill();
             });
         }

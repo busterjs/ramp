@@ -47,26 +47,26 @@ buster.testCase("Integration", {
         }));
     },
 
-    // "test multiple browsers": function (done) {
-    //     var self = this;
+    "test multiple browsers": function (done) {
+        var self = this;
 
-    //     ih.capture(function (slave, phantom) {
-    //         assert.equals(self.s.sessionQueue.slaves.length, 1);
+        this.p.capture(function (slave, phantom) {
+            assert.equals(self.s.sessionQueue.slaves.length, 1);
 
-    //         ih.capture(function (slave, phantom2) {
-    //             assert.equals(self.s.sessionQueue.slaves.length, 2);
+            self.p.capture(function (slave, phantom2) {
+                assert.equals(self.s.sessionQueue.slaves.length, 2);
 
-    //             phantom.kill(function () {
-    //                 assert.equals(self.s.sessionQueue.slaves.length, 1);
+                phantom.kill(function () {
+                    assert.equals(self.s.sessionQueue.slaves.length, 1);
 
-    //                 phantom2.kill(function () {
-    //                     assert.equals(self.s.sessionQueue.slaves.length, 0);
-    //                     done();
-    //                 });
-    //             });
-    //         });
-    //     });
-    // },
+                    phantom2.kill(function () {
+                        assert.equals(self.s.sessionQueue.slaves.length, 0);
+                        done();
+                    });
+                });
+            });
+        });
+    },
 
     // "test posting events from session": function (done) {
     //     var self = this;
