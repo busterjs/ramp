@@ -7,11 +7,13 @@ var faye = require("faye");
 var phantomPort = 12000;
 var h = require("./../test-helper");
 
-module.exports = {
-    Phantom: function () {
-        return Phantom.apply(Phantom, arguments);
-    },
+var PhantomFactory = function () {
+    this.phantoms = [];
+};
 
+module.exports = PhantomFactory;
+
+PhantomFactory.prototype = {
     openCapture: function (ready) {
         var captureUrl = "http://0.0.0.0:" + h.SERVER_PORT + "/capture";
 
@@ -20,10 +22,12 @@ module.exports = {
                 ready(phantom);
             });
         });
+
+        this.phantoms.push(phantom);
     },
 
     capture: function(ready) {
-        module.exports.openCapture(function (phantom) {
+        this.openCapture(function (phantom) {
             var c = bCaptureServer.createServerClient({
                 host: "0.0.0.0",
                 port: h.SERVER_PORT
@@ -36,6 +40,10 @@ module.exports = {
                 });
             });
         });
+    },
+
+    killAll: function () {
+        this.phantoms.forEach(function (p) { p.kill() });
     }
 };
 

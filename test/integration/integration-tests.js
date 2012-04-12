@@ -5,7 +5,7 @@ var refute = buster.refute;
 var bCaptureServer = require("../../lib/buster-capture-server");
 var http = require("http");
 var h = require("./../test-helper");
-var ih = require("./test-helper");
+var PhantomFactory = require("./phantom-factory");
 
 buster.testRunner.timeout = 500;
 buster.testCase("Integration", {
@@ -27,6 +27,8 @@ buster.testCase("Integration", {
             host: "0.0.0.0",
             port: h.SERVER_PORT
         });
+
+        this.p = new PhantomFactory();
     },
 
     tearDown: function (done) {
@@ -34,15 +36,15 @@ buster.testCase("Integration", {
         this.httpServer.close();
 
         this.reqSocks.forEach(function (s) { s.destroy(); });
+        this.p.killAll();
     },
 
     "test one browser": function (done) {
         var self = this;
 
-        ih.capture(function (slave, phantom) {
+        this.p.capture(done(function (slave, phantom) {
             assert.equals(self.s.sessionQueue.slaves.length, 1);
-            phantom.kill(done);
-        });
+        }));
     },
 
     // "test multiple browsers": function (done) {
