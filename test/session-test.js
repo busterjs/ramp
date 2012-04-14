@@ -18,6 +18,7 @@ var refute = buster.refute;
 
 var bCaptureServer = require("../lib/buster-capture-server");
 var bCaptureServerPubsubClient = require("../lib/pubsub-client");
+var bayeuxServer = require("./../lib/bayeux-server");
 var bSession = require("../lib/session");
 var busterResources = require("buster-resources");
 var http = require("http");
@@ -36,7 +37,7 @@ buster.testCase("Session", {
     "should create with resource set": function (done) {
         var sessionData = {resourceSet: this.rsSrl};
 
-        bSession.create(sessionData, h.mockFayeAdapter()).then(done(function (session) {
+        bSession.create(sessionData, h.mockBayeuxServer()).then(done(function (session) {
             assert(bSession.isPrototypeOf(session));
         }.bind(this)));
     },
@@ -44,15 +45,15 @@ buster.testCase("Session", {
     "should create non-joinable": function (done) {
         var sessionData = {resourceSet: {}, joinable: false};
 
-        bSession.create(sessionData, h.mockFayeAdapter()).then(done(function (session) {
+        bSession.create(sessionData, h.mockBayeuxServer()).then(done(function (session) {
             assert.isFalse(session.joinable);
         }.bind(this)));
     },
 
     "should not share resource paths": function (done) {
         var sessions = [
-            bSession.create({}, h.mockFayeAdapter()),
-            bSession.create({}, h.mockFayeAdapter())
+            bSession.create({}, h.mockBayeuxServer()),
+            bSession.create({}, h.mockBayeuxServer())
         ];
         when.all(sessions).then(done(function (sessions) {
             var s1 = sessions[0];
@@ -67,8 +68,8 @@ buster.testCase("Session", {
 
     "should have static resource paths when specified": function (done) {
         var sessions = [
-            bSession.create({staticResourcePath: true}, h.mockFayeAdapter()),
-            bSession.create({staticResourcePath: true}, h.mockFayeAdapter())
+            bSession.create({staticResourcePath: true}, h.mockBayeuxServer()),
+            bSession.create({staticResourcePath: true}, h.mockBayeuxServer())
         ];
         when.all(sessions).then(done(function (sessions) {
             var s1 = sessions[0];
@@ -79,7 +80,7 @@ buster.testCase("Session", {
     },
 
     "should reject when creation fails": function (done) {
-        bSession.create({unknownProp: true}, h.mockFayeAdapter()).then(
+        bSession.create({unknownProp: true}, h.mockBayeuxServer()).then(
             function () {},
             done(function (err) {
                 assert.equals(err.message, "Unknown property 'unknownProp'.");
@@ -93,7 +94,7 @@ buster.testCase("Session", {
         busterResources.resourceSet.deserialize.returns(deferred.promise);
         deferred.reject({message: "Foo"});
 
-        bSession.create({resourceSet: {}}, h.mockFayeAdapter()).then(
+        bSession.create({resourceSet: {}}, h.mockBayeuxServer()).then(
             function () {},
             done(function (err) {
                 assert.equals(err.message, "Foo");
@@ -107,20 +108,19 @@ buster.testCase("Session", {
 
             this.httpServer = http.createServer();
             this.httpServer.listen(h.SERVER_PORT, function () {
-                bSession.create({}, self.fayeAdapter).then(done(function (session) {
+                bSession.create({}, self.bs).then(done(function (session) {
                     self.session = session;
                     self.sessionData = session.serialize();
 
                     self.pubsubClient = bCaptureServerPubsubClient.create({
                         contextPath: self.session.messagingPath,
-                        fayeClient: self.fayeClient
+                        fayeClient: self.bs.getClient()
                     });
                 }));
             });
 
-            this.fayeAdapter = new faye.NodeAdapter({mount: "/messaging"});
-            this.fayeAdapter.attach(this.httpServer);
-            this.fayeClient = this.fayeAdapter.getClient();
+            this.bs = bayeuxServer.create(null, "/messaging");
+            this.bs.attach(this.httpServer);
         },
 
         tearDown: function (done) {
@@ -144,7 +144,11 @@ buster.testCase("Session", {
                 }
             );
             sc.connect().then(function () {
-                sc.disconnect();
+                // TODO: fix session client so it doesn't resolve connect
+                // until after "initialize" has been received on the server.
+                setTimeout(function () {
+                    sc.disconnect();
+                }, 50);
             });
 
             assert(true);
@@ -217,7 +221,7 @@ buster.testCase("Session", {
         var self = this;
         var sessionData = {resourceSet: this.rsSrl};
 
-        bSession.create(sessionData, h.mockFayeAdapter()).then(function (session) {
+        bSession.create(sessionData, h.mockBayeuxServer()).then(function (session) {
             assert(session.resourceSet);
             session.resourceSet.serialize().then(done(function (rs) {
                 assert.equals(self.rsSrl, rs);

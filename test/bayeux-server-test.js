@@ -15,9 +15,7 @@ buster.testCase("bayeux server", {
         this.httpServer = http.createServer();
         this.httpServer.listen(h.SERVER_PORT, done);
 
-        var NOOP = function(){};
-        var NOOP_LOGGER = {error:NOOP,warn:NOOP,log:NOOP,info:NOOP,debug:NOOP};
-        this.bs = bayeuxServer.create(NOOP_LOGGER, "/messaging");
+        this.bs = bayeuxServer.create(null, "/messaging");
         this.bs.attach(this.httpServer);
     },
 

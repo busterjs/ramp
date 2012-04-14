@@ -45,14 +45,14 @@ module.exports = {
         }
     },
 
-    mockFayeAdapter: function () {
-        return {
+    mockBayeuxServer: function () {
+        return buster.extend(buster.eventEmitter.create(), {
             getClient: function () { return module.exports.mockFayeClient() },
             addExtension: sinon.spy(),
             removeExtension: sinon.spy(),
             bind: sinon.spy(),
             unbind: sinon.spy()
-        }
+        })
     },
 
     mockFayeClient: function () {

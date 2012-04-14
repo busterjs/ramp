@@ -4,8 +4,8 @@ var refute = buster.refute;
 
 var bCaptureServer = require("../lib/buster-capture-server");
 var bSession = require("../lib/session");
+var bayeuxServer = require("./../lib/bayeux-server");
 var http = require("http");
-var faye = require("faye");
 var when = require("when");
 var h = require("./test-helper");
 
@@ -15,15 +15,14 @@ buster.testCase("session client", {
 
         this.httpServer = http.createServer();
         this.httpServer.listen(h.SERVER_PORT, function () {
-            bSession.create({}, self.fayeAdapter).then(done(function (session) {
+            bSession.create({}, self.bs).then(done(function (session) {
                 self.session = session;
                 self.sessionData = session.serialize();
             }));
         });
 
-        this.fayeAdapter = new faye.NodeAdapter({mount: "/messaging"});
-        this.fayeAdapter.attach(this.httpServer);
-        this.fayeClient = this.fayeAdapter.getClient();
+        this.bs = bayeuxServer.create(null, "/messaging");
+        this.bs.attach(this.httpServer);
     },
 
     tearDown: function (done) {
