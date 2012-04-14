@@ -85,7 +85,37 @@ buster.testCase("slave", {
         "preparing when not ready": function (done) {
             assert(true);
             this.slave.prepare().then(done);
-            this.pc.emit("slave:" + this.slave._id + ":imprisoned");
+            this.pc.emit("slave:" + this.slave._id + ":imprisoned", {});
+        },
+
+        "with mock browser": {
+            setUp: function (done) {
+                var self = this;
+                this.mockBrowser = bCapServPubsubClient.create({
+                    host: "0.0.0.0",
+                    port: h.SERVER_PORT
+                })
+                this.mockBrowser.connect().then(function () {
+                    self.mockBrowser.emit(
+                        "slave:" + self.slave._id + ":imprisoned",
+                        {
+                            pubsubClientId: self.mockBrowser.id
+                        }
+                    );
+                });
+
+                this.slave.prepare().then(done);
+            },
+
+            tearDown: function () {
+                this.mockBrowser.disconnect();
+            },
+
+            "ends when browser disconnects": function (done) {
+                assert(true);
+                this.mockBrowser.disconnect();
+                this.slave.on("end", done);
+            }
         }
     },
 
