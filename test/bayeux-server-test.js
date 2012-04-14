@@ -65,5 +65,38 @@ buster.testCase("bayeux server", {
                 assert(clients[c2._id].fayeClientId);
             }));
         });
+    },
+
+    "emits event when pubsub client disconnects": function (done) {
+        var self = this;
+
+        var c1 = pubsubClient.create({
+            host: "0.0.0.0",
+            port: h.SERVER_PORT
+        })
+        c1.connect().then(function () {
+            c1.disconnect();
+        });
+
+        self.bs.on("client:disconnect", done(function (clientId) {
+            assert.equals(c1._id, clientId);
+        }));
+    },
+
+    "removes stored pubsub client when it disconnects": function (done) {
+        var self = this;
+
+        var c1 = pubsubClient.create({
+            host: "0.0.0.0",
+            port: h.SERVER_PORT
+        })
+        c1.connect().then(function () {
+            c1.disconnect();
+        });
+
+        self.bs.on("client:disconnect", done(function (clientId) {
+            var clients = self.bs._pubsubClients;
+            assert.equals(Object.keys(clients).length, 0);
+        }));
     }
 });
