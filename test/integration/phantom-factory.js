@@ -28,18 +28,27 @@ PhantomFactory.prototype = {
     },
 
     capture: function(ready) {
-        this.openCapture(function (phantom) {
-            var c = bCaptureServer.createServerClient({
-                host: "0.0.0.0",
-                port: h.SERVER_PORT
-            });
+        var connectDeferred = when.defer();
+        var phantomDeferred = when.defer();
 
-            c.connect().then(function () {
-                c.on("slave:captured", function (slave) {
-                    c.disconnect();
-                    ready(slave, phantom);
-                });
+        when.all([connectDeferred, phantomDeferred]).then(function (e) {
+            ready(e[0], e[1]);
+        });
+
+        var c = bCaptureServer.createServerClient({
+            host: "0.0.0.0",
+            port: h.SERVER_PORT
+        });
+
+        c.connect().then(function () {
+            c.on("slave:captured", function (slave) {
+                c.disconnect();
+                connectDeferred.resolve(slave);
             });
+        });
+
+        this.openCapture(function (phantom) {
+            phantomDeferred.resolve(phantom);
         });
     },
 
