@@ -4,6 +4,7 @@ var refute = buster.refute;
 
 var bCapServSlave = require("../lib/slave");
 var bCapServPubsubClient = require("../lib/pubsub-client");
+var bCapServPubsubServer = require("./../lib/pubsub-server");
 var http = require("http");
 var faye = require("faye");
 var when = require("when");
@@ -16,14 +17,12 @@ buster.testCase("slave", {
         });
         this.httpServer.listen(h.SERVER_PORT, done);
 
-        this.fayeAdapter = new faye.NodeAdapter({mount: "/messaging"});
-        this.fayeAdapter.attach(this.httpServer);
-        this.fayeClient = this.fayeAdapter.getClient();
-
-        this._pubsubClient = bCapServPubsubClient.create({
-            fayeClient: this.fayeClient
+        this.ps = bCapServPubsubServer.create(null, "/messaging");
+        this.ps.attach(this.httpServer);
+        this.pc = bCapServPubsubClient.create({
+            fayeClient: this.ps.getClient()
         });
-        this.slave = bCapServSlave.create(this._pubsubClient);
+        this.slave = bCapServSlave.create();
     },
 
     tearDown: function (done) {
@@ -41,7 +40,7 @@ buster.testCase("slave", {
 
     "attached": {
         setUp: function () {
-            this.slave.attach(this.httpServer, this._pubsubClient);
+            this.slave.attach(this.httpServer, this.ps);
         },
 
         "serves prison": function (done) {
@@ -54,9 +53,9 @@ buster.testCase("slave", {
             var self = this;
             var session = {foo: "bar"};
 
-            this._pubsubClient.on("slave:" + this.slave._id + ":session:load", function (s) {
+            this.pc.on("slave:" + this.slave._id + ":session:load", function (s) {
                 assert.equals(s, session);
-                self._pubsubClient.emit("slave:" + self.slave._id + ":session:loaded");
+                self.pc.emit("slave:" + self.slave._id + ":session:loaded");
             });
 
             this.slave.loadSession(session).then(done);
@@ -66,8 +65,8 @@ buster.testCase("slave", {
             var self = this;
             assert(true);
 
-            this._pubsubClient.on("slave:" + this.slave._id + ":session:unload", function (s) {
-                self._pubsubClient.emit("slave:" + self.slave._id + ":session:unloaded");
+            this.pc.on("slave:" + this.slave._id + ":session:unload", function (s) {
+                self.pc.emit("slave:" + self.slave._id + ":session:unloaded");
             });
 
             this.slave.unloadSession().then(done);
@@ -86,7 +85,7 @@ buster.testCase("slave", {
         "preparing when not ready": function (done) {
             assert(true);
             this.slave.prepare().then(done);
-            this._pubsubClient.emit("slave:" + this.slave._id + ":imprisoned");
+            this.pc.emit("slave:" + this.slave._id + ":imprisoned");
         }
     },
 
