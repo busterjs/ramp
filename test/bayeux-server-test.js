@@ -61,8 +61,8 @@ buster.testCase("bayeux server", {
                 var clients = self.bs._pubsubClients;
                 assert.equals(Object.keys(clients).length, 2);
 
-                assert(clients[c1._id].fayeClientId);
-                assert(clients[c2._id].fayeClientId);
+                assert(clients[c1.id].fayeClientId);
+                assert(clients[c2.id].fayeClientId);
             }));
         });
     },
@@ -79,7 +79,7 @@ buster.testCase("bayeux server", {
         });
 
         self.bs.on("client:disconnect", done(function (clientId) {
-            assert.equals(c1._id, clientId);
+            assert.equals(c1.id, clientId);
         }));
     },
 
