@@ -3,7 +3,7 @@ var assert = buster.assert;
 var refute = buster.refute;
 var sinon = require("sinon");
 
-var pubsubClient = require("./../lib/pubsub-client");
+var bCapServPubsubClient = require("./../lib/pubsub-client");
 var http = require("http");
 var faye = require("faye");
 var when = require("when");
@@ -26,7 +26,7 @@ buster.testCase("pubsub-client", {
         this.fayeAdapter.attach(this.httpServer);
         this.fayeClient = this.fayeAdapter.getClient();
 
-        this.pc = pubsubClient.create({
+        this.pc = bCapServPubsubClient.create({
             host: "0.0.0.0",
             port: h.SERVER_PORT
         });
@@ -168,7 +168,7 @@ buster.testCase("pubsub-client", {
 
     "context path": {
         setUp: function () {
-            this.pc2 = pubsubClient.create({
+            this.pc2 = bCapServPubsubClient.create({
                 host: "0.0.0.0",
                 port: h.SERVER_PORT,
                 contextPath: "/foo"
@@ -196,7 +196,7 @@ buster.testCase("pubsub-client", {
 
     "providing faye client": {
         setUp: function () {
-            this.pc2 = pubsubClient.create({
+            this.pc2 = bCapServPubsubClient.create({
                 fayeClient: this.fayeClient
             });
         },
@@ -221,7 +221,7 @@ buster.testCase("pubsub-client", {
     "should call onConnect when donnecting": function (done) {
         var spy = this.spy();
 
-        var pc2 = pubsubClient.create({
+        var pc2 = bCapServPubsubClient.create({
             fayeClient: this.fayeClient,
             onConnect: spy
         });

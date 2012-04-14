@@ -2,12 +2,12 @@ var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
 
-var bCaptureServerSlave = require("../lib/slave");
+var bCapServSlave = require("../lib/slave");
+var bCapServPubsubClient = require("../lib/pubsub-client");
 var http = require("http");
 var faye = require("faye");
 var when = require("when");
 var h = require("./test-helper");
-var bCaptureServerPubsubClient = require("../lib/pubsub-client");
 
 buster.testCase("slave", {
     setUp: function (done) {
@@ -20,10 +20,10 @@ buster.testCase("slave", {
         this.fayeAdapter.attach(this.httpServer);
         this.fayeClient = this.fayeAdapter.getClient();
 
-        this._pubsubClient = bCaptureServerPubsubClient.create({
+        this._pubsubClient = bCapServPubsubClient.create({
             fayeClient: this.fayeClient
         });
-        this.slave = bCaptureServerSlave.create(this._pubsubClient);
+        this.slave = bCapServSlave.create(this._pubsubClient);
     },
 
     tearDown: function (done) {

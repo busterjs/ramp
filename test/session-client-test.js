@@ -2,9 +2,9 @@ var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
 
-var bCaptureServer = require("../lib/buster-capture-server");
-var bSession = require("../lib/session");
-var pubsubServer = require("./../lib/pubsub-server");
+var bCapServ = require("../lib/buster-capture-server");
+var bCapServSession = require("../lib/session");
+var bCapServPubsubServer = require("./../lib/pubsub-server");
 var http = require("http");
 var when = require("when");
 var h = require("./test-helper");
@@ -15,13 +15,13 @@ buster.testCase("session client", {
 
         this.httpServer = http.createServer();
         this.httpServer.listen(h.SERVER_PORT, function () {
-            bSession.create({}, self.ps).then(done(function (session) {
+            bCapServSession.create({}, self.ps).then(done(function (session) {
                 self.session = session;
                 self.sessionData = session.serialize();
             }));
         });
 
-        this.ps = pubsubServer.create(null, "/messaging");
+        this.ps = bCapServPubsubServer.create(null, "/messaging");
         this.ps.attach(this.httpServer);
     },
 
@@ -33,7 +33,7 @@ buster.testCase("session client", {
     "connected": {
         setUp: function (done) {
             var self = this;
-            this.sc = bCaptureServer.createSessionClient({
+            this.sc = bCapServ.createSessionClient({
                 host: "0.0.0.0",
                 port: h.SERVER_PORT,
                 session: this.sessionData
@@ -54,7 +54,7 @@ buster.testCase("session client", {
     },
 
     "connecting publishes init event": function (done) {
-        var sc = bCaptureServer.createSessionClient({
+        var sc = bCapServ.createSessionClient({
             host: "0.0.0.0",
             port: h.SERVER_PORT,
             session: this.sessionData
@@ -68,7 +68,7 @@ buster.testCase("session client", {
     },
 
     "publishing init event emits init data": function () {
-        var sc = bCaptureServer.createSessionClient({
+        var sc = bCapServ.createSessionClient({
             host: "0.0.0.0",
             port: h.SERVER_PORT,
             session: this.sessionData
@@ -82,7 +82,7 @@ buster.testCase("session client", {
     },
 
     "init data as owner": function () {
-        var sc = bCaptureServer.createSessionClient({
+        var sc = bCapServ.createSessionClient({
             host: "0.0.0.0",
             port: h.SERVER_PORT,
             session: this.sessionData,
@@ -93,7 +93,7 @@ buster.testCase("session client", {
     },
 
     "init data as non-owner": function () {
-        var sc = bCaptureServer.createSessionClient({
+        var sc = bCapServ.createSessionClient({
             host: "0.0.0.0",
             port: h.SERVER_PORT,
             session: this.sessionData

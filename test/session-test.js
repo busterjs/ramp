@@ -16,11 +16,11 @@ var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
 
-var bCaptureServer = require("../lib/buster-capture-server");
-var bCaptureServerPubsubClient = require("../lib/pubsub-client");
-var pubsubServer = require("./../lib/pubsub-server");
-var bSession = require("../lib/session");
-var busterResources = require("buster-resources");
+var bCapServ = require("../lib/buster-capture-server");
+var bCapServPubsubClient = require("../lib/pubsub-client");
+var bCapServPubsubServer = require("./../lib/pubsub-server");
+var bCapServSession = require("../lib/session");
+var bResources = require("buster-resources");
 var http = require("http");
 var faye = require("faye");
 var when = require("when");
@@ -28,7 +28,7 @@ var h = require("./test-helper");
 
 buster.testCase("Session", {
     setUp: function (done) {
-        this.rs = busterResources.resourceSet.create();
+        this.rs = bResources.resourceSet.create();
         this.rs.serialize().then(done(function (rsSrl) {
             this.rsSrl = rsSrl;
         }.bind(this)));
@@ -37,23 +37,23 @@ buster.testCase("Session", {
     "should create with resource set": function (done) {
         var sessionData = {resourceSet: this.rsSrl};
 
-        bSession.create(sessionData, h.mockPubsubServer()).then(done(function (session) {
-            assert(bSession.isPrototypeOf(session));
+        bCapServSession.create(sessionData, h.mockPubsubServer()).then(done(function (session) {
+            assert(bCapServSession.isPrototypeOf(session));
         }.bind(this)));
     },
 
     "should create non-joinable": function (done) {
         var sessionData = {resourceSet: {}, joinable: false};
 
-        bSession.create(sessionData, h.mockPubsubServer()).then(done(function (session) {
+        bCapServSession.create(sessionData, h.mockPubsubServer()).then(done(function (session) {
             assert.isFalse(session.joinable);
         }.bind(this)));
     },
 
     "should not share resource paths": function (done) {
         var sessions = [
-            bSession.create({}, h.mockPubsubServer()),
-            bSession.create({}, h.mockPubsubServer())
+            bCapServSession.create({}, h.mockPubsubServer()),
+            bCapServSession.create({}, h.mockPubsubServer())
         ];
         when.all(sessions).then(done(function (sessions) {
             var s1 = sessions[0];
@@ -68,8 +68,8 @@ buster.testCase("Session", {
 
     "should have static resource paths when specified": function (done) {
         var sessions = [
-            bSession.create({staticResourcePath: true}, h.mockPubsubServer()),
-            bSession.create({staticResourcePath: true}, h.mockPubsubServer())
+            bCapServSession.create({staticResourcePath: true}, h.mockPubsubServer()),
+            bCapServSession.create({staticResourcePath: true}, h.mockPubsubServer())
         ];
         when.all(sessions).then(done(function (sessions) {
             var s1 = sessions[0];
@@ -80,7 +80,7 @@ buster.testCase("Session", {
     },
 
     "should reject when creation fails": function (done) {
-        bSession.create({unknownProp: true}, h.mockPubsubServer()).then(
+        bCapServSession.create({unknownProp: true}, h.mockPubsubServer()).then(
             function () {},
             done(function (err) {
                 assert.equals(err.message, "Unknown property 'unknownProp'.");
@@ -90,11 +90,11 @@ buster.testCase("Session", {
 
     "should reject when creation fails when deserializing": function (done) {
         var deferred = when.defer();
-        this.stub(busterResources.resourceSet, "deserialize");
-        busterResources.resourceSet.deserialize.returns(deferred.promise);
+        this.stub(bResources.resourceSet, "deserialize");
+        bResources.resourceSet.deserialize.returns(deferred.promise);
         deferred.reject({message: "Foo"});
 
-        bSession.create({resourceSet: {}}, h.mockPubsubServer()).then(
+        bCapServSession.create({resourceSet: {}}, h.mockPubsubServer()).then(
             function () {},
             done(function (err) {
                 assert.equals(err.message, "Foo");
@@ -108,18 +108,18 @@ buster.testCase("Session", {
 
             this.httpServer = http.createServer();
             this.httpServer.listen(h.SERVER_PORT, function () {
-                bSession.create({}, self.ps).then(done(function (session) {
+                bCapServSession.create({}, self.ps).then(done(function (session) {
                     self.session = session;
                     self.sessionData = session.serialize();
 
-                    self.pubsubClient = bCaptureServerPubsubClient.create({
+                    self.pubsubClient = bCapServPubsubClient.create({
                         contextPath: self.session.messagingPath,
                         fayeClient: self.ps.getClient()
                     });
                 }));
             });
 
-            this.ps = pubsubServer.create(null, "/messaging");
+            this.ps = bCapServPubsubServer.create(null, "/messaging");
             this.ps.attach(this.httpServer);
         },
 
@@ -135,7 +135,7 @@ buster.testCase("Session", {
         },
 
         "should end when session owner disconnects": function (done) {
-            var sc = bCaptureServer.createSessionClient(
+            var sc = bCapServ.createSessionClient(
                 {
                     host: "0.0.0.0",
                     port: h.SERVER_PORT,
@@ -221,7 +221,7 @@ buster.testCase("Session", {
         var self = this;
         var sessionData = {resourceSet: this.rsSrl};
 
-        bSession.create(sessionData, h.mockPubsubServer()).then(function (session) {
+        bCapServSession.create(sessionData, h.mockPubsubServer()).then(function (session) {
             assert(session.resourceSet);
             session.resourceSet.serialize().then(done(function (rs) {
                 assert.equals(self.rsSrl, rs);

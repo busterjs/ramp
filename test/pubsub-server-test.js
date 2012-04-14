@@ -3,8 +3,8 @@ var assert = buster.assert;
 var refute = buster.refute;
 var sinon = require("sinon");
 
-var pubsubServer = require("./../lib/pubsub-server");
-var pubsubClient = require("./../lib/pubsub-client");
+var bCapServPubsubServer = require("./../lib/pubsub-server");
+var bCapServPubsubClient = require("./../lib/pubsub-client");
 var http = require("http");
 var faye = require("faye");
 var when = require("when");
@@ -15,7 +15,7 @@ buster.testCase("pubsub server", {
         this.httpServer = http.createServer();
         this.httpServer.listen(h.SERVER_PORT, done);
 
-        this.ps = pubsubServer.create(null, "/messaging");
+        this.ps = bCapServPubsubServer.create(null, "/messaging");
         this.ps.attach(this.httpServer);
     },
 
@@ -43,12 +43,12 @@ buster.testCase("pubsub server", {
     "stores list of pubsub clients": function (done) {
         var self = this;
 
-        var c1 = pubsubClient.create({
+        var c1 = bCapServPubsubClient.create({
             host: "0.0.0.0",
             port: h.SERVER_PORT
         })
         c1.connect().then(function () {
-            var c2 = pubsubClient.create({
+            var c2 = bCapServPubsubClient.create({
                 host: "0.0.0.0",
                 port: h.SERVER_PORT
             })
@@ -68,7 +68,7 @@ buster.testCase("pubsub server", {
     "emits event when pubsub client disconnects": function (done) {
         var self = this;
 
-        var c1 = pubsubClient.create({
+        var c1 = bCapServPubsubClient.create({
             host: "0.0.0.0",
             port: h.SERVER_PORT
         })
@@ -84,7 +84,7 @@ buster.testCase("pubsub server", {
     "removes stored pubsub client when it disconnects": function (done) {
         var self = this;
 
-        var c1 = pubsubClient.create({
+        var c1 = bCapServPubsubClient.create({
             host: "0.0.0.0",
             port: h.SERVER_PORT
         })

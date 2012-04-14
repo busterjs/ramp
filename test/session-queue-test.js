@@ -3,7 +3,7 @@ var assert = buster.assert;
 var refute = buster.refute;
 var sinon = require("sinon");
 
-var bsq = require("../lib/session-queue");
+var bCapServSessionQueue = require("../lib/session-queue");
 var when = require("when");
 
 var mockSlave = function () {
@@ -62,7 +62,7 @@ var mockSession = function () {
 
 buster.testCase("Session queue", {
     setUp: function () {
-        this.sq = bsq.create();
+        this.sq = bCapServSessionQueue.create();
         this.sq.prepareSession = function (session) {
             var deferred = when.defer();
             deferred.resolve(session);
@@ -393,7 +393,7 @@ buster.testCase("Session queue", {
             this.sq.enqueueSession(sess);
 
             assert.calledOnce(sess.aborted);
-            assert.calledWithExactly(sess.aborted, {message: bsq.ERR_NO_SLAVES});
+            assert.calledWithExactly(sess.aborted, {message: bCapServSessionQueue.ERR_NO_SLAVES});
             assert.equals(this.sq.sessions.length, 0);
         },
 
@@ -419,7 +419,7 @@ buster.testCase("Session queue", {
             sess1.mockEnd();
 
             assert.calledOnce(sess2.aborted);
-            assert.calledWithExactly(sess2.aborted, {message: bsq.ERR_NO_SLAVES});
+            assert.calledWithExactly(sess2.aborted, {message: bCapServSessionQueue.ERR_NO_SLAVES});
             assert.equals(this.sq.sessions.length, 0);
         }
     },

@@ -2,7 +2,7 @@ var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
 
-var bCaptureServer = require("../lib/buster-capture-server");
+var bCapServ = require("../lib/buster-capture-server");
 var bResources = require("buster-resources");
 var http = require("http");
 var faye = require("faye");
@@ -26,7 +26,7 @@ buster.testCase("server client", {
             });
         });
 
-        this.c = bCaptureServer.createServerClient({
+        this.c = bCapServ.createServerClient({
             host: "0.0.0.0",
             port: h.SERVER_PORT
         });

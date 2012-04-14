@@ -2,8 +2,8 @@ var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
 
-var bCaptureServer = require("../lib/buster-capture-server");
-var bCaptureServerSess = require("../lib/session");
+var bCapServ = require("../lib/buster-capture-server");
+var bCapServSess = require("../lib/session");
 var http = require("http");
 var when = require("when");
 var h = require("./test-helper");
@@ -15,10 +15,10 @@ buster.testCase("server", {
         });
         this.httpServer.listen(h.SERVER_PORT, done);
 
-        this.s = bCaptureServer.createServer();
+        this.s = bCapServ.createServer();
         this.s.attach(this.httpServer);
 
-        this.c = bCaptureServer.createServerClient({
+        this.c = bCapServ.createServerClient({
             host: "0.0.0.0",
             port: h.SERVER_PORT,
             fayeClient: this.s.pubsubServer.getClient()
