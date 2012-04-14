@@ -3,20 +3,20 @@ var assert = buster.assert;
 var refute = buster.refute;
 var sinon = require("sinon");
 
-var bayeuxServer = require("./../lib/bayeux-server");
+var pubsubServer = require("./../lib/pubsub-server");
 var pubsubClient = require("./../lib/pubsub-client");
 var http = require("http");
 var faye = require("faye");
 var when = require("when");
 var h = require("./test-helper");
 
-buster.testCase("bayeux server", {
+buster.testCase("pubsub server", {
     setUp: function (done) {
         this.httpServer = http.createServer();
         this.httpServer.listen(h.SERVER_PORT, done);
 
-        this.bs = bayeuxServer.create(null, "/messaging");
-        this.bs.attach(this.httpServer);
+        this.ps = pubsubServer.create(null, "/messaging");
+        this.ps.attach(this.httpServer);
     },
 
     tearDown: function (done) {
@@ -25,19 +25,19 @@ buster.testCase("bayeux server", {
     },
 
     "client is faye adapter client": function () {
-        var expected = this.bs._fayeAdapter.getClient();
-        assert.same(this.bs.getClient(), expected);
-        assert.same(this.bs.getClient(), expected);
+        var expected = this.ps._fayeAdapter.getClient();
+        assert.same(this.ps.getClient(), expected);
+        assert.same(this.ps.getClient(), expected);
     },
 
     "attach attaches faye adapter": function () {
         var httpServer = {};
-        this.stub(this.bs._fayeAdapter, "attach");
+        this.stub(this.ps._fayeAdapter, "attach");
 
-        this.bs.attach(httpServer);
+        this.ps.attach(httpServer);
 
-        assert.calledOnce(this.bs._fayeAdapter.attach);
-        assert.same(this.bs._fayeAdapter.attach.getCall(0).args[0], httpServer);
+        assert.calledOnce(this.ps._fayeAdapter.attach);
+        assert.same(this.ps._fayeAdapter.attach.getCall(0).args[0], httpServer);
     },
 
     "stores list of pubsub clients": function (done) {
@@ -56,7 +56,7 @@ buster.testCase("bayeux server", {
                 c1.disconnect();
                 c2.disconnect();
 
-                var clients = self.bs._pubsubClients;
+                var clients = self.ps._pubsubClients;
                 assert.equals(Object.keys(clients).length, 2);
 
                 assert(clients[c1.id].fayeClientId);
@@ -76,7 +76,7 @@ buster.testCase("bayeux server", {
             c1.disconnect();
         });
 
-        self.bs.on("client:disconnect", done(function (clientId) {
+        self.ps.on("client:disconnect", done(function (clientId) {
             assert.equals(c1.id, clientId);
         }));
     },
@@ -92,8 +92,8 @@ buster.testCase("bayeux server", {
             c1.disconnect();
         });
 
-        self.bs.on("client:disconnect", done(function (clientId) {
-            var clients = self.bs._pubsubClients;
+        self.ps.on("client:disconnect", done(function (clientId) {
+            var clients = self.ps._pubsubClients;
             assert.equals(Object.keys(clients).length, 0);
         }));
     }

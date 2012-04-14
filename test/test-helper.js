@@ -45,7 +45,7 @@ module.exports = {
         }
     },
 
-    mockBayeuxServer: function () {
+    mockPubsubServer: function () {
         return buster.extend(buster.eventEmitter.create(), {
             getClient: function () { return module.exports.mockFayeClient() },
             addExtension: sinon.spy(),

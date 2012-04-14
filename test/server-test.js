@@ -21,7 +21,7 @@ buster.testCase("server", {
         this.c = bCaptureServer.createServerClient({
             host: "0.0.0.0",
             port: h.SERVER_PORT,
-            fayeClient: this.s.bayeuxServer.getClient()
+            fayeClient: this.s.pubsubServer.getClient()
         });
     },
 
