@@ -4,6 +4,7 @@ var refute = buster.refute;
 
 var bCaptureServer = require("../../lib/buster-capture-server");
 var http = require("http");
+var when = require("when");
 var h = require("./../test-helper");
 var PhantomFactory = require("./phantom-factory");
 
@@ -32,11 +33,18 @@ buster.testCase("Integration", {
     },
 
     tearDown: function (done) {
-        this.httpServer.on("close", done);
+        var promises = [];
+
+        var httpDeferred = when.defer();
+        promises.push(httpDeferred.promise);
+
+        this.httpServer.on("close", httpDeferred.resolve);
         this.httpServer.close();
 
         this.reqSocks.forEach(function (s) { s.destroy(); });
-        this.p.killAll();
+
+        promises = promises.concat(this.p.killAll());
+        when.all(promises).then(done);
     },
 
     "test one browser": function (done) {
@@ -56,10 +64,10 @@ buster.testCase("Integration", {
             self.p.capture(function (slave, phantom2) {
                 assert.equals(self.s.sessionQueue.slaves.length, 2);
 
-                phantom.kill(function () {
+                phantom.kill().then(function () {
                     assert.equals(self.s.sessionQueue.slaves.length, 1);
 
-                    phantom2.kill(function () {
+                    phantom2.kill().then(function () {
                         assert.equals(self.s.sessionQueue.slaves.length, 0);
                         done();
                     });

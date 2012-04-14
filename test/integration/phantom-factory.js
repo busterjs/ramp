@@ -4,6 +4,7 @@ var bCaptureServer = require("../../lib/buster-capture-server");
 var EventEmitter = require("events").EventEmitter;
 var CP = require("child_process");
 var faye = require("faye");
+var when = require("when");
 var phantomPort = 12000;
 var h = require("./../test-helper");
 
@@ -43,7 +44,7 @@ PhantomFactory.prototype = {
     },
 
     killAll: function () {
-        this.phantoms.forEach(function (p) { p.kill() });
+        return this.phantoms.map(function (p) { return p.kill(); });
     }
 };
 
@@ -92,15 +93,18 @@ var Phantom = function (onready) {
             });
         },
 
-        kill: function (onkill) {
+        kill: function () {
+            var deferred = when.defer();
             if (this.isKilled) return;
             this.isKilled = true;
 
             // Loading a blank page ensures beforeunload callback gets called
             this.open(blankPageUrl, function () {
-                phantom.on("exit", onkill || function () {});
+                phantom.on("exit", deferred.resolve);
                 phantom.kill();
             });
+
+            return deferred.promise;
         }
     };
 }
