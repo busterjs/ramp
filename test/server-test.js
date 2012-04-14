@@ -21,7 +21,7 @@ buster.testCase("server", {
         this.c = bCapServ.createServerClient({
             host: "0.0.0.0",
             port: h.SERVER_PORT,
-            fayeClient: this.s.pubsubServer.getClient()
+            fayeClient: this.s._pubsubServer.getClient()
         });
     },
 
@@ -50,14 +50,14 @@ buster.testCase("server", {
 
     "listens to slave:captured on session queue": function () {
         this.stub(this.s, "_onSlaveCaptured");
-        this.s.sessionQueue.emit("slave:captured", "foo");
+        this.s._sessionQueue.emit("slave:captured", "foo");
         assert.calledOnce(this.s._onSlaveCaptured);
         assert.calledWithExactly(this.s._onSlaveCaptured, "foo");
     },
 
     "listens to slave:freed on session queue": function () {
         this.stub(this.s, "_onSlaveFreed");
-        this.s.sessionQueue.emit("slave:freed", "foo");
+        this.s._sessionQueue.emit("slave:freed", "foo");
         assert.calledOnce(this.s._onSlaveFreed);
         assert.calledWithExactly(this.s._onSlaveFreed, "foo");
     },
@@ -102,12 +102,12 @@ buster.testCase("server", {
 
     "creating new slave adds it to queue and attaches and mounts it": function () {
         this.stub(this.s._resourceMiddleware, "mount");
-        this.stub(this.s.sessionQueue, "addSlave");
+        this.stub(this.s._sessionQueue, "addSlave");
         this.stub(this.s, "_attachSlave");
         var slave = this.s._createSlave();
 
-        assert.calledOnce(this.s.sessionQueue.addSlave);
-        assert.same(this.s.sessionQueue.addSlave.getCall(0).args[0], slave);
+        assert.calledOnce(this.s._sessionQueue.addSlave);
+        assert.same(this.s._sessionQueue.addSlave.getCall(0).args[0], slave);
 
         assert.calledOnce(this.s._attachSlave);
         assert.same(this.s._attachSlave.getCall(0).args[0], slave);
@@ -145,7 +145,7 @@ buster.testCase("server", {
         this.stub(this.s._resourceCache, "inflate").returns(inflateDeferred.promise);
         this.stub(this.s._resourceMiddleware, "mount");
 
-        this.s.sessionQueue.prepareSession(session);
+        this.s._sessionQueue.prepareSession(session);
 
         assert.calledOnce(this.s._resourceMiddleware.mount)
         var args = this.s._resourceMiddleware.mount.getCall(0).args;
@@ -156,7 +156,7 @@ buster.testCase("server", {
     "teardown session unmounts": function () {
         var session = {resourcesPath: "/fofoafo"};
         this.stub(this.s._resourceMiddleware, "unmount");
-        this.s.sessionQueue.teardownSession(session);
+        this.s._sessionQueue.teardownSession(session);
 
         assert.calledOnce(this.s._resourceMiddleware.unmount);
         assert.calledWithExactly(this.s._resourceMiddleware.unmount, "/fofoafo");
