@@ -2,7 +2,8 @@ var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
 
-var bCaptureServer = require("../../lib/buster-capture-server");
+var bCapServ = require("../../lib/buster-capture-server");
+var bResources = require("buster-resources");
 var http = require("http");
 var when = require("when");
 var h = require("./../test-helper");
@@ -21,10 +22,10 @@ buster.testCase("Integration", {
         this.reqSocks = [];
         this.httpServer.on("connection", function (sock) { self.reqSocks.push(sock) });
 
-        this.s = bCaptureServer.createServer();
+        this.s = bCapServ.createServer();
         this.s.attach(this.httpServer);
 
-        this.c = bCaptureServer.createServerClient({
+        this.c = bCapServ.createServerClient({
             host: "0.0.0.0",
             port: h.SERVER_PORT
         });
@@ -75,27 +76,32 @@ buster.testCase("Integration", {
         });
     },
 
-    // "test posting events from session": function (done) {
-    //     var self = this;
-    //     ih.capture(this.srv, function (slave, phantom) {
-    //         self.captureServer.createSession({
-    //             resourceSet: {
-    //                 resources: [
-    //                     {
-    //                         path: "/test.js",
-    //                         content: 'buster.publish("/some/event", 123);'
-    //                     }
-    //                 ],
-    //                 loadPath: ["/test.js"]
-    //             }
-    //         }).then(function (session) {
-    //             h.bayeuxForSession(session).subscribe("/some/event", function (data) {
-    //                 assert.equals(data, 123);
-    //                 phantom.kill(done);
-    //             });
-    //         });
-    //     });
-    // },
+    "test posting events from session": function (done) {
+        var self = this;
+
+        this.p.capture(function (slave, phantom) {
+            var rs = bResources.resourceSet.create();
+            rs.addResource({
+                path: "/test.js",
+                content: 'console.log("emitting");buster.emit("some:event", 123);'
+            });
+            rs.loadPath.append("/test.js");
+
+            self.c.createSession({resourceSet: rs}).then(function (session) {
+                var sc = bCapServ.createSessionClient({
+                    host: "0.0.0.0",
+                    port: h.SERVER_PORT,
+                    session: session
+                });
+                sc.connect().then(function () {
+                    console.log("listening");
+                    sc.on("some:event", done(function (data) {
+                        assert.equals(data, 123);
+                    }));
+                });
+            });
+        });
+    },
 
     // "test subscribing to events from session": function (done) {
     //     var self = this;
