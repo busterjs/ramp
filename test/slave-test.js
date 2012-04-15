@@ -51,10 +51,11 @@ buster.testCase("slave", {
 
         "loading session": function (done) {
             var self = this;
-            var session = {foo: "bar"};
+            var sessionData = {foo: "bar"};
+            var session = {serialize: function () { return sessionData }};
 
             this.pc.on("slave:" + this.slave._id + ":session:load", function (s) {
-                assert.equals(s, session);
+                assert.equals(s, sessionData);
                 self.pc.emit("slave:" + self.slave._id + ":session:loaded");
             });
 
