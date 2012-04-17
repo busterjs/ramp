@@ -1,6 +1,6 @@
 {
     "name": "buster-capture-server",
-    "version": "0.4.1",
+    "version": "0.4.2",
     "description": "Buster capture server",
     "homepage": "http://busterjs.org/docs/buster-capture-server",
     "author": {
@@ -19,8 +19,8 @@
         "url": "git://gitorious.org/buster/buster-capture-server.git"
     },
     "dependencies": {
-        "buster-core": ">=0.5.1",
-        "buster-resources": ">=0.2",
+        "buster-core": ">=0.6.0",
+        "buster-resources": ">=0.3",
         "buster-faye": "~0.7",
         "ejs": "~0.4",
         "node-uuid": "~1",
