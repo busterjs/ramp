@@ -67,10 +67,13 @@ var Phantom = function (onready) {
 
     var phantom = CP.spawn("phantomjs", [phantomScriptPath, phantomControlPort]);
     phantom.stdout.on("data", function (data) {
-        var msg = data.toString("utf8");
-        var command = msg.match(/^[^ ]+/)[0];
-        var data = msg.slice(command.length + 1).trim();
-        eventEmitter.emit(command, data);
+        var msgs = data.toString("utf8").split("\n");
+        msgs.forEach(function (msg) {
+            if (msg.length == 0) return;
+            var command = msg.match(/^[^ ]+/)[0];
+            var data = msg.slice(command.length + 1).trim();
+            eventEmitter.emit(command, data);
+        });
     });
 
     eventEmitter.on("debug", function (data) {
