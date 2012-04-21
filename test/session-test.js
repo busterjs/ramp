@@ -29,6 +29,7 @@ var h = require("./test-helper");
 buster.testCase("Session", {
     setUp: function (done) {
         this.rs = bResources.resourceSet.create();
+        this.rs.addResource({path: "/foo.js", content: "var foo = 5;"});
         this.rs.serialize().then(done(function (rsSrl) {
             this.rsSrl = rsSrl;
         }.bind(this)));
@@ -223,8 +224,10 @@ buster.testCase("Session", {
 
         bCapServSession.create(sessionData, h.mockPubsubServer()).then(function (session) {
             assert(session.resourceSet);
-            session.resourceSet.serialize().then(done(function (rs) {
-                assert.equals(self.rsSrl, rs);
+            var foo = session.resourceSet.get("/foo.js");
+            assert(foo);
+            foo.content().then(done(function (data) {
+                assert.equals(data, "var foo = 5;");
             }));
         });
     }
