@@ -158,7 +158,9 @@ buster.testCase("Session", {
 
         "notifies when session starts": function (done) {
             var self = this;
+            assert.isFalse(self.session.state.started);
             this.pubsubClient.on("session:started", done(function (e) {
+                assert.isTrue(self.session.state.started);
                 assert.equals(e.session, self.sessionData);
             }));
             this.session.started();
@@ -166,7 +168,9 @@ buster.testCase("Session", {
 
         "notifies when session is loaded": function (done) {
             var self = this;
+            assert.isFalse(self.session.state.loaded);
             this.pubsubClient.on("session:loaded", done(function (e) {
+                assert.isTrue(self.session.state.loaded);
                 assert.equals(e.session, self.sessionData);
             }));
             this.session.loaded();
@@ -174,7 +178,9 @@ buster.testCase("Session", {
 
         "notifies when session is aborted": function (done) {
             var self = this;
+            assert.isFalse(self.session.state.aborted);
             this.pubsubClient.on("session:aborted", done(function (e) {
+                assert.isTrue(self.session.state.aborted);
                 assert.equals(e.session, self.sessionData);
                 assert.equals(e.error.message, "Some reason");
             }));
@@ -183,7 +189,9 @@ buster.testCase("Session", {
 
         "notifies when session is ended": function (done) {
             var self = this;
+            assert.isFalse(self.session.state.ended);
             this.pubsubClient.on("session:ended", done(function (e) {
+                assert.isTrue(self.session.state.ended);
                 assert.equals(e.session, self.sessionData);
             }));
             this.session.ended();
@@ -191,7 +199,9 @@ buster.testCase("Session", {
 
         "notifies when session is unloaded": function (done) {
             var self = this;
+            assert.isFalse(self.session.state.unloaded);
             this.pubsubClient.on("session:unloaded", done(function (e) {
+                assert.isTrue(self.session.state.unloaded);
                 assert.equals(e.session, self.sessionData);
             }));
             this.session.unloaded();
