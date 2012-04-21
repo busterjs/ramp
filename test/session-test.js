@@ -129,6 +129,14 @@ buster.testCase("Session", {
             this.httpServer.close();
         },
 
+        "should serialize": function () {
+            var serialized = this.session.serialize();
+            assert.equals(serialized.id, this.session.id);
+            assert.equals(serialized.resourcesPath, this.session.resourcesPath);
+            assert.equals(serialized.messagingPath, this.session.messagingPath);
+            assert.equals(serialized.state, this.session.state);
+        },
+
         "should end session when receiving event": function (done) {
             assert(true);
             this.pubsubClient.emit("end");
