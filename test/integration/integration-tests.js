@@ -83,7 +83,7 @@ buster.testCase("Integration", {
             var rs = bResources.resourceSet.create();
             rs.addResource({
                 path: "/test.js",
-                content: 'console.log("emitting");buster.emit("some:event", 123);'
+                content: 'buster.emit("some:event", 123);'
             });
             rs.loadPath.append("/test.js");
 
@@ -94,7 +94,6 @@ buster.testCase("Integration", {
                     session: session
                 });
                 sc.connect().then(function () {
-                    console.log("listening");
                     sc.on("some:event", done(function (data) {
                         assert.equals(data, 123);
                     }));
@@ -103,37 +102,36 @@ buster.testCase("Integration", {
         });
     },
 
-    // "test subscribing to events from session": function (done) {
-    //     var self = this;
-    //     ih.capture(this.srv, function (slave, phantom) {
-    //         self.captureServer.createSession({
-    //             resourceSet: {
-    //                 resources: [
-    //                     {
-    //                         path: "/test.js",
-    //                         content: [
-    //                             'var subs = buster.subscribe("/some/event", function (data) {',
-    //                             '    buster.publish("/other/event", data);',
-    //                             '});'].join("\n")
-    //                     }
-    //                 ],
-    //                 loadPath: ["/test.js"]
-    //             }
-    //         }).then(function (session) {
-    //             var sessionBayeux = h.bayeuxForSession(session);
+    "test subscribing to events from session": function (done) {
+        var self = this;
+        this.p.capture(function (slave, phantom) {
+            var rs = bResources.resourceSet.create();
+            rs.addResource({
+                path: "/test.js",
+                content: [
+                    'buster.on("some:event", function (data) {',
+                    '    buster.emit("other:event", data);',
+                    '});'].join("\n")
+            });
+            rs.loadPath.append("/test.js");
 
-    //             self.srv.captureServer.bayeux.subscribe("/session/start", function (e) {
-    //                 sessionBayeux.publish("/some/event", 123);
-    //                 assert.equals(session, e.session);
-    //             });
-
-    //             sessionBayeux.subscribe("/other/event", function (data) {
-    //                 assert.equals(data, 123);
-    //                 phantom.kill(done);
-    //             });
-    //         });
-    //     });
-    // },
+            self.c.createSession({resourceSet: rs}).then(function (session) {
+                var sc = bCapServ.createSessionClient({
+                    host: "0.0.0.0",
+                    port: h.SERVER_PORT,
+                    session: session
+                });
+                sc.connect().then(function () {
+                    sc.on("session:loaded", function () {
+                        sc.on("other:event", done(function (data) {
+                            assert.equals(data, 123);
+                        }));
+                        sc.emit("some:event", 123);
+                    });
+                });
+            });
+        });
+    },
 
     // "test loading second session": function (done) {
     //     var self = this;
