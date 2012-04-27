@@ -84,6 +84,10 @@ var Phantom = function (onready) {
         onready();
     });
 
+    eventEmitter.on("error", function (data) {
+        console.log("Phantom JS error: ");
+    });
+
     return {
         open: function (url, onload) {
             if (isOpening) throw new Error("Attempted to open URL before prev page was loaded");
