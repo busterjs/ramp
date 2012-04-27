@@ -93,11 +93,10 @@ buster.testCase("Integration", {
                     port: h.SERVER_PORT,
                     session: session
                 });
-                sc.connect().then(function () {
-                    sc.on("some:event", done(function (data) {
-                        assert.equals(data, 123);
-                    }));
-                });
+                sc.connect();
+                sc.on("some:event", done(function (data) {
+                    assert.equals(data, 123);
+                }));
             });
         });
     },
@@ -121,13 +120,12 @@ buster.testCase("Integration", {
                     port: h.SERVER_PORT,
                     session: session
                 });
-                sc.connect().then(function () {
-                    sc.on("session:loaded", function () {
-                        sc.on("other:event", done(function (data) {
-                            assert.equals(data, 123);
-                        }));
-                        sc.emit("some:event", 123);
-                    });
+                sc.connect()
+                sc.loaded.then(function () {
+                    sc.on("other:event", done(function (data) {
+                        assert.equals(data, 123);
+                    }));
+                    sc.emit("some:event", 123);
                 });
             });
         });
