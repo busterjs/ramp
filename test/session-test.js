@@ -170,9 +170,9 @@ buster.testCase("Session", {
         },
 
         "should emit state when client initializes": function (done) {
-            this.privatePubsubClient.on("state", done(function (e) {
-                assert(e.state);
-                assert.equals(e.state, this.sessionData.state);
+            this.privatePubsubClient.on("initialized", done(function (e) {
+                assert(e.session);
+                assert.equals(e.session, this.sessionData);
             }.bind(this)));
             this.privatePubsubClient.emit("initialize", {});
         },
