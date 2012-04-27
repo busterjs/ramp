@@ -108,5 +108,40 @@ buster.testCase("session client", {
         });
 
         assert.match(sc._getInitData(), {isOwner: false});
+    },
+
+    "connected": {
+        setUp: function (done) {
+            this.sc = bCapServ.createSessionClient({
+                fayeClient: this.ps.getClient(),
+                session: this.sessionData
+            });
+
+            this.sc.connect().then(done);
+        },
+
+        "resolves started promise when starting": function (done) {
+            assert(true);
+            this.sc.started.then(done);
+            this.session.started();
+        },
+
+        "resolves loaded and started when loading": function (done) {
+            assert(true);
+            when.all([this.sc.started, this.sc.loaded]).then(done);
+            this.session.loaded();
+        },
+
+        "resolves loaded, started and ended when ending": function (done) {
+            assert(true);
+            when.all([this.sc.started, this.sc.loaded, this.sc.ended]).then(done);
+            this.session.ended();
+        },
+
+        "resolves loaded, started, ended and unloaded when unloading": function (done) {
+            assert(true);
+            when.all([this.sc.started, this.sc.loaded, this.sc.ended, this.sc.unloaded]).then(done);
+            this.session.unloaded();
+        }
     }
 });
