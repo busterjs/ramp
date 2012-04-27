@@ -18,6 +18,15 @@ buster.testCase("session client", {
             bCapServSession.create({}, self.ps).then(done(function (session) {
                 self.session = session;
                 self.sessionData = session.serialize();
+
+                self.publicPubsub = buster.captureServer.pubsubClient.create({
+                    contextPath: self.sessionData.messagingPath,
+                    fayeClient: self.ps.getClient()
+                });
+                self.privatePubsub = buster.captureServer.pubsubClient.create({
+                    contextPath: self.sessionData.privateMessagingPath,
+                    fayeClient: self.ps.getClient()
+                });
             }));
         });
 
@@ -45,11 +54,10 @@ buster.testCase("session client", {
             this.sc.disconnect();
         },
 
-        "should end": function () {
-            this.stub(this.sc._pubsubClient, "emit");
+        "should end": function (done) {
+            assert(true)
+            this.privatePubsub.on("end", done);
             this.sc.end();
-            assert.calledOnce(this.sc._pubsubClient.emit);
-            assert.calledWithExactly(this.sc._pubsubClient.emit, "end");
         }
     },
 
@@ -67,18 +75,18 @@ buster.testCase("session client", {
         }));
     },
 
-    "publishing init event emits init data": function () {
+    "publishing init event emits init data": function (done) {
+        this.privatePubsub.on("initialize", done(function (data) {
+            assert.equals(data, sc._getInitData());
+            sc.disconnect();
+        }));
+
         var sc = bCapServ.createSessionClient({
             host: "0.0.0.0",
             port: h.SERVER_PORT,
             session: this.sessionData
         });
-
-        sc._pubsubClient = {emit: this.spy()};
-        this.stub(sc, "_getInitData").returns({foo: "bar"});
-        sc._onInitialize();
-        assert.calledOnce(sc._pubsubClient.emit);
-        assert.calledWithExactly(sc._pubsubClient.emit, "initialize", {foo: "bar"});
+        sc.connect();
     },
 
     "init data as owner": function () {

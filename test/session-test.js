@@ -117,6 +117,11 @@ buster.testCase("Session", {
                         contextPath: self.session.messagingPath,
                         fayeClient: self.ps.getClient()
                     });
+
+                    self.privatePubsubClient = bCapServPubsubClient.create({
+                        contextPath: self.session.privateMessagingPath,
+                        fayeClient: self.ps.getClient()
+                    });
                 }));
             });
 
@@ -139,7 +144,7 @@ buster.testCase("Session", {
 
         "should end session when receiving event": function (done) {
             assert(true);
-            this.pubsubClient.emit("end");
+            this.privatePubsubClient.emit("end");
             this.session.on("end", done);
         },
 
@@ -167,7 +172,7 @@ buster.testCase("Session", {
         "notifies when session starts": function (done) {
             var self = this;
             assert.isFalse(self.session.state.started);
-            this.pubsubClient.on("session:started", done(function (e) {
+            this.privatePubsubClient.on("session:started", done(function (e) {
                 assert.isTrue(self.session.state.started);
                 assert.equals(e.session, self.sessionData);
             }));
@@ -177,7 +182,7 @@ buster.testCase("Session", {
         "notifies when session is loaded": function (done) {
             var self = this;
             assert.isFalse(self.session.state.loaded);
-            this.pubsubClient.on("session:loaded", done(function (e) {
+            this.privatePubsubClient.on("session:loaded", done(function (e) {
                 assert.isTrue(self.session.state.loaded);
                 assert.equals(e.session, self.sessionData);
             }));
@@ -187,7 +192,7 @@ buster.testCase("Session", {
         "notifies when session is aborted": function (done) {
             var self = this;
             assert.isFalse(self.session.state.aborted);
-            this.pubsubClient.on("session:aborted", done(function (e) {
+            this.privatePubsubClient.on("session:aborted", done(function (e) {
                 assert.isTrue(self.session.state.aborted);
                 assert.equals(e.session, self.sessionData);
                 assert.equals(e.error.message, "Some reason");
@@ -198,7 +203,7 @@ buster.testCase("Session", {
         "notifies when session is ended": function (done) {
             var self = this;
             assert.isFalse(self.session.state.ended);
-            this.pubsubClient.on("session:ended", done(function (e) {
+            this.privatePubsubClient.on("session:ended", done(function (e) {
                 assert.isTrue(self.session.state.ended);
                 assert.equals(e.session, self.sessionData);
             }));
@@ -208,7 +213,7 @@ buster.testCase("Session", {
         "notifies when session is unloaded": function (done) {
             var self = this;
             assert.isFalse(self.session.state.unloaded);
-            this.pubsubClient.on("session:unloaded", done(function (e) {
+            this.privatePubsubClient.on("session:unloaded", done(function (e) {
                 assert.isTrue(self.session.state.unloaded);
                 assert.equals(e.session, self.sessionData);
             }));
@@ -218,7 +223,7 @@ buster.testCase("Session", {
         "notifies when slave is captured": function (done) {
             var self = this;
             var slave = {foo: "bar"};
-            this.pubsubClient.on("slave:captured", done(function (e) {
+            this.privatePubsubClient.on("slave:captured", done(function (e) {
                 assert.equals(e.session, self.sessionData);
                 assert.equals(e.slave, slave);
             }));
@@ -228,7 +233,7 @@ buster.testCase("Session", {
         "notifies when slave is freed": function (done) {
             var self = this;
             var slave = {foo: "bar"};
-            this.pubsubClient.on("slave:freed", done(function (e) {
+            this.privatePubsubClient.on("slave:freed", done(function (e) {
                 assert.equals(e.session, self.sessionData);
                 assert.equals(e.slave, slave);
             }));
