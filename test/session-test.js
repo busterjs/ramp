@@ -172,9 +172,9 @@ buster.testCase("Session", {
         "notifies when session starts": function (done) {
             var self = this;
             assert.isFalse(self.session.state.started);
-            this.privatePubsubClient.on("session:started", done(function (e) {
+            this.privatePubsubClient.on("state", done(function (e) {
                 assert.isTrue(self.session.state.started);
-                assert.equals(e.session, self.sessionData);
+                assert.equals(e.state, self.session.state);
             }));
             this.session.started();
         },
@@ -182,19 +182,16 @@ buster.testCase("Session", {
         "notifies when session is loaded": function (done) {
             var self = this;
             assert.isFalse(self.session.state.loaded);
-            this.privatePubsubClient.on("session:loaded", done(function (e) {
+            this.privatePubsubClient.on("state", done(function (e) {
                 assert.isTrue(self.session.state.loaded);
-                assert.equals(e.session, self.sessionData);
+                assert.equals(e.state, self.session.state);
             }));
             this.session.loaded();
         },
 
         "notifies when session is aborted": function (done) {
             var self = this;
-            assert.isFalse(self.session.state.aborted);
-            this.privatePubsubClient.on("session:aborted", done(function (e) {
-                assert.isTrue(self.session.state.aborted);
-                assert.equals(e.session, self.sessionData);
+            this.privatePubsubClient.on("aborted", done(function (e) {
                 assert.equals(e.error.message, "Some reason");
             }));
             this.session.aborted({message: "Some reason"});
@@ -203,9 +200,9 @@ buster.testCase("Session", {
         "notifies when session is ended": function (done) {
             var self = this;
             assert.isFalse(self.session.state.ended);
-            this.privatePubsubClient.on("session:ended", done(function (e) {
+            this.privatePubsubClient.on("state", done(function (e) {
                 assert.isTrue(self.session.state.ended);
-                assert.equals(e.session, self.sessionData);
+                assert.equals(e.state, self.session.state);
             }));
             this.session.ended();
         },
@@ -213,9 +210,9 @@ buster.testCase("Session", {
         "notifies when session is unloaded": function (done) {
             var self = this;
             assert.isFalse(self.session.state.unloaded);
-            this.privatePubsubClient.on("session:unloaded", done(function (e) {
+            this.privatePubsubClient.on("state", done(function (e) {
                 assert.isTrue(self.session.state.unloaded);
-                assert.equals(e.session, self.sessionData);
+                assert.equals(e.state, self.session.state);
             }));
             this.session.unloaded();
         },
@@ -224,7 +221,6 @@ buster.testCase("Session", {
             var self = this;
             var slave = {foo: "bar"};
             this.privatePubsubClient.on("slave:captured", done(function (e) {
-                assert.equals(e.session, self.sessionData);
                 assert.equals(e.slave, slave);
             }));
             this.session.capturedSlave({serialize: function () { return slave; }});
@@ -234,7 +230,6 @@ buster.testCase("Session", {
             var self = this;
             var slave = {foo: "bar"};
             this.privatePubsubClient.on("slave:freed", done(function (e) {
-                assert.equals(e.session, self.sessionData);
                 assert.equals(e.slave, slave);
             }));
             this.session.freedSlave({serialize: function () { return slave; }});
