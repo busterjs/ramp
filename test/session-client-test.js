@@ -143,5 +143,17 @@ buster.testCase("session client", {
             when.all([this.sc.started, this.sc.loaded, this.sc.ended, this.sc.unloaded]).then(done);
             this.session.unloaded();
         }
+    },
+
+    "resolves initialized and stores session data": function (done) {
+        var sc = bCapServ.createSessionClient({
+            fayeClient: this.ps.getClient(),
+            session: this.sessionData
+        });
+        sc.connect();
+
+        sc.initialized.then(done(function () {
+            assert.equals(sc.session, this.sessionData);
+        }.bind(this)));
     }
 });
