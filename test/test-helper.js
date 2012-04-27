@@ -20,21 +20,6 @@ module.exports = {
         return req;
     },
 
-    bayeuxSubscribeOnce: function(bayeux, url, handler) {
-        var wrapped = function () {
-            handler.apply(this, arguments);
-            bayeux.unsubscribe(url, wrapped);
-        };
-        return bayeux.subscribe(url, wrapped);
-    },
-
-    bayeuxForSession: function (session) {
-        var url = "http://127.0.0.1:"
-            + module.exports.SERVER_PORT
-            + "/messaging";
-        return bCapServ.createSessionMessenger(url, session);
-    },
-
     mockLogger: function (test) {
         return {
             error: test.spy(),
