@@ -9,43 +9,69 @@ var when = require("when");
 var h = require("./../test-helper");
 var PhantomFactory = require("./phantom-factory");
 
+
+var uuid = require("node-uuid");
+
+function createServerBundle(done) {
+    var bundle = {};
+    bundle.httpServer = http.createServer(function (req, res) {
+        res.writeHead(h.NO_RESPONSE_STATUS_CODE); res.end();
+    });
+    bundle.httpServer.listen(h.SERVER_PORT, function () {
+        bundle.httpServer.WTF = uuid();
+        done();
+    });
+
+    reqSocks = [];
+    bundle.httpServer.on("connection", function (sock) { reqSocks.push(sock) });
+
+    bundle.s = bCapServ.createServer();
+    bundle.s.attach(bundle.httpServer);
+
+    bundle.c = bCapServ.createServerClient({
+        host: "0.0.0.0",
+        port: h.SERVER_PORT
+    });
+
+    bundle.p = new PhantomFactory();
+
+    return {
+        extend: function (test) {
+            buster.extend(test, bundle);
+        },
+
+        tearDown: function (done) {
+            var promises = [this.tearDownServer(), this.tearDownBrowsers()];
+            when.all(promises).then(done)
+        },
+
+        tearDownServer: function () {
+            var deferred = when.defer();
+
+            bundle.httpServer.on("close", deferred.resolve);
+            bundle.httpServer.close();
+            reqSocks.forEach(function (s) { s.destroy(); });
+
+            return deferred.promise;
+        },
+
+        tearDownBrowsers: function () {
+            return when.all(bundle.p.killAll());
+        }
+    }
+}
+
 buster.testRunner.timeout = 2000;
 buster.testCase("Integration", {
     setUp: function (done) {
         var self = this;
 
-        this.httpServer = http.createServer(function (req, res) {
-            res.writeHead(h.NO_RESPONSE_STATUS_CODE); res.end();
-        });
-        this.httpServer.listen(h.SERVER_PORT, done);
-
-        this.reqSocks = [];
-        this.httpServer.on("connection", function (sock) { self.reqSocks.push(sock) });
-
-        this.s = bCapServ.createServer();
-        this.s.attach(this.httpServer);
-
-        this.c = bCapServ.createServerClient({
-            host: "0.0.0.0",
-            port: h.SERVER_PORT
-        });
-
-        this.p = new PhantomFactory();
+        this.serverBundle = createServerBundle(done);
+        this.serverBundle.extend(this);
     },
 
     tearDown: function (done) {
-        var promises = [];
-
-        var httpDeferred = when.defer();
-        promises.push(httpDeferred.promise);
-
-        this.httpServer.on("close", httpDeferred.resolve);
-        this.httpServer.close();
-
-        this.reqSocks.forEach(function (s) { s.destroy(); });
-
-        promises = promises.concat(this.p.killAll());
-        when.all(promises).then(done);
+        this.serverBundle.tearDown(done);
     },
 
     "test one browser": function (done) {
