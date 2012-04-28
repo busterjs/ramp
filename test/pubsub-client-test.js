@@ -44,7 +44,7 @@ buster.testCase("pubsub-client", {
         assert.calledOnce(spy);
 
         var url = "http://" + this.pc._serverHost + ":" + this.pc._serverPort + "/messaging";
-        assert.calledWithExactly(faye.Client, url);
+        assert.calledWith(faye.Client, url);
     },
 
     "should connect": function (done) {
