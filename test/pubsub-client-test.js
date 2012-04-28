@@ -229,5 +229,19 @@ buster.testCase("pubsub-client", {
         pc2.connect().then(done(function () {
             assert.calledOnce(spy);
         }));
+    },
+
+    "should not disconnect when not using own faye client": function (done) {
+        var self = this;
+        this.spy(this.fayeClient, "disconnect");
+
+        var pc2 = bCapServPubsubClient.create({
+            fayeClient: this.fayeClient
+        });
+
+        pc2.connect().then(done(function () {
+            pc2.disconnect();
+            refute.called(self.fayeClient.disconnect);
+        }));
     }
 });
