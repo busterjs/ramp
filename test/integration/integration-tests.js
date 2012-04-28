@@ -213,27 +213,32 @@ buster.testCase("Integration", {
         });
     },
 
-    // "test loads session when slave is captured": function (done) {
-    //     var self = this;
-    //     var bayeux = this.srv.captureServer.bayeux;
-    //     this.captureServer.createSession({
-    //         resourceSet: {
-    //             resources: [
-    //                 {path: "/test.js", content: 'buster.publish("/some/event", 123);'}
-    //             ],
-    //             loadPath: ["/test.js"]
-    //         }
-    //     }).then(function (sess) {
-    //         h.bayeuxSubscribeOnce(bayeux, "/session/start", function (e) {
-    //             var phantom;
-    //             ih.capture(self.srv, function (slave, p) { phantom = p; });
-    //             h.bayeuxForSession(sess).subscribe("/some/event", function (data) {
-    //                 assert.equals(data, 123);
-    //                 phantom.kill(done);
-    //             });
-    //         });
-    //     });
-    // },
+    "test loads session when slave is captured": function (done) {
+        var self = this;
+
+        var rs = bResources.resourceSet.create();
+        rs.addResource({
+            path: "/test.js",
+            content: 'buster.emit("testing", 123);'
+        });
+        rs.loadPath.append("/test.js");
+
+        self.c.createSession({resourceSet: rs}).then(function (session) {
+            var sc = bCapServ.createSessionClient({
+                host: "0.0.0.0",
+                port: h.SERVER_PORT,
+                session: session
+            });
+            sc.connect();
+            sc.loaded.then(function () {
+                self.p.capture(function (slave, phantom) {});
+            });
+
+            sc.on("testing", done(function (e) {
+                assert.equals(e, 123);
+            }));
+        });
+    },
 
     // "test is able to relative path lookups in slaves": function (done) {
     //     var self = this;
