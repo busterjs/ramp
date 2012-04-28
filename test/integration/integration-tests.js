@@ -192,26 +192,26 @@ buster.testCase("Integration", {
         });
     },
 
-    // // TODO: Figure out why this test causes errors in node's http.js
-    // "//test recaptures when server restarts": function (done) {
-    //     var port = h.SERVER_PORT + 1;
-    //     var srv1 = ih.createServer(port, function () {
-    //         ih.capture(srv1, function (slave1, phantom) {
-    //             srv1.kill(function () {
-    //                 var srv2 = ih.createServer(port, function () {
-    //                     srv2.captureServer.oncapture = function (req, res, slave2) {
-    //                         refute.same(slave1, slave2);
-    //                         res.writeHead(200);
-    //                         res.end();
-    //                         srv2.kill(function () {
-    //                             phantom.kill(done);
-    //                         });
-    //                     };
-    //                 });
-    //             });
-    //         });
-    //     });
-    // },
+    "test recaptures when server restarts": function (done) {
+        var self = this;
+        var oldServerBundle = this.serverBundle;
+
+        var timesCaptured = 0;
+
+        this.c.connect();
+        this.c.on("slave:captured", function () {
+            if (++timesCaptured == 2) {
+                assert(true);
+                oldServerBundle.tearDownBrowsers().then(done);
+            }
+        })
+
+        this.p.capture(function (slave, phantom) {
+            self.serverBundle.tearDownServer().then(function () {
+                self.serverBundle = createServerBundle(function () {});
+            });
+        });
+    },
 
     // "test loads session when slave is captured": function (done) {
     //     var self = this;
