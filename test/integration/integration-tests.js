@@ -305,25 +305,28 @@ buster.testCase("Integration", {
         });
     },
 
-    // "provides buster.env.id": function (done) {
-    //     var self = this;
-    //     this.captureServer.createSession({
-    //         resourceSet: {
-    //             resources: [
-    //                 {
-    //                     path: "/foo.js",
-    //                     content: 'buster.publish("/some/event", buster.env.id);'
-    //                 },
-    //             ],
-    //             loadPath: ["/foo.js"]
-    //         }
-    //     }).then(function (session) {
-    //         ih.capture(self.srv, function (slave, phantom) {
-    //             h.bayeuxForSession(session).subscribe("/some/event", function (data) {
-    //                 assert.equals(data, slave.id);
-    //                 phantom.kill(done);
-    //             });
-    //         });
-    //     });
-    // }
+    "test provides buster.env.id": function (done) {
+        var self = this;
+
+        var rs = bResources.resourceSet.create();
+        rs.addResource({
+            path: "/foo.js",
+            content: 'buster.emit("kindofblue", buster.env.id);'
+        });
+        rs.loadPath.append("/foo.js");
+
+        this.p.capture(function (slave, phantom) {
+            self.c.createSession({resourceSet: rs}).then(function (session) {
+                var sc = bCapServ.createSessionClient({
+                    host: "0.0.0.0",
+                    port: h.SERVER_PORT,
+                    session: session
+                });
+                sc.connect();
+                sc.on("kindofblue", done(function (e) {
+                    assert.equals(e, slave.id);
+                }));
+            });
+        });
+    }
 });

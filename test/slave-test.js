@@ -122,7 +122,8 @@ buster.testCase("slave", {
 
     "serializing": function () {
         var expected = {
-            prisonPath: this.slave.prisonPath
+            prisonPath: this.slave.prisonPath,
+            id: this.slave._id
         }
 
         assert.equals(this.slave.serialize(), expected);
