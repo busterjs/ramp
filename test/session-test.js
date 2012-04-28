@@ -242,6 +242,12 @@ buster.testCase("Session", {
             }));
             this.session.freedSlave({serialize: function () { return slave; }});
         },
+
+        "should teardown": function () {
+            this.stub(this.session, "_pubsubServerDetach");
+            this.session.teardown();
+            assert.calledOnce(this.session._pubsubServerDetach);
+        }
     },
 
     "should create with resource set": function (done) {

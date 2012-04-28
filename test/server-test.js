@@ -154,12 +154,13 @@ buster.testCase("server", {
     },
 
     "teardown session unmounts": function () {
-        var session = {resourcesPath: "/fofoafo"};
+        var session = {resourcesPath: "/fofoafo", teardown: this.spy()};
         this.stub(this.s._resourceMiddleware, "unmount");
         this.s._sessionQueue.teardownSession(session);
 
         assert.calledOnce(this.s._resourceMiddleware.unmount);
         assert.calledWithExactly(this.s._resourceMiddleware.unmount, "/fofoafo");
+        assert.calledOnce(session.teardown);
     },
 
     "serves resources middleware": function () {
