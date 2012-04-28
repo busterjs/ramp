@@ -277,31 +277,33 @@ buster.testCase("Integration", {
         });
     },
 
-    // "test provides buster.env.contextPath": function (done) {
-    //     var self = this;
-    //     this.captureServer.createSession({
-    //         resourceSet: {
-    //             resources: [
-    //                 {
-    //                     path: "/foo.js",
-    //                     content: 'var e = document.createElement("script"); e.src = buster.env.contextPath + "/bar.js"; document.body.appendChild(e);'
-    //                 },
-    //                 {
-    //                     path: "/bar.js",
-    //                     content: 'buster.publish("/some/event", 123);'
-    //                 }
-    //             ],
-    //             loadPath: ["/foo.js"]
-    //         }
-    //     }).then(function (session) {
-    //         ih.capture(self.srv, function (slave, phantom) {
-    //             h.bayeuxForSession(session).subscribe("/some/event", function (data) {
-    //                 assert.equals(data, 123);
-    //                 phantom.kill(done);
-    //             });
-    //         });
-    //     });
-    // },
+    "test provides buster.env.contextPath": function (done) {
+        var self = this;
+
+        var rs = bResources.resourceSet.create();
+        rs.addResource({
+            path: "/foo.js",
+            content: 'var e = document.createElement("script"); e.src = buster.env.contextPath + "/bar.js"; document.body.appendChild(e);'
+        });
+        rs.addResource({
+            path: "/bar.js",
+            content: 'buster.emit("nicelydone", 123);'
+        });
+        rs.loadPath.append("/foo.js");
+
+        this.p.capture(function (slave, phantom) {});
+        this.c.createSession({resourceSet: rs}).then(function (session) {
+            var sc = bCapServ.createSessionClient({
+                host: "0.0.0.0",
+                port: h.SERVER_PORT,
+                session: session
+            });
+            sc.connect();
+            sc.on("nicelydone", done(function (e) {
+                assert.equals(e, 123);
+            }));
+        });
+    },
 
     // "provides buster.env.id": function (done) {
     //     var self = this;
