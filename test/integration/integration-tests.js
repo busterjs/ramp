@@ -240,40 +240,42 @@ buster.testCase("Integration", {
         });
     },
 
-    // "test is able to relative path lookups in slaves": function (done) {
-    //     var self = this;
-    //     this.captureServer.createSession({
-    //         resourceSet: {
-    //             resources: [
-    //                 {
-    //                     path: "/",
-    //                     content: [
-    //                         '<!DOCTYPE html>',
-    //                         '<html>',
-    //                         '  <head>',
-    //                         '    <script src="foo.js"></script>',
-    //                         '  </head>',
-    //                         '  <body></body>',
-    //                         '</html>'].join("\n")
-    //                 },
-    //                 {
-    //                     path: "/foo.js",
-    //                     content: [
-    //                         'window.addEventListener("load", function () {',
-    //                         '  buster.publish("/some/event", 123);',
-    //                         '});'].join("\n")
-    //                 }
-    //             ]
-    //         }
-    //     }).then(function (session) {
-    //         ih.capture(self.srv, function (slave, phantom) {
-    //             h.bayeuxForSession(session).subscribe("/some/event", function (data) {
-    //                 assert.equals(data, 123);
-    //                 phantom.kill(done);
-    //             });
-    //         });
-    //     });
-    // },
+    "test is able to relative path lookups in slaves": function (done) {
+        var self = this;
+
+        var rs = bResources.resourceSet.create();
+        rs.addResource({
+            path: "/",
+            content: [
+                '<!DOCTYPE html>',
+                '<html>',
+                '  <head>',
+                '    <script src="foo.js"></script>',
+                '  </head>',
+                '  <body></body>',
+                '</html>'].join("\n")
+        });
+        rs.addResource({
+            path: "/foo.js",
+            content: [
+                'window.addEventListener("load", function () {',
+                '  buster.emit("veryclever", 123);',
+                '});'].join("\n")
+        });
+
+        this.p.capture(function (slave, phantom) {});
+        this.c.createSession({resourceSet: rs}).then(function (session) {
+            var sc = bCapServ.createSessionClient({
+                host: "0.0.0.0",
+                port: h.SERVER_PORT,
+                session: session
+            });
+            sc.connect();
+            sc.on("veryclever", done(function (e) {
+                assert.equals(e, 123);
+            }));
+        });
+    },
 
     // "test refreshing slave URL": function (done) {
     //     var self = this;
