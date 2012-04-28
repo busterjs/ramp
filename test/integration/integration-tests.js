@@ -277,21 +277,6 @@ buster.testCase("Integration", {
         });
     },
 
-    // "test refreshing slave URL": function (done) {
-    //     var self = this;
-    //     ih.capture(this.srv, function (slave, phantom) {
-    //         var slaveUrl = "http://127.0.0.1:" + self.srv.httpServer.address().port + slave.url;
-    //         phantom.kill(function () {
-    //             var phantom2 = ih.Phantom(function () {
-    //                 phantom2.open(slaveUrl, function () {
-    //                     assert(true);
-    //                     phantom2.kill(done);
-    //                 });
-    //             });
-    //         });
-    //     });
-    // },
-
     // "test provides buster.env.contextPath": function (done) {
     //     var self = this;
     //     this.captureServer.createSession({
