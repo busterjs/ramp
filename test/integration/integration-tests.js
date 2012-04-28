@@ -131,27 +131,40 @@ buster.testCase("Integration", {
         });
     },
 
-    // "test loading second session": function (done) {
-    //     var self = this;
-    //     var bayeux = self.srv.captureServer.bayeux;
-    //     ih.capture(this.srv, function (slave, phantom) {
-    //         self.captureServer.createSession({}).then(function (sess1) {
-    //             h.bayeuxSubscribeOnce(bayeux, "/session/start", function (e) {
-    //                 assert.equals(sess1, e.session);
+    "test loading second session": function (done) {
+        var self = this;
+        assert(true);
+        var rs = bResources.resourceSet.create();
 
-    //                 h.bayeuxSubscribeOnce(bayeux, "/session/end", function (e) {
-    //                     self.captureServer.createSession({}).then(function (sess2) {
-    //                         h.bayeuxSubscribeOnce(bayeux, "/session/start", function (e) {
-    //                             assert.equals(sess2, e.session);
-    //                             phantom.kill(done);
-    //                         });
-    //                     });
-    //                 });
-    //                 self.srv.captureServer.endSession(sess1.id);
-    //             });
-    //         });
-    //     });
-    // },
+        this.p.capture(function (slave, phantom) {
+            self.c.createSession({resourceSet: rs}).then(function (sess1) {
+                var sc1 = bCapServ.createSessionClient({
+                    host: "0.0.0.0",
+                    port: h.SERVER_PORT,
+                    session: sess1
+                });
+                sc1.connect()
+                sc1.loaded.then(function () {
+                    assert.equals(sess1.id, sc1.session.id);
+                    sc1.end();
+                });
+
+                sc1.unloaded.then(function () {
+                    self.c.createSession({resourceSet: rs}).then(function (sess2) {
+                        var sc2 = bCapServ.createSessionClient({
+                            host: "0.0.0.0",
+                            port: h.SERVER_PORT,
+                            session: sess2
+                        });
+                        sc2.connect()
+                        sc2.loaded.then(done(function () {
+                            assert.equals(sess2.id, sc2.session.id);
+                        }));
+                    });
+                });
+            });
+        });
+    },
 
     // // TODO: Figure out why this test causes errors in node's http.js
     // "//test recaptures when server restarts": function (done) {
