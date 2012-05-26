@@ -147,7 +147,7 @@ buster.testCase("Integration", {
                     session: session
                 });
                 sc.connect()
-                sc.loaded.then(function () {
+                sc.onLoaded(function () {
                     sc.on("other:event", done(function (data) {
                         assert.equals(data, 123);
                     }));
@@ -170,12 +170,12 @@ buster.testCase("Integration", {
                     session: sess1
                 });
                 sc1.connect()
-                sc1.loaded.then(function () {
+                sc1.onLoaded(function () {
                     assert.equals(sess1.id, sc1.session.id);
                     sc1.end();
                 });
 
-                sc1.unloaded.then(function () {
+                sc1.onUnloaded(function () {
                     self.c.createSession({resourceSet: rs}).then(function (sess2) {
                         var sc2 = bCapServ.createSessionClient({
                             host: "0.0.0.0",
@@ -183,7 +183,7 @@ buster.testCase("Integration", {
                             session: sess2
                         });
                         sc2.connect()
-                        sc2.loaded.then(done(function () {
+                        sc2.onLoaded(done(function () {
                             assert.equals(sess2.id, sc2.session.id);
                         }));
                     });
@@ -230,7 +230,7 @@ buster.testCase("Integration", {
                 session: session
             });
             sc.connect();
-            sc.loaded.then(function () {
+            sc.onLoaded(function () {
                 self.p.capture(function (slave, phantom) {});
             });
 
