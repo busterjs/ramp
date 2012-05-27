@@ -26,10 +26,7 @@ buster.testCase("server client", {
             });
         });
 
-        this.c = bCapServ.createServerClient({
-            host: "0.0.0.0",
-            port: h.SERVER_PORT
-        });
+        this.c = bCapServ.createServerClient(h.SERVER_PORT);
     },
 
     tearDown: function (done) {

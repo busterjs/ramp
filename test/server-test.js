@@ -18,10 +18,7 @@ buster.testCase("server", {
         this.s = bCapServ.createServer();
         this.s.attach(this.httpServer);
 
-        this.c = bCapServ.createServerClient({
-            host: "0.0.0.0",
-            port: h.SERVER_PORT
-        });
+        this.c = bCapServ.createServerClient(h.SERVER_PORT);
     },
 
     tearDown: function (done) {
