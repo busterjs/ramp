@@ -20,8 +20,7 @@ buster.testCase("server", {
 
         this.c = bCapServ.createServerClient({
             host: "0.0.0.0",
-            port: h.SERVER_PORT,
-            fayeClient: this.s._pubsubServer.getClient()
+            port: h.SERVER_PORT
         });
     },
 
@@ -65,10 +64,10 @@ buster.testCase("server", {
     "capturing slave emits event and mounts resource set": function (done) {
         var slave = {foo: "bar"};
 
-        this.c.on("slave:captured", done(function (e) {
+        this.s._pubsubClient.connect();
+        this.s._pubsubClient.on("slave:captured", done(function (e) {
             assert.equals(e, slave);
         }));
-
         this.s._onSlaveCaptured(slave);
     },
 
@@ -78,7 +77,8 @@ buster.testCase("server", {
             prisonPath: "/foo123",
         };
 
-        this.c.on("slave:freed", done(function (e) {
+        this.s._pubsubClient.connect();
+        this.s._pubsubClient.on("slave:freed", done(function (e) {
             assert.equals(e, slave);
         }));
 
