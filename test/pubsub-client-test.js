@@ -171,7 +171,7 @@ buster.testCase("pubsub-client", {
             assert(spy.calledOnce);
 
             var opts = spy.getCall(0).args[0];
-            assert.same(opts.fayeClient, this.pc._fayeClient);
+            assert.same(opts._fayeClient, this.pc._fayeClient);
             assert.equals(opts.contextPath, "/my/context/path");
         },
 
@@ -213,7 +213,7 @@ buster.testCase("pubsub-client", {
     "providing faye client": {
         setUp: function () {
             this.pc2 = bCapServPubsubClient.create({
-                fayeClient: this.fayeClient
+                _fayeClient: this.fayeClient
             });
         },
 
@@ -238,7 +238,7 @@ buster.testCase("pubsub-client", {
         var spy = this.spy();
 
         var pc2 = bCapServPubsubClient.create({
-            fayeClient: this.fayeClient,
+            _fayeClient: this.fayeClient,
             onConnect: spy
         });
 
@@ -252,7 +252,7 @@ buster.testCase("pubsub-client", {
         this.spy(this.fayeClient, "disconnect");
 
         var pc2 = bCapServPubsubClient.create({
-            fayeClient: this.fayeClient
+            _fayeClient: this.fayeClient
         });
 
         pc2.connect().then(done(function () {
