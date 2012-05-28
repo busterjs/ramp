@@ -19,9 +19,7 @@ buster.testCase("slave", {
 
         this.ps = bCapServPubsubServer.create(null, "/messaging");
         this.ps.attach(this.httpServer);
-        this.pc = bCapServPubsubClient.create({
-            fayeClient: this.ps.getClient()
-        });
+        this.pc = this.ps.createClient();
         this.slave = bCapServSlave.create();
     },
 

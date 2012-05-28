@@ -2,7 +2,7 @@ var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
 
-var bCapServ = require("../lib/buster-capture-server");
+var bCapServSessionClient = require("../lib/session-client");
 var bCapServSession = require("../lib/session");
 var bCapServPubsubServer = require("./../lib/pubsub-server");
 var http = require("http");
@@ -19,19 +19,17 @@ buster.testCase("session client", {
                 self.session = session;
                 self.sessionData = session.serialize();
 
-                self.publicPubsub = buster.captureServer.pubsubClient.create({
-                    contextPath: self.sessionData.messagingPath,
-                    fayeClient: self.ps.getClient()
-                });
-                self.privatePubsub = buster.captureServer.pubsubClient.create({
-                    contextPath: self.sessionData.privateMessagingPath,
-                    fayeClient: self.ps.getClient()
-                });
+                self.publicPubsub =
+                    self.ps.createClient(self.sessionData.messagingPath);
+                self.privatePubsub =
+                    self.ps.createClient(self.sessionData.privateMessagingPath);
             }));
         });
 
         this.ps = bCapServPubsubServer.create(null, "/messaging");
         this.ps.attach(this.httpServer);
+
+        this.pc = this.ps.createClient();
     },
 
     tearDown: function (done) {
@@ -39,14 +37,10 @@ buster.testCase("session client", {
         this.httpServer.close();
     },
 
-    "connected": {
+    "when connected": {
         setUp: function (done) {
             var self = this;
-            this.sc = bCapServ.createSessionClient({
-                host: "0.0.0.0",
-                port: h.SERVER_PORT,
-                session: this.sessionData
-            });
+            this.sc = bCapServSessionClient._create(this.sessionData, this.pc);
             this.sc.connect().then(done);
         },
 
@@ -61,63 +55,28 @@ buster.testCase("session client", {
         }
     },
 
-    "connecting publishes init event": function (done) {
-        var sc = bCapServ.createSessionClient({
-            host: "0.0.0.0",
-            port: h.SERVER_PORT,
-            session: this.sessionData
-        });
-
-        var initStub = this.stub(sc, "_onInitialize");
-        sc.connect().then(done(function () {
-            assert.calledOnce(initStub);
-            sc.disconnect();
-        }));
-    },
-
     "publishing init event emits init data": function (done) {
         this.privatePubsub.on("initialize", done(function (data) {
             assert.equals(data, sc._getInitData());
             sc.disconnect();
         }));
 
-        var sc = bCapServ.createSessionClient({
-            host: "0.0.0.0",
-            port: h.SERVER_PORT,
-            session: this.sessionData
-        });
-        sc.connect();
+        var sc = bCapServSessionClient._create(this.sessionData, this.pc);
     },
 
     "init data as owner": function () {
-        var sc = bCapServ.createSessionClient({
-            host: "0.0.0.0",
-            port: h.SERVER_PORT,
-            session: this.sessionData,
-            owner: true
-        });
-
+        var sc = bCapServSessionClient._create(this.sessionData, this.pc, {owner: true});
         assert.match(sc._getInitData(), {isOwner: true});
     },
 
     "init data as non-owner": function () {
-        var sc = bCapServ.createSessionClient({
-            host: "0.0.0.0",
-            port: h.SERVER_PORT,
-            session: this.sessionData
-        });
-
+        var sc = bCapServSessionClient._create(this.sessionData, this.pc);
         assert.match(sc._getInitData(), {isOwner: false});
     },
 
-    "connected": {
-        setUp: function (done) {
-            this.sc = bCapServ.createSessionClient({
-                fayeClient: this.ps.getClient(),
-                session: this.sessionData
-            });
-
-            this.sc.connect().then(done);
+    "default client": {
+        setUp: function () {
+            this.sc = bCapServSessionClient._create(this.sessionData, this.pc);
         },
 
         "resolves started promise when starting": function (done) {
@@ -146,11 +105,7 @@ buster.testCase("session client", {
     },
 
     "resolves initialized and stores session data": function (done) {
-        var sc = bCapServ.createSessionClient({
-            fayeClient: this.ps.getClient(),
-            session: this.sessionData
-        });
-        sc.connect();
+        var sc = bCapServSessionClient._create(this.sessionData, this.pc);
 
         sc.initialized.then(done(function () {
             assert.equals(sc.session, this.sessionData);
@@ -161,11 +116,7 @@ buster.testCase("session client", {
         assert(true);
 
         this.session.loaded();
-        var sc = bCapServ.createSessionClient({
-            fayeClient: this.ps.getClient(),
-            session: this.sessionData
-        });
-        sc.connect();
+        var sc = bCapServSessionClient._create(this.sessionData, this.pc);
         sc.onLoaded(done);
     }
 });

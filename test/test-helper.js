@@ -2,6 +2,9 @@ var http = require("http");
 var bCapServ = require("../lib/buster-capture-server");
 var sinon = require("sinon");
 
+
+var bCapServPubsubClient = require("./../lib/pubsub-client");
+
 module.exports = {
     NO_RESPONSE_STATUS_CODE: 418,
     SERVER_PORT: 16178,
@@ -33,6 +36,9 @@ module.exports = {
     mockPubsubServer: function () {
         return buster.extend(buster.eventEmitter.create(), {
             getClient: function () { return module.exports.mockFayeClient() },
+            createClient: function () {
+                return bCapServPubsubClient.create({_fayeClient: this.getClient()})
+            },
             addExtension: sinon.spy(),
             removeExtension: sinon.spy(),
             bind: sinon.spy(),
