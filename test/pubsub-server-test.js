@@ -96,5 +96,15 @@ buster.testCase("pubsub server", {
             var clients = self.ps._pubsubClients;
             assert.equals(Object.keys(clients).length, 0);
         }));
-    }
+    },
+
+    "creating new client": function () {
+        var spy = this.spy(bCapServPubsubClient, "create");
+        var c = this.ps.createClient("/my/context/path");
+        assert(spy.calledOnce);
+
+        var opts = spy.getCall(0).args[0];
+        assert.same(opts._fayeClient, this.ps._fayeAdapter.getClient());
+        assert.equals(opts.contextPath, "/my/context/path");
+    },
 });
