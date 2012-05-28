@@ -21,5 +21,6 @@ server.listen(SERVER_PORT, function (request, response) {
 
     response.statusCode = 200;
     response.write("");
+    response.close();
 });
 console.log("ready 1");
