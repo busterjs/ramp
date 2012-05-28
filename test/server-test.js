@@ -3,7 +3,7 @@ var assert = buster.assert;
 var refute = buster.refute;
 
 var bCapServ = require("../lib/buster-capture-server");
-var bCapServSess = require("../lib/session");
+var bCapServSessionClient = require("../lib/session-client");
 var bResources = require("buster-resources");
 var http = require("http");
 var when = require("when");
@@ -14,7 +14,9 @@ buster.testCase("server", {
         this.httpServer = http.createServer(function (req, res) {
             res.writeHead(h.NO_RESPONSE_STATUS_CODE); res.end();
         });
-        this.httpServer.listen(h.SERVER_PORT, done);
+        this.httpServer.listen(h.SERVER_PORT, function () {
+            this.c.connect().then(done);
+        }.bind(this));
 
         this.s = bCapServ.createServer();
         this.s.attach(this.httpServer);
@@ -33,10 +35,10 @@ buster.testCase("server", {
     "should create new session successfully": function (done) {
         var self = this;
         this.c.createSession(this.rs).then(
-            done(function (sess) {
-                assertIsSerializedSession(sess);
+            done(function (sessionClient) {
+                assert(bCapServSessionClient.isPrototypeOf(sessionClient));
                 assert(self.s._sessionQueue.sessions.some(function (s) {
-                    return s.id = sess.id;
+                    return s.id = sessionClient.sessionId;
                 }));
             })
         );
@@ -185,9 +187,3 @@ buster.testCase("server", {
     "// should not send cached resources to server": function (done) {
     }
 });
-
-function assertIsSerializedSession(obj) {
-    assert(obj.id);
-    assert(obj.resourcesPath);
-    assert(obj.messagingPath);
-}
