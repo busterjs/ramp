@@ -31,9 +31,13 @@ buster.testCase("server", {
     },
 
     "should create new session successfully": function (done) {
+        var self = this;
         this.c.createSession(this.rs).then(
             done(function (sess) {
                 assertIsSerializedSession(sess);
+                assert(self.s._sessionQueue.sessions.some(function (s) {
+                    return s.id = sess.id;
+                }));
             })
         );
     },
