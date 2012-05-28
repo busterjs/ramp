@@ -34,18 +34,6 @@ buster.testCase("server client", {
         this.httpServer.close();
     },
 
-    "should create session without resource set": function (done) {
-        var self = this;
-        var sessionData = {foo: "bar"}
-
-        onRequest(this.httpServer, done(function (req, res, body) {
-            assert.equals(JSON.parse(body), sessionData);
-            res.end();
-        }));
-
-        this.c.createSession(sessionData);
-    },
-
     "should create session with serialized resource set": function (done) {
         var self = this;
 
@@ -55,7 +43,7 @@ buster.testCase("server client", {
             res.end();
         }));
 
-        this.c.createSession({resourceSet: this.rs, foo: "bar"});
+        this.c.createSession(this.rs, {foo: "bar"});
     },
 
     "should check server for cache": function (done) {
@@ -73,7 +61,7 @@ buster.testCase("server client", {
         deferred.resolve([1, 2, 3]);
 
         this.spy(this.rs, "serialize");
-        this.c.createSession({resourceSet: this.rs, cache: true});
+        this.c.createSession(this.rs, {cache: true});
     },
 
     "should fail if unable to get cached resources": function (done) {
@@ -82,7 +70,7 @@ buster.testCase("server client", {
         this.c._getCachedResources.returns(deferred.promise);
         deferred.reject({message: "An error"});
 
-        this.c.createSession({resourceSet: this.rs, cache: true}).then(
+        this.c.createSession(this.rs, {cache: true}).then(
             function () {},
             done(function (err) {
                 assert.equals(err.message, "An error");
@@ -96,7 +84,7 @@ buster.testCase("server client", {
         this.rs.serialize.returns(deferred.promise);
         deferred.reject({message: "An error"});
 
-        this.c.createSession({resourceSet: this.rs}).then(
+        this.c.createSession(this.rs).then(
             function () {},
             done(function (err) {
                 assert.equals(err.message, "An error");
@@ -125,7 +113,7 @@ buster.testCase("server client", {
         });
 
         this.spy(this.rs, "serialize");
-        this.c.createSession({resourceSet: this.rs, cache: true});
+        this.c.createSession(this.rs, {cache: true});
     },
 
     "connected": {

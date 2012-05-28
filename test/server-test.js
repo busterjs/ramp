@@ -4,6 +4,7 @@ var refute = buster.refute;
 
 var bCapServ = require("../lib/buster-capture-server");
 var bCapServSess = require("../lib/session");
+var bResources = require("buster-resources");
 var http = require("http");
 var when = require("when");
 var h = require("./test-helper");
@@ -19,6 +20,8 @@ buster.testCase("server", {
         this.s.attach(this.httpServer);
 
         this.c = bCapServ.createServerClient(h.SERVER_PORT);
+
+        this.rs = bResources.resourceSet.create();
     },
 
     tearDown: function (done) {
@@ -28,7 +31,7 @@ buster.testCase("server", {
     },
 
     "should create new session successfully": function (done) {
-        this.c.createSession({}).then(
+        this.c.createSession(this.rs).then(
             done(function (sess) {
                 assertIsSerializedSession(sess);
             })
@@ -36,7 +39,7 @@ buster.testCase("server", {
     },
 
     "should not create invalid session": function (done) {
-        this.c.createSession({unknownProperty: true}).then(
+        this.c.createSession(this.rs, {unknownProperty: true}).then(
             function () {},
             done(function (err) {
                 assert.match(err.message, "unknown property");
