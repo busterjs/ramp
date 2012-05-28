@@ -28,10 +28,7 @@ function createServerBundle(done) {
     bundle.s = bCapServ.createServer();
     bundle.s.attach(bundle.httpServer);
 
-    bundle.c = bCapServ.createServerClient({
-        host: "0.0.0.0",
-        port: h.SERVER_PORT
-    });
+    bundle.c = bCapServ.createServerClient(h.SERVER_PORT);
 
     bundle.p = new PhantomFactory();
 
@@ -113,7 +110,7 @@ buster.testCase("Integration", {
             });
             rs.loadPath.append("/test.js");
 
-            self.c.createSession({resourceSet: rs}).then(function (session) {
+            self.c.createSession(rs).then(function (session) {
                 var sc = bCapServ.createSessionClient({
                     host: "0.0.0.0",
                     port: h.SERVER_PORT,
@@ -140,7 +137,7 @@ buster.testCase("Integration", {
             });
             rs.loadPath.append("/test.js");
 
-            self.c.createSession({resourceSet: rs}).then(function (session) {
+            self.c.createSession(rs).then(function (session) {
                 var sc = bCapServ.createSessionClient({
                     host: "0.0.0.0",
                     port: h.SERVER_PORT,
@@ -163,7 +160,7 @@ buster.testCase("Integration", {
         var rs = bResources.resourceSet.create();
 
         this.p.capture(function (slave, phantom) {
-            self.c.createSession({resourceSet: rs}).then(function (sess1) {
+            self.c.createSession(rs).then(function (sess1) {
                 var sc1 = bCapServ.createSessionClient({
                     host: "0.0.0.0",
                     port: h.SERVER_PORT,
@@ -176,7 +173,7 @@ buster.testCase("Integration", {
                 });
 
                 sc1.onUnloaded(function () {
-                    self.c.createSession({resourceSet: rs}).then(function (sess2) {
+                    self.c.createSession(rs).then(function (sess2) {
                         var sc2 = bCapServ.createSessionClient({
                             host: "0.0.0.0",
                             port: h.SERVER_PORT,
@@ -223,7 +220,7 @@ buster.testCase("Integration", {
         });
         rs.loadPath.append("/test.js");
 
-        self.c.createSession({resourceSet: rs}).then(function (session) {
+        self.c.createSession(rs).then(function (session) {
             var sc = bCapServ.createSessionClient({
                 host: "0.0.0.0",
                 port: h.SERVER_PORT,
@@ -264,7 +261,7 @@ buster.testCase("Integration", {
         });
 
         this.p.capture(function (slave, phantom) {});
-        this.c.createSession({resourceSet: rs}).then(function (session) {
+        this.c.createSession(rs).then(function (session) {
             var sc = bCapServ.createSessionClient({
                 host: "0.0.0.0",
                 port: h.SERVER_PORT,
@@ -292,7 +289,7 @@ buster.testCase("Integration", {
         rs.loadPath.append("/foo.js");
 
         this.p.capture(function (slave, phantom) {});
-        this.c.createSession({resourceSet: rs}).then(function (session) {
+        this.c.createSession(rs).then(function (session) {
             var sc = bCapServ.createSessionClient({
                 host: "0.0.0.0",
                 port: h.SERVER_PORT,
@@ -316,7 +313,7 @@ buster.testCase("Integration", {
         rs.loadPath.append("/foo.js");
 
         this.p.capture(function (slave, phantom) {
-            self.c.createSession({resourceSet: rs}).then(function (session) {
+            self.c.createSession(rs).then(function (session) {
                 var sc = bCapServ.createSessionClient({
                     host: "0.0.0.0",
                     port: h.SERVER_PORT,

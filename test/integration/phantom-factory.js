@@ -35,10 +35,7 @@ PhantomFactory.prototype = {
             ready(e[0], e[1]);
         });
 
-        var c = bCaptureServer.createServerClient({
-            host: "0.0.0.0",
-            port: h.SERVER_PORT
-        });
+        var c = bCaptureServer.createServerClient(h.SERVER_PORT);
 
         c.connect().then(function () {
             c.on("slave:captured", function (slave) {
