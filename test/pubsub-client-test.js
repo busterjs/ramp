@@ -163,6 +163,22 @@ buster.testCase("pubsub-client", {
             }));
 
             this.pc.emit("foo");
+        },
+
+        "inherits with faye client": function () {
+            var spy = this.spy(bCapServPubsubClient, "create");
+            this.pc2 = this.pc.inherit("/my/context/path");
+            assert(spy.calledOnce);
+
+            var opts = spy.getCall(0).args[0];
+            assert.same(opts.fayeClient, this.pc._fayeClient);
+            assert.equals(opts.contextPath, "/my/context/path");
+        },
+
+        "fails inherit with blank context path": function () {
+            assert.exception(function () {
+                this.pc.inherit("");
+            }.bind(this));
         }
     },
 
@@ -243,5 +259,11 @@ buster.testCase("pubsub-client", {
             pc2.disconnect();
             refute.called(self.fayeClient.disconnect);
         }));
+    },
+
+    "fails inherit when not connected": function () {
+        assert.exception(function () {
+            this.pc.inherit("/foo");
+        }.bind(this));
     }
 });
