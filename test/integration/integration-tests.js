@@ -135,7 +135,7 @@ buster.testCase("Integration", {
             rs.loadPath.append("/test.js");
 
             self.c.createSession(rs).then(function (sessionClient) {
-                sessionClient.onLoaded(function () {
+                sessionClient.onLoad(function () {
                     sessionClient.on("other:event", done(function (e) {
                         assert.equals(e.data, 123);
                     }));
@@ -152,13 +152,13 @@ buster.testCase("Integration", {
 
         this.p.capture(function (slave, phantom) {
             self.c.createSession(rs).then(function (sc1) {
-                sc1.onLoaded(function () {
+                sc1.onLoad(function () {
                     sc1.end();
                 });
 
-                sc1.onUnloaded(function () {
+                sc1.onUnload(function () {
                     self.c.createSession(rs).then(function (sc2) {
-                        sc2.onLoaded(done);
+                        sc2.onLoad(done);
                     });
                 });
             });
@@ -197,7 +197,7 @@ buster.testCase("Integration", {
         rs.loadPath.append("/test.js");
 
         self.c.createSession(rs).then(function (sc) {
-            sc.onLoaded(function () {
+            sc.onLoad(function () {
                 self.p.capture(function (slave, phantom) {});
             });
 

@@ -69,25 +69,25 @@ buster.testCase("session client", {
 
         "resolves started promise when starting": function (done) {
             assert(true);
-            this.sc.onStarted(done);
+            this.sc.onStart(done);
             this.session.started();
         },
 
         "resolves loaded and started when loading": function (done) {
             assert(true);
-            when.all([this.sc.onStarted(), this.sc.onLoaded()]).then(done);
+            when.all([this.sc.onStart(), this.sc.onLoad()]).then(done);
             this.session.loaded();
         },
 
         "resolves loaded, started and ended when ending": function (done) {
             assert(true);
-            when.all([this.sc.onStarted(), this.sc.onLoaded(), this.sc.onEnded()]).then(done);
+            when.all([this.sc.onStart(), this.sc.onLoad(), this.sc.onEnd()]).then(done);
             this.session.ended();
         },
 
         "resolves loaded, started, ended and unloaded when unloading": function (done) {
             assert(true);
-            when.all([this.sc.onStarted(), this.sc.onLoaded(), this.sc.onEnded(), this.sc.onUnloaded()]).then(done);
+            when.all([this.sc.onStart(), this.sc.onLoad(), this.sc.onEnd(), this.sc.onUnload()]).then(done);
             this.session.unloaded();
         },
 
@@ -117,6 +117,6 @@ buster.testCase("session client", {
 
         this.session.loaded();
         var sc = bCapServSessionClient._create(this.sessionData, this.pc);
-        sc.onLoaded(done);
+        sc.onLoad(done);
     },
 });
