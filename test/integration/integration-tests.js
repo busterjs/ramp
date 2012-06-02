@@ -29,6 +29,7 @@ function createServerBundle(done) {
     bundle.s.attach(bundle.httpServer);
 
     bundle.c = bCapServ.createServerClient(h.SERVER_PORT);
+    bundle.c.connect();
 
     bundle.p = new PhantomFactory();
 
@@ -38,7 +39,7 @@ function createServerBundle(done) {
         },
 
         tearDown: function (done) {
-            var promises = [this.tearDownServer(), this.tearDownBrowsers()];
+            var promises = [this.tearDownServer(), this.tearDownBrowsers(), bundle.c.disconnect];
             when.all(promises).then(done)
         },
 
@@ -58,7 +59,7 @@ function createServerBundle(done) {
     }
 }
 
-buster.testRunner.timeout = 2000;
+buster.testRunner.timeout = 4000;
 buster.testCase("Integration", {
     setUp: function (done) {
         var self = this;
@@ -68,7 +69,9 @@ buster.testCase("Integration", {
     },
 
     tearDown: function (done) {
-        this.serverBundle.tearDown(done);
+        this.serverBundle.tearDown(function () {
+            setTimeout(done, 200);
+        });
     },
 
     "test one browser": function (done) {
@@ -110,14 +113,8 @@ buster.testCase("Integration", {
             });
             rs.loadPath.append("/test.js");
 
-            self.c.createSession(rs).then(function (session) {
-                var sc = bCapServ.createSessionClient({
-                    host: "0.0.0.0",
-                    port: h.SERVER_PORT,
-                    session: session
-                });
-                sc.connect();
-                sc.on("some:event", done(function (data) {
+            self.c.createSession(rs).then(function (sessionClient) {
+                sessionClient.on("some:event", done(function (data) {
                     assert.equals(data, 123);
                 }));
             });
@@ -137,18 +134,12 @@ buster.testCase("Integration", {
             });
             rs.loadPath.append("/test.js");
 
-            self.c.createSession(rs).then(function (session) {
-                var sc = bCapServ.createSessionClient({
-                    host: "0.0.0.0",
-                    port: h.SERVER_PORT,
-                    session: session
-                });
-                sc.connect()
-                sc.onLoaded(function () {
-                    sc.on("other:event", done(function (data) {
+            self.c.createSession(rs).then(function (sessionClient) {
+                sessionClient.onLoaded(function () {
+                    sessionClient.on("other:event", done(function (data) {
                         assert.equals(data, 123);
                     }));
-                    sc.emit("some:event", 123);
+                    sessionClient.emit("some:event", 123);
                 });
             });
         });
@@ -160,29 +151,14 @@ buster.testCase("Integration", {
         var rs = bResources.resourceSet.create();
 
         this.p.capture(function (slave, phantom) {
-            self.c.createSession(rs).then(function (sess1) {
-                var sc1 = bCapServ.createSessionClient({
-                    host: "0.0.0.0",
-                    port: h.SERVER_PORT,
-                    session: sess1
-                });
-                sc1.connect()
+            self.c.createSession(rs).then(function (sc1) {
                 sc1.onLoaded(function () {
-                    assert.equals(sess1.id, sc1.session.id);
                     sc1.end();
                 });
 
                 sc1.onUnloaded(function () {
-                    self.c.createSession(rs).then(function (sess2) {
-                        var sc2 = bCapServ.createSessionClient({
-                            host: "0.0.0.0",
-                            port: h.SERVER_PORT,
-                            session: sess2
-                        });
-                        sc2.connect()
-                        sc2.onLoaded(done(function () {
-                            assert.equals(sess2.id, sc2.session.id);
-                        }));
+                    self.c.createSession(rs).then(function (sc2) {
+                        sc2.onLoaded(done);
                     });
                 });
             });
@@ -220,13 +196,7 @@ buster.testCase("Integration", {
         });
         rs.loadPath.append("/test.js");
 
-        self.c.createSession(rs).then(function (session) {
-            var sc = bCapServ.createSessionClient({
-                host: "0.0.0.0",
-                port: h.SERVER_PORT,
-                session: session
-            });
-            sc.connect();
+        self.c.createSession(rs).then(function (sc) {
             sc.onLoaded(function () {
                 self.p.capture(function (slave, phantom) {});
             });
@@ -261,13 +231,7 @@ buster.testCase("Integration", {
         });
 
         this.p.capture(function (slave, phantom) {});
-        this.c.createSession(rs).then(function (session) {
-            var sc = bCapServ.createSessionClient({
-                host: "0.0.0.0",
-                port: h.SERVER_PORT,
-                session: session
-            });
-            sc.connect();
+        this.c.createSession(rs).then(function (sc) {
             sc.on("veryclever", done(function (e) {
                 assert.equals(e, 123);
             }));
@@ -289,13 +253,7 @@ buster.testCase("Integration", {
         rs.loadPath.append("/foo.js");
 
         this.p.capture(function (slave, phantom) {});
-        this.c.createSession(rs).then(function (session) {
-            var sc = bCapServ.createSessionClient({
-                host: "0.0.0.0",
-                port: h.SERVER_PORT,
-                session: session
-            });
-            sc.connect();
+        this.c.createSession(rs).then(function (sc) {
             sc.on("nicelydone", done(function (e) {
                 assert.equals(e, 123);
             }));
@@ -313,13 +271,7 @@ buster.testCase("Integration", {
         rs.loadPath.append("/foo.js");
 
         this.p.capture(function (slave, phantom) {
-            self.c.createSession(rs).then(function (session) {
-                var sc = bCapServ.createSessionClient({
-                    host: "0.0.0.0",
-                    port: h.SERVER_PORT,
-                    session: session
-                });
-                sc.connect();
+            self.c.createSession(rs).then(function (sc) {
                 sc.on("kindofblue", done(function (e) {
                     assert.equals(e, slave.id);
                 }));
