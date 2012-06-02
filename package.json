@@ -18,6 +18,9 @@
         "type": "git",
         "url": "git://gitorious.org/buster/buster-capture-server.git"
     },
+    "scripts": {
+        "test": "./node_modules/buster/bin/buster-test"
+    },
     "dependencies": {
         "buster-core": ">=0.5.1",
         "buster-resources": ">=0.2",
