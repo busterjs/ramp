@@ -210,7 +210,8 @@ buster.testCase("Session queue", {
             newSlave.mockEnd();
 
             assert.calledOnce(sess1.freedSlave);
-            assert.same(sess1.freedSlave.getCall(0).args[0], newSlave);
+            var args = sess1.freedSlave.getCall(0).args;
+            assert.same(args[0], newSlave);
             refute.called(sess2.freedSlave);
         },
 
@@ -459,7 +460,10 @@ buster.testCase("Session queue", {
         slave.readyDeferred.resolve();
 
         assert.calledOnce(spy);
-        assert.calledWithExactly(spy, slave.serialized);
+        assert.calledWithExactly(spy, {
+            slave: slave.serialized,
+            slaves: [slave.serialized]
+        });
     },
 
     "emits event when slave is removed": function () {
@@ -473,6 +477,57 @@ buster.testCase("Session queue", {
         slave.mockEnd();
 
         assert.calledOnce(spy);
-        assert.calledWithExactly(spy, slave.serialized);
+        assert.calledWithExactly(spy, {
+            slave: slave.serialized,
+            slaves: []
+        });
+    },
+
+    "emits  existing slaves when adding a new slave": function () {
+
+        var slaveA = mockSlave();
+        this.sq.addSlave(slaveA);
+        slaveA.readyDeferred.resolve();
+
+        var slaveB = mockSlave();
+        this.sq.addSlave(slaveB);
+        slaveB.readyDeferred.resolve();
+
+        var spy = this.spy();
+        this.sq.on("slave:captured", spy);
+        var slaveC = mockSlave();
+        this.sq.addSlave(slaveC);
+        slaveC.readyDeferred.resolve();
+
+        assert.calledOnce(spy);
+        assert.calledWithExactly(spy, {
+            slave: slaveC.serialized,
+            slaves: [slaveA.serialized, slaveB.serialized, slaveC.serialized]
+        });
+    },
+
+    "emits existing slave when removing slave": function () {
+        var slaveA = mockSlave();
+        this.sq.addSlave(slaveA);
+        slaveA.readyDeferred.resolve();
+
+        var slaveB = mockSlave();
+        this.sq.addSlave(slaveB);
+        slaveB.readyDeferred.resolve();
+
+        var slaveC = mockSlave();
+        this.sq.addSlave(slaveC);
+        slaveC.readyDeferred.resolve();
+
+        var spy = this.spy();
+        this.sq.on("slave:freed", spy);
+
+        slaveB.mockEnd();
+
+        assert.calledOnce(spy);
+        assert.calledWithExactly(spy, {
+            slave: slaveB.serialized,
+            slaves: [slaveA.serialized, slaveC.serialized]
+        });
     }
 });
