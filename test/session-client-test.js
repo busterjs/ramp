@@ -37,28 +37,16 @@ buster.testCase("session client", {
         this.httpServer.close();
     },
 
-    "when connected": {
-        setUp: function (done) {
-            var self = this;
-            this.sc = bCapServSessionClient._create(this.sessionData, this.pc);
-            this.sc.connect().then(done);
-        },
-
-        tearDown: function () {
-            this.sc.disconnect();
-        },
-
-        "should end": function (done) {
-            assert(true)
-            this.privatePubsub.on("end", done);
-            this.sc.end();
-        }
+    "should end": function (done) {
+        assert(true)
+        var sc = bCapServSessionClient._create(this.sessionData, this.pc);
+        this.privatePubsub.on("end", done);
+        sc.end();
     },
 
     "publishing init event emits init data": function (done) {
         this.privatePubsub.on("initialize", done(function (data) {
             assert.equals(data, sc._getInitData());
-            sc.disconnect();
         }));
 
         var sc = bCapServSessionClient._create(this.sessionData, this.pc);
@@ -101,7 +89,27 @@ buster.testCase("session client", {
             assert(true);
             when.all([this.sc.onStarted(), this.sc.onLoaded(), this.sc.onEnded(), this.sc.onUnloaded()]).then(done);
             this.session.unloaded();
-        }
+        },
+
+        "emitting with client id": function (done) {
+            var self = this;
+
+            this.sc.on("foo", done(function (e) {
+                assert.equals(e.data, 123);
+                assert.equals(e.clientId, self.sc.clientId);
+            }));
+
+            this.sc.emit("foo", 123);
+        },
+
+        "emitting with custom client id": function (done) {
+            this.sc.clientId = "123abc";
+            this.sc.on("foo", done(function (e) {
+                assert.equals(e.data, 123);
+                assert.equals(e.clientId, "123abc");
+            }));
+            this.sc.emit("foo", 123);
+        },
     },
 
     "also sets state when initializing": function (done) {
@@ -110,5 +118,5 @@ buster.testCase("session client", {
         this.session.loaded();
         var sc = bCapServSessionClient._create(this.sessionData, this.pc);
         sc.onLoaded(done);
-    }
+    },
 });

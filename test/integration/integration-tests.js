@@ -114,8 +114,8 @@ buster.testCase("Integration", {
             rs.loadPath.append("/test.js");
 
             self.c.createSession(rs).then(function (sessionClient) {
-                sessionClient.on("some:event", done(function (data) {
-                    assert.equals(data, 123);
+                sessionClient.on("some:event", done(function (e) {
+                    assert.equals(e.data, 123);
                 }));
             });
         });
@@ -128,16 +128,16 @@ buster.testCase("Integration", {
             rs.addResource({
                 path: "/test.js",
                 content: [
-                    'buster.on("some:event", function (data) {',
-                    '    buster.emit("other:event", data);',
+                    'buster.on("some:event", function (e) {',
+                    '    buster.emit("other:event", e.data);',
                     '});'].join("\n")
             });
             rs.loadPath.append("/test.js");
 
             self.c.createSession(rs).then(function (sessionClient) {
                 sessionClient.onLoaded(function () {
-                    sessionClient.on("other:event", done(function (data) {
-                        assert.equals(data, 123);
+                    sessionClient.on("other:event", done(function (e) {
+                        assert.equals(e.data, 123);
                     }));
                     sessionClient.emit("some:event", 123);
                 });
@@ -202,7 +202,7 @@ buster.testCase("Integration", {
             });
 
             sc.on("testing", done(function (e) {
-                assert.equals(e, 123);
+                assert.equals(e.data, 123);
             }));
         });
     },
@@ -233,7 +233,7 @@ buster.testCase("Integration", {
         this.p.capture(function (slave, phantom) {});
         this.c.createSession(rs).then(function (sc) {
             sc.on("veryclever", done(function (e) {
-                assert.equals(e, 123);
+                assert.equals(e.data, 123);
             }));
         });
     },
@@ -255,7 +255,7 @@ buster.testCase("Integration", {
         this.p.capture(function (slave, phantom) {});
         this.c.createSession(rs).then(function (sc) {
             sc.on("nicelydone", done(function (e) {
-                assert.equals(e, 123);
+                assert.equals(e.data, 123);
             }));
         });
     },
@@ -273,7 +273,7 @@ buster.testCase("Integration", {
         this.p.capture(function (slave, phantom) {
             self.c.createSession(rs).then(function (sc) {
                 sc.on("kindofblue", done(function (e) {
-                    assert.equals(e, slave.id);
+                    assert.equals(e.data, slave.id);
                 }));
             });
         });
