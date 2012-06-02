@@ -110,6 +110,11 @@ buster.testCase("session client", {
             }));
             this.sc.emit("foo", 123);
         },
+
+        "stores session properties": function () {
+            assert.equals(this.sc.sessionId, this.sessionData.id);
+            assert.equals(this.sc.resourcesPath, this.sessionData.resourcesPath);
+        },
     },
 
     "also sets state when initializing": function (done) {
