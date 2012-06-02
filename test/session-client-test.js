@@ -104,14 +104,6 @@ buster.testCase("session client", {
         }
     },
 
-    "resolves initialized and stores session data": function (done) {
-        var sc = bCapServSessionClient._create(this.sessionData, this.pc);
-
-        sc.initialized.then(done(function () {
-            assert.equals(sc.session, this.sessionData);
-        }.bind(this)));
-    },
-
     "also sets state when initializing": function (done) {
         assert(true);
 
