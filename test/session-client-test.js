@@ -115,6 +115,35 @@ buster.testCase("session client", {
             assert.equals(this.sc.sessionId, this.sessionData.id);
             assert.equals(this.sc.resourcesPath, this.sessionData.resourcesPath);
         },
+
+        "notifies when slaves are captured": function (done) {
+            var self = this;
+            var mockSlave = {id: "123abcdef"};
+            this.sc.onSlaveCaptured(done(function (slave) {
+                assert.equals(slave, mockSlave);
+                assert.equals(self.sc.slaves, [mockSlave]);
+            }));
+
+            this.privatePubsub.emit("slave:captured", {
+                slave: mockSlave,
+                slaves: [mockSlave]
+            });
+        },
+
+        "notifies when slaves are freed": function (done) {
+            var self = this;
+            var mockSlaveA = {id: "123abcdef"};
+            var mockSlaveB = {id: "456defabc"};
+            this.sc.onSlaveFreed(done(function (slave) {
+                assert.equals(slave, mockSlaveA);
+                assert.equals(self.sc.slaves, [mockSlaveB]);
+            }));
+
+            this.privatePubsub.emit("slave:freed", {
+                slave: mockSlaveA,
+                slaves: [mockSlaveB]
+            });
+        }
     },
 
     "also sets state when initializing": function (done) {
@@ -123,5 +152,5 @@ buster.testCase("session client", {
         this.session.loaded();
         var sc = bCapServSessionClient._create(this.sessionData, this.pc);
         sc.onLoad(done);
-    },
+    }
 });
