@@ -215,6 +215,46 @@ buster.testCase("Session queue", {
             refute.called(sess2.freedSlave);
         },
 
+        "current session gets list of current slaves when slave is captured": function () {
+            var sess = mockSession();
+            this.sq.enqueueSession(sess);
+            this.slave.loadSessionComplete();
+
+            var slaveB = mockSlave();
+            this.sq.addSlave(slaveB);
+            slaveB.readyDeferred.resolve();
+            slaveB.loadSessionComplete();
+
+            assert.calledOnce(sess.capturedSlave);
+            var args = sess.capturedSlave.getCall(0).args;
+            assert.equals(args[0], slaveB);
+            assert.equals(args[1], [this.slave, slaveB]);
+        },
+
+        "current session gets list of current slaves when slave is freed": function () {
+            var slaveB = mockSlave();
+            this.sq.addSlave(slaveB);
+            slaveB.readyDeferred.resolve();
+
+            var slaveC = mockSlave();
+            this.sq.addSlave(slaveC);
+            slaveC.readyDeferred.resolve();
+
+            var sess = mockSession();
+            this.sq.enqueueSession(sess);
+
+            this.slave.loadSessionComplete();
+            slaveB.loadSessionComplete();
+            slaveC.loadSessionComplete();
+
+            slaveB.mockEnd();
+
+            assert.calledOnce(sess.freedSlave);
+            var args = sess.freedSlave.getCall(0).args;
+            assert.equals(args[0], slaveB);
+            assert.equals(args[1], [this.slave, slaveC]);
+        },
+
         "prepares session when callback is set": function () {
             this.sq.prepareSession = function (session) {
                 var deferred = when.defer();
@@ -460,10 +500,7 @@ buster.testCase("Session queue", {
         slave.readyDeferred.resolve();
 
         assert.calledOnce(spy);
-        assert.calledWithExactly(spy, {
-            slave: slave.serialized,
-            slaves: [slave.serialized]
-        });
+        assert.calledWithExactly(spy, slave);
     },
 
     "emits event when slave is removed": function () {
@@ -477,57 +514,6 @@ buster.testCase("Session queue", {
         slave.mockEnd();
 
         assert.calledOnce(spy);
-        assert.calledWithExactly(spy, {
-            slave: slave.serialized,
-            slaves: []
-        });
-    },
-
-    "emits  existing slaves when adding a new slave": function () {
-
-        var slaveA = mockSlave();
-        this.sq.addSlave(slaveA);
-        slaveA.readyDeferred.resolve();
-
-        var slaveB = mockSlave();
-        this.sq.addSlave(slaveB);
-        slaveB.readyDeferred.resolve();
-
-        var spy = this.spy();
-        this.sq.on("slave:captured", spy);
-        var slaveC = mockSlave();
-        this.sq.addSlave(slaveC);
-        slaveC.readyDeferred.resolve();
-
-        assert.calledOnce(spy);
-        assert.calledWithExactly(spy, {
-            slave: slaveC.serialized,
-            slaves: [slaveA.serialized, slaveB.serialized, slaveC.serialized]
-        });
-    },
-
-    "emits existing slave when removing slave": function () {
-        var slaveA = mockSlave();
-        this.sq.addSlave(slaveA);
-        slaveA.readyDeferred.resolve();
-
-        var slaveB = mockSlave();
-        this.sq.addSlave(slaveB);
-        slaveB.readyDeferred.resolve();
-
-        var slaveC = mockSlave();
-        this.sq.addSlave(slaveC);
-        slaveC.readyDeferred.resolve();
-
-        var spy = this.spy();
-        this.sq.on("slave:freed", spy);
-
-        slaveB.mockEnd();
-
-        assert.calledOnce(spy);
-        assert.calledWithExactly(spy, {
-            slave: slaveB.serialized,
-            slaves: [slaveA.serialized, slaveC.serialized]
-        });
+        assert.calledWithExactly(spy, slave);
     }
 });
