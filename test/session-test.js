@@ -205,8 +205,11 @@ buster.testCase("Session", {
             var slave = {foo: "bar"};
             this.privatePubsubClient.on("slave:captured", done(function (e) {
                 assert.equals(e.slave, slave);
+                assert.equals(e.slaves, [slave]);
             }));
-            this.session.capturedSlave({serialize: function () { return slave; }});
+
+            var slaveObj = {serialize: function () { return slave; }};
+            this.session.capturedSlave(slaveObj, [slaveObj]);
         },
 
         "notifies when slave is freed": function (done) {
@@ -214,8 +217,11 @@ buster.testCase("Session", {
             var slave = {foo: "bar"};
             this.privatePubsubClient.on("slave:freed", done(function (e) {
                 assert.equals(e.slave, slave);
+                assert.equals(e.slaves, [slave]);
             }));
-            this.session.freedSlave({serialize: function () { return slave; }});
+
+            var slaveObj = {serialize: function () { return slave; }};
+            this.session.freedSlave(slaveObj, [slaveObj]);
         },
 
         "should teardown": function () {
