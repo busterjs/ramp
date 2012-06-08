@@ -70,11 +70,11 @@ buster.testCase("pubsub-client", {
         },
 
         "should get faye event name": function ( ){
-            assert.equals(this.pc._getEventName("foo"), "/user-foo");
+            assert.equals(this.pc._getEventName("foo"), "/user/foo");
         },
 
         "should get namespaced faye event name": function ( ){
-            assert.equals(this.pc._getEventName("foo:bar:baz"), "/user-foo-bar-baz");
+            assert.equals(this.pc._getEventName("foo:bar:baz"), "/user/foo-bar-baz");
         },
 
         "should fail when getting invalid event name": function () {
