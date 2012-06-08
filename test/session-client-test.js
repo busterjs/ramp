@@ -1,4 +1,4 @@
-var buster = require("buster");
+ buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
 
@@ -77,6 +77,14 @@ buster.testCase("session client", {
             assert(true);
             when.all([this.sc.onStart(), this.sc.onLoad()]).then(done);
             this.session.loaded([]);
+        },
+
+        "resolves loaded with slaves": function (done) {
+            var slave = h.mockSlave();
+            this.sc.onLoad(done(function (slaves) {
+                assert.equals(slaves, [slave.serialize()]);
+            }));
+            this.session.loaded([slave]);
         },
 
         "resolves loaded, started and ended when ending": function (done) {
