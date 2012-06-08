@@ -1,7 +1,7 @@
 var http = require("http");
 var bCapServ = require("../lib/buster-capture-server");
 var sinon = require("sinon");
-
+var when = require("when");
 
 var bCapServPubsubClient = require("./../lib/pubsub-client");
 
@@ -51,5 +51,44 @@ module.exports = {
             publish: sinon.spy(),
             subscribe: sinon.spy()
         }
+    },
+
+    mockSlave: function () {
+        return buster.extend(buster.eventEmitter.create(), {
+            prepare: sinon.spy(function () {
+                this.readyDeferred = when.defer();
+                return this.readyDeferred.promise;
+            }),
+
+            loadSession: sinon.spy(function () {
+                this.loadSessionDeferred = when.defer();
+                return this.loadSessionDeferred.promise;
+            }),
+
+            loadSessionComplete: function () {
+                this.loadSessionDeferred.resolve();
+                delete this.loadSessionDeferred;
+            },
+
+            unloadSession: sinon.spy(function () {
+                this.unloadSessionDeferred = when.defer();
+                return this.unloadSessionDeferred.promise;
+            }),
+
+            unloadSessionComplete: function () {
+                this.unloadSessionDeferred.resolve();
+                delete this.unloadSessionDeferred;
+            },
+
+            mockEnd: function () {
+                this.emit("end");
+            },
+
+            serialize: function () {
+                return this.serialized;
+            },
+
+            serialized: {foo: Math.random().toString()}
+        });
     }
 };

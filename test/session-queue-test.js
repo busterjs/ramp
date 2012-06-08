@@ -5,45 +5,7 @@ var sinon = require("sinon");
 
 var bCapServSessionQueue = require("../lib/session-queue");
 var when = require("when");
-
-var mockSlave = function () {
-    return buster.extend(buster.eventEmitter.create(), {
-        prepare: sinon.spy(function () {
-            this.readyDeferred = when.defer();
-            return this.readyDeferred.promise;
-        }),
-
-        loadSession: sinon.spy(function () {
-            this.loadSessionDeferred = when.defer();
-            return this.loadSessionDeferred.promise;
-        }),
-
-        loadSessionComplete: function () {
-            this.loadSessionDeferred.resolve();
-            delete this.loadSessionDeferred;
-        },
-
-        unloadSession: sinon.spy(function () {
-            this.unloadSessionDeferred = when.defer();
-            return this.unloadSessionDeferred.promise;
-        }),
-
-        unloadSessionComplete: function () {
-            this.unloadSessionDeferred.resolve();
-            delete this.unloadSessionDeferred;
-        },
-
-        mockEnd: function () {
-            this.emit("end");
-        },
-
-        serialize: function () {
-            return this.serialized;
-        },
-
-        serialized: {foo: Math.random().toString()}
-    })
-}
+var h = require("./test-helper");
 
 var mockSession = function () {
     return buster.extend(buster.eventEmitter.create(), {
@@ -72,7 +34,7 @@ buster.testCase("Session queue", {
     },
 
     "adds slave when slave is prepared": function () {
-        var slave = mockSlave();
+        var slave = h.mockSlave();
         this.sq.addSlave(slave);
         assert.equals(this.sq.slaves.length, 0);
 
@@ -82,7 +44,7 @@ buster.testCase("Session queue", {
     },
 
     "ignores slaves that fails prepare": function () {
-        var slave = mockSlave();
+        var slave = h.mockSlave();
         this.sq.addSlave(slave);
         slave.readyDeferred.reject();
         assert.equals(this.sq.slaves.length, 0);
@@ -90,7 +52,7 @@ buster.testCase("Session queue", {
 
     "with slaves": {
         setUp: function () {
-            this.slave = mockSlave();
+            this.slave = h.mockSlave();
             this.sq.addSlave(this.slave);
             this.slave.readyDeferred.resolve();
         },
@@ -183,7 +145,7 @@ buster.testCase("Session queue", {
             var sess2 = mockSession();
             this.sq.enqueueSession(sess2);
 
-            var newSlave = mockSlave();
+            var newSlave = h.mockSlave();
             this.sq.addSlave(newSlave);
             newSlave.readyDeferred.resolve();
             newSlave.loadSessionComplete();
@@ -195,7 +157,7 @@ buster.testCase("Session queue", {
         },
 
         "current session gets notified when slaves are freed": function () {
-            var newSlave = mockSlave();
+            var newSlave = h.mockSlave();
             this.sq.addSlave(newSlave);
             newSlave.readyDeferred.resolve();
 
@@ -220,7 +182,7 @@ buster.testCase("Session queue", {
             this.sq.enqueueSession(sess);
             this.slave.loadSessionComplete();
 
-            var slaveB = mockSlave();
+            var slaveB = h.mockSlave();
             this.sq.addSlave(slaveB);
             slaveB.readyDeferred.resolve();
             slaveB.loadSessionComplete();
@@ -232,11 +194,11 @@ buster.testCase("Session queue", {
         },
 
         "current session gets list of current slaves when slave is freed": function () {
-            var slaveB = mockSlave();
+            var slaveB = h.mockSlave();
             this.sq.addSlave(slaveB);
             slaveB.readyDeferred.resolve();
 
-            var slaveC = mockSlave();
+            var slaveC = h.mockSlave();
             this.sq.addSlave(slaveC);
             slaveC.readyDeferred.resolve();
 
@@ -286,15 +248,15 @@ buster.testCase("Session queue", {
 
      "with multiple slaves": {
          setUp: function () {
-             this.slave1 = mockSlave();
+             this.slave1 = h.mockSlave();
              this.sq.addSlave(this.slave1);
              this.slave1.readyDeferred.resolve();
 
-             this.slave2 = mockSlave();
+             this.slave2 = h.mockSlave();
              this.sq.addSlave(this.slave2);
              this.slave2.readyDeferred.resolve();
 
-             this.slave3 = mockSlave();
+             this.slave3 = h.mockSlave();
              this.sq.addSlave(this.slave3);
              this.slave3.readyDeferred.resolve();
          },
@@ -365,7 +327,7 @@ buster.testCase("Session queue", {
          "slave ends before prepare": function () {
              assert.equals(this.sq.slaves.length, 3);
 
-             var slave = mockSlave();
+             var slave = h.mockSlave();
              this.sq.addSlave(slave);
              slave.mockEnd();
 
@@ -378,7 +340,7 @@ buster.testCase("Session queue", {
 
     "non-joinable sessions": {
         setUp: function () {
-            this.slave = mockSlave();
+            this.slave = h.mockSlave();
             this.sq.addSlave(this.slave);
             this.slave.readyDeferred.resolve();
         },
@@ -389,7 +351,7 @@ buster.testCase("Session queue", {
             this.sq.enqueueSession(sess);
             this.slave.loadSessionComplete();
 
-            var newSlave = mockSlave();
+            var newSlave = h.mockSlave();
             this.sq.addSlave(newSlave);
             newSlave.readyDeferred.resolve();
 
@@ -402,7 +364,7 @@ buster.testCase("Session queue", {
             this.sq.enqueueSession(sess);
             this.slave.loadSessionComplete();
 
-            var newSlave = mockSlave();
+            var newSlave = h.mockSlave();
             this.sq.addSlave(newSlave);
             newSlave.readyDeferred.resolve();
 
@@ -417,7 +379,7 @@ buster.testCase("Session queue", {
             this.sq.enqueueSession(sess);
             this.slave.loadSessionComplete();
 
-            var newSlave = mockSlave();
+            var newSlave = h.mockSlave();
             this.sq.addSlave(newSlave);
             newSlave.readyDeferred.resolve();
 
@@ -483,7 +445,7 @@ buster.testCase("Session queue", {
         },
 
         "starts top of queue session when slave joins": function () {
-            var newSlave = mockSlave();
+            var newSlave = h.mockSlave();
             this.sq.addSlave(newSlave);
             newSlave.readyDeferred.resolve();
 
@@ -495,7 +457,7 @@ buster.testCase("Session queue", {
         var spy = this.spy();
         this.sq.on("slave:captured", spy);
 
-        var slave = mockSlave();
+        var slave = h.mockSlave();
         this.sq.addSlave(slave);
         slave.readyDeferred.resolve();
 
@@ -504,7 +466,7 @@ buster.testCase("Session queue", {
     },
 
     "emits event when slave is removed": function () {
-        var slave = mockSlave();
+        var slave = h.mockSlave();
         this.sq.addSlave(slave);
         slave.readyDeferred.resolve();
 
