@@ -164,12 +164,14 @@ buster.testCase("Session", {
 
         "notifies when session is loaded": function (done) {
             var self = this;
+            var slave = h.mockSlave();
             assert.isFalse(self.session.state.loaded.reached);
             this.privatePubsubClient.on("state", done(function (e) {
                 assert.isTrue(self.session.state.loaded.reached);
                 assert.equals(e.state, self.session.state);
+                assert.equals(e.state.loaded.data, [slave.serialize()]);
             }));
-            this.session.loaded([]);
+            this.session.loaded([slave]);
         },
 
         "notifies when session is aborted": function (done) {
