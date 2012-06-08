@@ -179,6 +179,23 @@ buster.testCase("pubsub-client", {
             assert.exception(function () {
                 this.pc.inherit("");
             }.bind(this));
+        },
+
+        "listening to all events emits event name": function (done) {
+            this.pc.on(done(function (eventName, data) {
+                assert.equals("foo:bar", eventName);
+                refute(data);
+            }));
+
+            this.pc.emit("foo:bar");
+        },
+
+        "listening to all events emits data": function (done) {
+            this.pc.on(done(function (eventName, data) {
+                assert.equals(data, 123);
+            }));
+
+            this.pc.emit("foo", 123);
         }
     },
 
