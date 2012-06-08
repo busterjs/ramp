@@ -154,9 +154,9 @@ buster.testCase("Session", {
 
         "notifies when session starts": function (done) {
             var self = this;
-            assert.isFalse(self.session.state.started);
+            assert.isFalse(self.session.state.started.reached);
             this.privatePubsubClient.on("state", done(function (e) {
-                assert.isTrue(self.session.state.started);
+                assert.isTrue(self.session.state.started.reached);
                 assert.equals(e.state, self.session.state);
             }));
             this.session.started();
@@ -164,12 +164,12 @@ buster.testCase("Session", {
 
         "notifies when session is loaded": function (done) {
             var self = this;
-            assert.isFalse(self.session.state.loaded);
+            assert.isFalse(self.session.state.loaded.reached);
             this.privatePubsubClient.on("state", done(function (e) {
-                assert.isTrue(self.session.state.loaded);
+                assert.isTrue(self.session.state.loaded.reached);
                 assert.equals(e.state, self.session.state);
             }));
-            this.session.loaded();
+            this.session.loaded([]);
         },
 
         "notifies when session is aborted": function (done) {
@@ -182,9 +182,9 @@ buster.testCase("Session", {
 
         "notifies when session is ended": function (done) {
             var self = this;
-            assert.isFalse(self.session.state.ended);
+            assert.isFalse(self.session.state.ended.reached);
             this.privatePubsubClient.on("state", done(function (e) {
-                assert.isTrue(self.session.state.ended);
+                assert.isTrue(self.session.state.ended.reached);
                 assert.equals(e.state, self.session.state);
             }));
             this.session.ended();
@@ -192,9 +192,9 @@ buster.testCase("Session", {
 
         "notifies when session is unloaded": function (done) {
             var self = this;
-            assert.isFalse(self.session.state.unloaded);
+            assert.isFalse(self.session.state.unloaded.reached);
             this.privatePubsubClient.on("state", done(function (e) {
-                assert.isTrue(self.session.state.unloaded);
+                assert.isTrue(self.session.state.unloaded.reached);
                 assert.equals(e.state, self.session.state);
             }));
             this.session.unloaded();

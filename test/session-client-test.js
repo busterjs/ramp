@@ -76,7 +76,7 @@ buster.testCase("session client", {
         "resolves loaded and started when loading": function (done) {
             assert(true);
             when.all([this.sc.onStart(), this.sc.onLoad()]).then(done);
-            this.session.loaded();
+            this.session.loaded([]);
         },
 
         "resolves loaded, started and ended when ending": function (done) {
@@ -149,7 +149,7 @@ buster.testCase("session client", {
     "also sets state when initializing": function (done) {
         assert(true);
 
-        this.session.loaded();
+        this.session.loaded([]);
         var sc = bCapServSessionClient._create(this.sessionData, this.pc);
         sc.onLoad(done);
     }
