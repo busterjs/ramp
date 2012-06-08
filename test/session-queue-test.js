@@ -500,7 +500,7 @@ buster.testCase("Session queue", {
         slave.readyDeferred.resolve();
 
         assert.calledOnce(spy);
-        assert.calledWithExactly(spy, slave);
+        assert.calledWithExactly(spy, slave.serialize());
     },
 
     "emits event when slave is removed": function () {
@@ -514,6 +514,6 @@ buster.testCase("Session queue", {
         slave.mockEnd();
 
         assert.calledOnce(spy);
-        assert.calledWithExactly(spy, slave);
+        assert.calledWithExactly(spy, slave.serialize());
     }
 });
