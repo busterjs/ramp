@@ -82,7 +82,7 @@ var Phantom = function (onready) {
     });
 
     eventEmitter.on("error", function (data) {
-        console.log("Phantom JS error:", data);
+        console.log("Phantom JS error:", data.split(" --- ").join("\n"));
     });
 
     return {
