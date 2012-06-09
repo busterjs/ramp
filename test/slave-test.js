@@ -117,5 +117,13 @@ buster.testCase("slave", {
         }
 
         assert.equals(this.slave.serialize(), expected);
+    },
+
+    "detaching makes prison unavailable": function (done) {
+        this.slave.detach();
+
+        h.request({path: this.slave.prisonPath}, done(function (res, body) {
+            assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
+        })).end()
     }
 });
