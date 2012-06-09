@@ -3,6 +3,7 @@ var assert = buster.assert;
 var refute = buster.refute;
 
 var bCapServ = require("../lib/buster-capture-server");
+var bCapServSlave = require("./../lib/slave.js");
 var bCapServSessionClient = require("../lib/session-client");
 var bResources = require("buster-resources");
 var http = require("http");
@@ -97,38 +98,17 @@ buster.testCase("server", {
     },
 
     "should create new slave via HTTP": function (done) {
-        var slave = {prisonPath: "/foo"};
-        this.stub(this.s, "_createSlave").returns(slave);
+        var slave = h.mockSlave();
+        this.stub(bCapServSlave, "create").returns(slave);
+        this.stub(this.s._sessionQueue, "addSlave");
 
         h.request({path: "/capture", method: "GET"}, done(function (res, body) {
             assert.equals(res.statusCode, 302);
-            assert.equals(res.headers["location"], "/foo");
-        })).end();
-    },
+            assert.equals(res.headers["location"], slave.prisonPath);
 
-    "creating new slave adds it to queue and attaches and mounts it": function () {
-        this.stub(this.s._resourceMiddleware, "mount");
-        this.stub(this.s._sessionQueue, "addSlave");
-        this.stub(this.s, "_attachSlave");
-        var slave = this.s._createSlave();
-
-        assert.calledOnce(this.s._sessionQueue.addSlave);
-        assert.same(this.s._sessionQueue.addSlave.getCall(0).args[0], slave);
-
-        assert.calledOnce(this.s._attachSlave);
-        assert.same(this.s._attachSlave.getCall(0).args[0], slave);
-
-        assert.calledOnce(this.s._resourceMiddleware.mount);
-        var args = this.s._resourceMiddleware.mount.getCall(0).args;
-        assert.same(args[0], slave.prisonPath);
-        assert.same(args[1], slave.prisonResourceSet);
-    },
-
-    "attaching slave": function () {
-        var slave = {attach: this.spy()};
-        this.s._attachSlave(slave);
-        assert(slave.attach.calledOnce);
-        assert.same(slave.attach.getCall(0).args[0], this.s._httpServer);
+            assert.calledOnce(this.s._sessionQueue.addSlave);
+            assert.same(this.s._sessionQueue.addSlave.getCall(0).args[0], slave);
+        }.bind(this))).end();
     },
 
     "should list cache via HTTP": function (done) {

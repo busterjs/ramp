@@ -5,6 +5,7 @@ var refute = buster.refute;
 var bCapServSlave = require("../lib/slave");
 var bCapServPubsubClient = require("../lib/pubsub-client");
 var bCapServPubsubServer = require("./../lib/pubsub-server");
+var bResources = require("buster-resources");
 var http = require("http");
 var faye = require("faye");
 var when = require("when");
@@ -12,7 +13,10 @@ var h = require("./test-helper");
 
 buster.testCase("slave", {
     setUp: function (done) {
+        var self = this;
+
         this.httpServer = http.createServer(function (req, res) {
+            if (self.resourceMiddleware.respond(req, res)) return;
             res.writeHead(h.NO_RESPONSE_STATUS_CODE); res.end();
         });
         this.httpServer.listen(h.SERVER_PORT, done);
@@ -20,7 +24,9 @@ buster.testCase("slave", {
         this.ps = bCapServPubsubServer.create(null, "/messaging");
         this.ps.attach(this.httpServer);
         this.pc = this.ps.createClient();
-        this.slave = bCapServSlave.create();
+        this.resourceMiddleware = bResources.resourceMiddleware.create();
+
+        this.slave = bCapServSlave.create(this.resourceMiddleware, this.ps);
     },
 
     tearDown: function (done) {
@@ -28,93 +34,79 @@ buster.testCase("slave", {
         this.httpServer.close();
     },
 
-    "has prison path": function () {
-        assert(this.slave.prisonPath);
+    "serves prison": function (done) {
+        h.request({path: this.slave.prisonPath}, done(function (res, body) {
+            assert.equals(res.statusCode, 200);
+        })).end()
     },
 
-    "has prison resource set": function () {
-        assert(this.slave.prisonResourceSet);
+    "loading session": function (done) {
+        var self = this;
+        var sessionData = {foo: "bar"};
+        var session = {serialize: function () { return sessionData }};
+
+        this.pc.on("slave:" + this.slave._id + ":session:load", function (s) {
+            assert.equals(s, sessionData);
+            self.pc.emit("slave:" + self.slave._id + ":session:loaded");
+        });
+
+        this.slave.loadSession(session).then(done);
     },
 
-    "attached": {
-        setUp: function () {
-            this.slave.attach(this.httpServer, this.ps);
-        },
+    "unloading session": function (done) {
+        var self = this;
+        assert(true);
 
-        "serves prison": function (done) {
-            h.request({path: this.slave.prisonPath}, done(function (res, body) {
-                assert.equals(res.statusCode, 200);
-            })).end()
-        },
+        this.pc.on("slave:" + this.slave._id + ":session:unload", function (s) {
+            self.pc.emit("slave:" + self.slave._id + ":session:unloaded");
+        });
 
-        "loading session": function (done) {
+        this.slave.unloadSession().then(done);
+    },
+
+    "preparing when ready": function (done) {
+        assert(true);
+        this.slave._isReady = true;
+        this.slave.prepare().then(done);
+    },
+
+    "defaults to not ready": function () {
+        assert.isFalse(this.slave._isReady);
+    },
+
+    "preparing when not ready": function (done) {
+        assert(true);
+        this.slave.prepare().then(done);
+        this.pc.emit("slave:" + this.slave._id + ":imprisoned", {});
+    },
+
+    "with mock browser": {
+        setUp: function (done) {
             var self = this;
-            var sessionData = {foo: "bar"};
-            var session = {serialize: function () { return sessionData }};
-
-            this.pc.on("slave:" + this.slave._id + ":session:load", function (s) {
-                assert.equals(s, sessionData);
-                self.pc.emit("slave:" + self.slave._id + ":session:loaded");
+            this.mockBrowser = bCapServPubsubClient.create({
+                host: "0.0.0.0",
+                port: h.SERVER_PORT
+            })
+            this.mockBrowser.connect().then(function () {
+                self.mockBrowser.emit(
+                    "slave:" + self.slave._id + ":imprisoned",
+                    {
+                        pubsubClientId: self.mockBrowser.id
+                    }
+                );
             });
 
-            this.slave.loadSession(session).then(done);
-        },
-
-        "unloading session": function (done) {
-            var self = this;
-            assert(true);
-
-            this.pc.on("slave:" + this.slave._id + ":session:unload", function (s) {
-                self.pc.emit("slave:" + self.slave._id + ":session:unloaded");
-            });
-
-            this.slave.unloadSession().then(done);
-        },
-
-        "preparing when ready": function (done) {
-            assert(true);
-            this.slave._isReady = true;
             this.slave.prepare().then(done);
         },
 
-        "defaults to not ready": function () {
-            assert.isFalse(this.slave._isReady);
+        tearDown: function () {
+            this.mockBrowser.disconnect();
         },
 
-        "preparing when not ready": function (done) {
+        "ends when browser disconnects": function (done) {
             assert(true);
-            this.slave.prepare().then(done);
-            this.pc.emit("slave:" + this.slave._id + ":imprisoned", {});
-        },
-
-        "with mock browser": {
-            setUp: function (done) {
-                var self = this;
-                this.mockBrowser = bCapServPubsubClient.create({
-                    host: "0.0.0.0",
-                    port: h.SERVER_PORT
-                })
-                this.mockBrowser.connect().then(function () {
-                    self.mockBrowser.emit(
-                        "slave:" + self.slave._id + ":imprisoned",
-                        {
-                            pubsubClientId: self.mockBrowser.id
-                        }
-                    );
-                });
-
-                this.slave.prepare().then(done);
-            },
-
-            tearDown: function () {
-                this.mockBrowser.disconnect();
-            },
-
-            "ends when browser disconnects": function (done) {
-                assert(true);
-                this.mockBrowser.disconnect();
-                this.slave.on("end", done);
-            }
+            this.mockBrowser.disconnect();
+            this.slave.on("end", done);
         }
     },
 

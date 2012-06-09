@@ -55,6 +55,8 @@ module.exports = {
 
     mockSlave: function () {
         return buster.extend(buster.eventEmitter.create(), {
+            prisonPath: "/foo/" + Math.random().toString(),
+
             prepare: sinon.spy(function () {
                 this.readyDeferred = when.defer();
                 return this.readyDeferred.promise;
