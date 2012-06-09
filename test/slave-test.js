@@ -76,7 +76,9 @@ buster.testCase("slave", {
 
     "preparing when not ready": function (done) {
         assert(true);
-        this.slave.prepare().then(done);
+        this.slave.prepare().then(done(function () {
+            assert(this.slave._isReady);
+        }.bind(this)));
         this.pc.emit("slave:" + this.slave._id + ":imprisoned", {});
     },
 
