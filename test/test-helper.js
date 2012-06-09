@@ -58,6 +58,8 @@ module.exports = {
         return buster.extend(buster.eventEmitter.create(), {
             prisonPath: "/foo/" + Math.random().toString(),
 
+            detach: sinon.spy(),
+
             prepare: sinon.spy(function () {
                 this.readyDeferred = when.defer();
                 return this.readyDeferred.promise;

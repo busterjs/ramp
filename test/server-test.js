@@ -86,12 +86,8 @@ buster.testCase("server", {
             assert.equals(e, slave.serialize());
         }));
 
-        this.stub(this.s._resourceMiddleware, "unmount");
         this.s._onSlaveFreed(slave);
-
-        assert.calledOnce(this.s._resourceMiddleware.unmount);
-        var args = this.s._resourceMiddleware.unmount.getCall(0).args;
-        assert.same(args[0], slave.prisonPath);
+        assert.calledOnce(slave.detach);
     },
 
     "should create new slave via HTTP": function (done) {
