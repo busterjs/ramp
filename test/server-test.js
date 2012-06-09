@@ -87,7 +87,7 @@ buster.testCase("server", {
         }));
 
         this.s._onSlaveFreed(slave);
-        assert.calledOnce(slave.detach);
+        assert.calledOnce(slave.teardown);
     },
 
     "should create new slave via HTTP": function (done) {
