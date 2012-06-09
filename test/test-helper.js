@@ -48,8 +48,9 @@ module.exports = {
 
     mockFayeClient: function () {
         return {
-            publish: sinon.spy(),
-            subscribe: sinon.spy()
+            publish: sinon.stub(),
+            subscribe: sinon.stub(),
+            disconnect: sinon.stub()
         }
     },
 

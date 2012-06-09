@@ -9,14 +9,6 @@ var faye = require("faye");
 var when = require("when");
 var h = require("./test-helper");
 
-var mockFaye = function () {
-    return {
-        subscribe: sinon.spy(),
-        publish: sinon.spy(),
-        disconnect: sinon.spy()
-    };
-};
-
 buster.testCase("pubsub-client", {
     setUp: function (done) {
         this.httpServer = http.createServer();
@@ -65,7 +57,7 @@ buster.testCase("pubsub-client", {
 
     "mock connection": {
         setUp: function () {
-            this.mockFaye = mockFaye();
+            this.mockFaye = h.mockFayeClient();
             this.pc._fayeClient = this.mockFaye;
         },
 
@@ -141,6 +133,25 @@ buster.testCase("pubsub-client", {
 
             assert.calledOnce(this.pc._getEventName);
             assert.calledWithExactly(this.pc._getEventName, "foo");
+        },
+
+        "listening to event stores subscription": function () {
+            var subscription = {};
+            this.mockFaye.subscribe.returns(subscription);
+            this.pc.on("foo", function () {});
+
+            assert.equals(this.pc._subscriptions.length, 1);
+            assert.same(this.pc._subscriptions[0], subscription);
+        },
+
+        "teardown unsubscribes to all subscriptions": function () {
+            var subscription = {cancel: this.spy()};
+            this.mockFaye.subscribe.returns(subscription);
+            this.pc.on("foo", function () {});
+
+            this.pc.teardown();
+
+            assert.calledOnce(subscription.cancel);
         }
     },
 
@@ -206,7 +217,7 @@ buster.testCase("pubsub-client", {
                 port: h.SERVER_PORT,
                 contextPath: "/foo"
             });
-            this.mockFaye2 = mockFaye();
+            this.mockFaye2 = h.mockFayeClient();
             this.pc2._fayeClient = this.mockFaye2;
         },
 
