@@ -69,24 +69,21 @@ buster.testCase("server", {
     },
 
     "capturing slave emits event and mounts resource set": function (done) {
-        var slave = {foo: "bar"};
+        var slave = h.mockSlave();
 
         this.s._pubsubClient.connect();
         this.s._pubsubClient.on("slave:captured", done(function (e) {
-            assert.equals(e, slave);
+            assert.equals(e, slave.serialize());
         }));
         this.s._onSlaveCaptured(slave);
     },
 
     "freeing slave emits event and unmounts resource set": function (done) {
-        var slave = {
-            foo: "bar",
-            prisonPath: "/foo123",
-        };
+        var slave = h.mockSlave();
 
         this.s._pubsubClient.connect();
         this.s._pubsubClient.on("slave:freed", done(function (e) {
-            assert.equals(e, slave);
+            assert.equals(e, slave.serialize());
         }));
 
         this.stub(this.s._resourceMiddleware, "unmount");
