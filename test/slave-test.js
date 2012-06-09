@@ -131,5 +131,14 @@ buster.testCase("slave", {
         var stub = this.stub(this.slave._pubsubClient, "teardown");
         this.slave.detach();
         assert.calledOnce(stub);
+    },
+
+    "detaching removes pubsub listener": function () {
+        var stub = this.stub(this.slave._pubsubServer, "removeListener");
+        this.slave.detach();
+        assert.calledOnce(stub);
+        var args = stub.getCall(0).args;
+        assert.equals(args[0], "client:disconnect");
+        assert.same(args[1], this.slave._clientDisconnectListener);
     }
 });
