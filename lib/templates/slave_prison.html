@@ -3,7 +3,7 @@
   <head>
     <title>Buster</title>
     <% for (var i = 0, ii = scripts.length; i < ii; i++) { %>
-      <script type="text/javascript" src="<%= slaveRoot %><%= scripts[i] %>"></script>
+      <script type="text/javascript" src="<%= scripts[i] %>"></script>
     <% } %>
   </head>
   <frameset rows="<% if (hasHeaderFrame) { %><%= headerFrameHeight %>px,<% } %>*">
