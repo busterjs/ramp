@@ -119,23 +119,23 @@ buster.testCase("slave", {
         assert.equals(this.slave.serialize(), expected);
     },
 
-    "detaching makes prison unavailable": function (done) {
-        this.slave.detach();
+    "teardowning makes prison unavailable": function (done) {
+        this.slave.teardown();
 
         h.request({path: this.slave.prisonPath}, done(function (res, body) {
             assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
         })).end()
     },
 
-    "detaching tears down pubsub client": function () {
+    "teardowning tears down pubsub client": function () {
         var stub = this.stub(this.slave._pubsubClient, "teardown");
-        this.slave.detach();
+        this.slave.teardown();
         assert.calledOnce(stub);
     },
 
-    "detaching removes pubsub listener": function () {
+    "teardowning removes pubsub listener": function () {
         var stub = this.stub(this.slave._pubsubServer, "removeListener");
-        this.slave.detach();
+        this.slave.teardown();
         assert.calledOnce(stub);
         var args = stub.getCall(0).args;
         assert.equals(args[0], "client:disconnect");
