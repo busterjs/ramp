@@ -125,5 +125,11 @@ buster.testCase("slave", {
         h.request({path: this.slave.prisonPath}, done(function (res, body) {
             assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
         })).end()
+    },
+
+    "detaching tears down pubsub client": function () {
+        var stub = this.stub(this.slave._pubsubClient, "teardown");
+        this.slave.detach();
+        assert.calledOnce(stub);
     }
 });
