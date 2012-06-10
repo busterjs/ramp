@@ -154,6 +154,28 @@ buster.testCase("server", {
         assert.same(args[1], res);
     },
 
+    "should not set header on slaves when header is not specified": function (done) {
+        var stub = this.stub(bCapServSlave, "setHeader");
+
+        h.request({path: "/capture", method: "GET"}, done(function (res, body) {
+            refute.called(stub);
+        })).end();
+    },
+
+    "should set header on slaves": function (done) {
+        var stub = this.stub(bCapServSlave, "setHeader");
+        var height = 100;
+        var resourceSet = {};
+        this.s.setHeader(height, resourceSet);
+
+        h.request({path: "/capture", method: "GET"}, done(function (res, body) {
+            assert.calledOnce(stub);
+            var args = stub.getCall(0).args;
+            assert.equals(args[0], height);
+            assert.same(args[1], resourceSet);
+        })).end();
+    },
+
     "// should fail if attempting to load uncached items": function () {
     },
 
