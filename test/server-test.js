@@ -176,6 +176,13 @@ buster.testCase("server", {
         })).end();
     },
 
+    "should get list of slaves from session queue": function () {
+        var slaves = [{foo: "bar"}];
+        this.s._sessionQueue.slaves = slaves;
+        assert.equals(this.s.slaves(), slaves);
+        refute.same(this.s.slaves(), slaves);
+    },
+
     "// should fail if attempting to load uncached items": function () {
     },
 
