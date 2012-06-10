@@ -98,6 +98,7 @@ buster.testCase("server", {
         h.request({path: "/capture", method: "GET"}, done(function (res, body) {
             assert.equals(res.statusCode, 302);
             assert.equals(res.headers["location"], slave.prisonPath);
+            assert.equals(JSON.parse(body), slave.serialize());
 
             assert.calledOnce(this.s._sessionQueue.addSlave);
             assert.same(this.s._sessionQueue.addSlave.getCall(0).args[0], slave);
