@@ -69,8 +69,8 @@ buster.testCase("Session", {
 
     "should have static resource paths when specified": function (done) {
         var sessions = [
-            bCapServSession.create({staticResourcePath: true}, h.mockPubsubServer()),
-            bCapServSession.create({staticResourcePath: true}, h.mockPubsubServer())
+            bCapServSession.create({staticResourcesPath: true}, h.mockPubsubServer()),
+            bCapServSession.create({staticResourcesPath: true}, h.mockPubsubServer())
         ];
         when.all(sessions).then(done(function (sessions) {
             var s1 = sessions[0];
