@@ -16,6 +16,9 @@ var mockSession = function () {
         aborted: sinon.spy(),
         capturedSlave: sinon.spy(),
         freedSlave: sinon.spy(),
+        serialize: function () {
+            return {}
+        },
         mockEnd: function () {
             this.emit("end");
         }
