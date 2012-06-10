@@ -37,6 +37,16 @@ buster.testCase("slave", {
     "serves prison": function (done) {
         h.request({path: this.slave.prisonPath}, done(function (res, body) {
             assert.equals(res.statusCode, 200);
+            assert.equals(body.match(/<frame[^s]/g).length, 1);
+        })).end()
+    },
+
+    "serves prison with header": function (done) {
+        var rs = bResources.resourceSet.create();
+        this.slave.setHeader(100, rs);
+        h.request({path: this.slave.prisonPath}, done(function (res, body) {
+            assert.equals(res.statusCode, 200);
+            assert.equals(body.match(/<frame[^s]/g).length, 2);
         })).end()
     },
 
@@ -121,7 +131,7 @@ buster.testCase("slave", {
         assert.equals(this.slave.serialize(), expected);
     },
 
-    "teardowning makes prison unavailable": function (done) {
+    "teardown makes prison unavailable": function (done) {
         this.slave.teardown();
 
         h.request({path: this.slave.prisonPath}, done(function (res, body) {
@@ -129,18 +139,29 @@ buster.testCase("slave", {
         })).end()
     },
 
-    "teardowning tears down pubsub client": function () {
+    "teardown tears down pubsub client": function () {
         var stub = this.stub(this.slave._pubsubClient, "teardown");
         this.slave.teardown();
         assert.calledOnce(stub);
     },
 
-    "teardowning removes pubsub listener": function () {
+    "teardown removes pubsub listener": function () {
         var stub = this.stub(this.slave._pubsubServer, "removeListener");
         this.slave.teardown();
         assert.calledOnce(stub);
         var args = stub.getCall(0).args;
         assert.equals(args[0], "client:disconnect");
         assert.same(args[1], this.slave._clientDisconnectListener);
+    },
+
+    "teardown unmounts header": function (done) {
+        var rs = bResources.resourceSet.create();
+        this.slave.setHeader(100, rs);
+
+        this.slave.teardown();
+
+        h.request({path: this.slave.headerFramePath}, done(function (res, body) {
+            assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
+        })).end()
     }
 });

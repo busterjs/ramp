@@ -6,10 +6,10 @@
       <script type="text/javascript" src="<%= scripts[i] %>"></script>
     <% } %>
   </head>
-  <frameset rows="<% if (hasHeaderFrame) { %><%= headerFrameHeight %>px,<% } %>*">
-    <% if (hasHeaderFrame) { %>
+  <frameset rows="<% if (hasHeader) { %><%= headerHeight %>px,<% } %>*">
+    <% if (hasHeader) { %>
       <frame
-         src="<%= headerFramePath %>"
+         src="<%= headerPath %>"
          frameborder="0"
          noresize="noresize"></frame>
     <% } %>
