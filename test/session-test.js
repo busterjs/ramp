@@ -1,17 +1,3 @@
-// NOTE: Only applies to initial listener, not 2nd listener.
-
-// test emits /session/started if listening after first .started call
-// test emits /session/loaded if listening after first .loaded call
-// test emits /session/aborted if listening after first .aborted call
-// test emits /session/ended if listening after first .ended call
-// test emits /session/unloaded if listening after first .unloaded call
-// test emits /slave/captured if listening after first .capturedSlave call
-// test emits /slave/freed if listening after first .freedSlave call
-
-// OR:
-
-// test queues all events while there are no listeners
-
 var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
