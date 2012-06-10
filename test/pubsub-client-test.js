@@ -69,6 +69,10 @@ buster.testCase("pubsub-client", {
             assert.equals(this.pc._getEventName("foo:bar:baz"), "/user/foo-bar-baz");
         },
 
+        "should have unique event name for ambiguities": function () {
+            refute.equals(this.pc._getEventName("foo:bar:baz"), this.pc._getEventName("foo-bar-baz"));
+        },
+
         "should fail when getting invalid event name": function () {
             var self = this;
 
@@ -78,38 +82,6 @@ buster.testCase("pubsub-client", {
 
             assert.exception(function () {
                 self.pc._getEventName("foo/bar");
-            }, "TypeError");
-
-            assert.exception(function () {
-                self.pc._getEventName(":foo");
-            }, "TypeError");
-
-            assert.exception(function () {
-                self.pc._getEventName("foo:");
-            }, "TypeError");
-
-            assert.exception(function () {
-                self.pc._getEventName(":foo:bar:baz");
-            }, "TypeError");
-
-            assert.exception(function () {
-                self.pc._getEventName("foo:bar:baz:");
-            }, "TypeError");
-
-            assert.exception(function () {
-                self.pc._getEventName(":");
-            }, "TypeError");
-
-            assert.exception(function () {
-                self.pc._getEventName("::");
-            }, "TypeError");
-
-            assert.exception(function () {
-                self.pc._getEventName(":f:");
-            }, "TypeError");
-
-            assert.exception(function () {
-                self.pc._getEventName("");
             }, "TypeError");
         },
 
