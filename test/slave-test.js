@@ -128,7 +128,7 @@ buster.testCase("slave", {
             id: this.slave._id
         }
 
-        assert.equals(this.slave.serialize(), expected);
+        assert.match(this.slave.serialize(), expected);
     },
 
     "teardown makes prison unavailable": function (done) {

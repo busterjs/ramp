@@ -277,5 +277,13 @@ buster.testCase("Integration", {
                 }));
             });
         });
+    },
+
+    "test provides user agent": function (done) {
+        var self = this;
+
+        this.p.capture(done(function (slave, phantom) {
+            assert.match(slave.userAgent, "PhantomJS");
+        }));
     }
 });
