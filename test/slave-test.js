@@ -50,6 +50,21 @@ buster.testCase("slave", {
         })).end()
     },
 
+    "mounts header resource set": function (done) {
+        var headerContent = "<p>The header is here.</p>";
+        var rs = bResources.resourceSet.create();
+        rs.addResource({
+            path: "/",
+            content: headerContent
+        });
+        this.slave.setHeader(100, rs);
+
+        h.request({path: this.slave.headerPath}, done(function (res, body) {
+            assert.equals(res.statusCode, 200);
+            assert.equals(body, headerContent);
+        })).end()
+    },
+
     "loading session": function (done) {
         var self = this;
         var sessionData = {foo: "bar"};
