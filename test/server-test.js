@@ -105,6 +105,16 @@ buster.testCase("server", {
         }.bind(this))).end();
     },
 
+    "should create slave with custom capture path": function (done) {
+        this.s.capturePath = "/foo";
+        h.request({path: "/foo"}, done(function (res, body) {
+            var slave = JSON.parse(body);
+
+            assert.equals(res.statusCode, 302);
+            assert.equals(res.headers["location"], slave.prisonPath);
+        })).end();
+    },
+
     "should list cache via HTTP": function (done) {
         var resources = [{foo: "bar"}]
         this.stub(this.s._resourceCache, "resourceVersions").returns(resources);
