@@ -127,9 +127,9 @@ buster.testCase("session client", {
         "notifies when slaves are captured": function (done) {
             var self = this;
             var mockSlave = {id: "123abcdef"};
-            this.sc.onSlaveCaptured(done(function (slave) {
-                assert.equals(slave, mockSlave);
-                assert.equals(self.sc.slaves, [mockSlave]);
+            this.sc.onSlaveCaptured(done(function (e) {
+                assert.equals(e.slave, mockSlave);
+                assert.equals(e.slaves, [mockSlave]);
             }));
 
             this.privatePubsub.emit("slave:captured", {
@@ -142,9 +142,9 @@ buster.testCase("session client", {
             var self = this;
             var mockSlaveA = {id: "123abcdef"};
             var mockSlaveB = {id: "456defabc"};
-            this.sc.onSlaveFreed(done(function (slave) {
-                assert.equals(slave, mockSlaveA);
-                assert.equals(self.sc.slaves, [mockSlaveB]);
+            this.sc.onSlaveFreed(done(function (e) {
+                assert.equals(e.slave, mockSlaveA);
+                assert.equals(e.slaves, [mockSlaveB]);
             }));
 
             this.privatePubsub.emit("slave:freed", {
