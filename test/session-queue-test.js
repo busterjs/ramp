@@ -480,5 +480,18 @@ buster.testCase("Session queue", {
 
         assert.calledOnce(spy);
         assert.same(spy.getCall(0).args[0], slave);
+    },
+
+    "adds slave to preparingSlaves immediately": function () {
+        var slave = h.mockSlave();
+        this.sq.addSlave(slave);
+        assert.same(this.sq.preparingSlaves[0], slave);
+    },
+
+    "removes slave from preparingSlaves when prepared": function () {
+        var slave = h.mockSlave();
+        this.sq.addSlave(slave);
+        slave.readyDeferred.resolve();
+        assert.equals(this.sq.preparingSlaves.length, 0);
     }
 });
