@@ -194,6 +194,34 @@ buster.testCase("server", {
         refute.same(this.s.slaves(), slaves);
     },
 
+    "serves slave prison": function (done) {
+        bCapServ.testHelper.captureSlave(h.SERVER_PORT).then(function (slave) {
+            h.request({path: slave.prisonPath, method: "GET"}, done(function (res, body) {
+                assert.equals(res.statusCode, 200);
+            })).end();
+        });
+    },
+
+    "should re-capture when visiting slave like URL for non-existant slave": function (done) {
+        var self = this;
+
+        h.request({path: "/slaves/123-def/browser", method: "GET"}, done(function (res, body) {
+            assert.equals(res.statusCode, 302);
+            assert.equals(res.headers["location"], self.s.capturePath);
+        })).end();
+    },
+
+    // Needs to get a chance to load the first time
+    "should not re-capture immediately after capture": function (done) {
+        h.request({path: this.s.capturePath}, function (res, body) {
+            var slave = JSON.parse(body);
+            h.request({path: slave.prisonPath}, done(function (res, body) {
+                refute(res.headers["location"]);
+                assert.equals(res.statusCode, 200);
+            })).end();
+        }).end();
+    },
+
     "// should fail if attempting to load uncached items": function () {
     },
 
