@@ -27,7 +27,7 @@
         "faye": "~0.8",
         "ejs": "~0.4",
         "node-uuid": "~1",
-        "when": "https://github.com/cujojs/when/tarball/1.0.2"
+        "when": "~1"
     },
     "devDependencies": {
         "buster": "*",
