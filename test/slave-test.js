@@ -21,7 +21,7 @@ buster.testCase("slave", {
         });
         this.httpServer.listen(h.SERVER_PORT, done);
 
-        this.ps = bCapServPubsubServer.create(null, "/messaging");
+        this.ps = bCapServPubsubServer.create("/messaging");
         this.ps.attach(this.httpServer);
         this.pc = this.ps.createClient();
         this.resourceMiddleware = bResources.resourceMiddleware.create();

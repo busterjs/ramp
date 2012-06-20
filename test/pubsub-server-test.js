@@ -15,7 +15,7 @@ buster.testCase("pubsub server", {
         this.httpServer = http.createServer();
         this.httpServer.listen(h.SERVER_PORT, done);
 
-        this.ps = bCapServPubsubServer.create(null, "/messaging");
+        this.ps = bCapServPubsubServer.create("/messaging");
         this.ps.attach(this.httpServer);
     },
 
