@@ -493,5 +493,31 @@ buster.testCase("Session queue", {
         this.sq.addSlave(slave);
         slave.readyDeferred.resolve();
         assert.equals(this.sq.preparingSlaves.length, 0);
+    },
+
+    "kills jon-joinable session when all slaves leave": function () {
+        var slaveA = h.mockSlave();
+        this.sq.addSlave(slaveA);
+        slaveA.readyDeferred.resolve();
+
+        var slaveB = h.mockSlave();
+        this.sq.addSlave(slaveB);
+        slaveB.readyDeferred.resolve();
+
+        var session = mockSession();
+        session.joinable = false;
+        this.sq.enqueueSession(session);
+        slaveA.loadSessionComplete();
+        slaveB.loadSessionComplete();
+
+        var slaveC = h.mockSlave();
+        this.sq.addSlave(slaveC);
+        slaveC.readyDeferred.resolve();
+
+        slaveA.mockEnd();
+        slaveB.mockEnd();
+
+        assert.calledOnce(session.ended);
+        assert.calledOnce(session.unloaded);
     }
 });
