@@ -23,7 +23,7 @@
     },
     "dependencies": {
         "buster-core": ">=0.6.0",
-        "buster-resources": ">=0.3",
+        "ramp-resources": ">=0.1",
         "faye": "~0.8",
         "ejs": "~0.4",
         "node-uuid": "~1",

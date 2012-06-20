@@ -3,7 +3,7 @@ var assert = buster.assert;
 var refute = buster.refute;
 
 var bCapServ = require("../lib/buster-capture-server");
-var bResources = require("buster-resources");
+var rampResources = require("ramp-resources");
 var http = require("http");
 var faye = require("faye");
 var when = require("when");
@@ -15,7 +15,7 @@ buster.testCase("server client", {
 
         this.httpServer = http.createServer();
         this.httpServer.listen(h.SERVER_PORT, function () {
-            self.rs = bResources.resourceSet.create();
+            self.rs = rampResources.resourceSet.create();
             self.rs.addResources([
                 {path: "/", etag: "123abc", content: "foo"},
                 {path: "/test", etag: "456def", content: "bar"}

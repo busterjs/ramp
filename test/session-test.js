@@ -6,7 +6,7 @@ var bCapServPubsubClient = require("../lib/pubsub-client");
 var bCapServPubsubServer = require("./../lib/pubsub-server");
 var bCapServSession = require("../lib/session");
 var bCapServSessionClient = require("../lib/session-client");
-var bResources = require("buster-resources");
+var rampResources = require("ramp-resources");
 var http = require("http");
 var faye = require("faye");
 var when = require("when");
@@ -14,7 +14,7 @@ var h = require("./test-helper");
 
 buster.testCase("Session", {
     setUp: function (done) {
-        this.rs = bResources.resourceSet.create();
+        this.rs = rampResources.resourceSet.create();
         this.rs.addResource({path: "/foo.js", content: "var foo = 5;"});
         this.rs.serialize().then(done(function (rsSrl) {
             this.rsSrl = rsSrl;
@@ -77,8 +77,8 @@ buster.testCase("Session", {
 
     "should reject when creation fails when deserializing": function (done) {
         var deferred = when.defer();
-        this.stub(bResources.resourceSet, "deserialize");
-        bResources.resourceSet.deserialize.returns(deferred.promise);
+        this.stub(rampResources.resourceSet, "deserialize");
+        rampResources.resourceSet.deserialize.returns(deferred.promise);
         deferred.reject({message: "Foo"});
 
         bCapServSession.create({resourceSet: {}}, h.mockPubsubServer()).then(

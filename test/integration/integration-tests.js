@@ -3,7 +3,7 @@ var assert = buster.assert;
 var refute = buster.refute;
 
 var bCapServ = require("../../lib/buster-capture-server");
-var bResources = require("buster-resources");
+var rampResources = require("ramp-resources");
 var http = require("http");
 var when = require("when");
 var h = require("./../test-helper");
@@ -106,7 +106,7 @@ buster.testCase("Integration", {
         var self = this;
 
         this.p.capture(function (slave, phantom) {
-            var rs = bResources.resourceSet.create();
+            var rs = rampResources.resourceSet.create();
             rs.addResource({
                 path: "/test.js",
                 content: 'buster.emit("some:event", 123);'
@@ -124,7 +124,7 @@ buster.testCase("Integration", {
     "test subscribing to events from session": function (done) {
         var self = this;
         this.p.capture(function (slave, phantom) {
-            var rs = bResources.resourceSet.create();
+            var rs = rampResources.resourceSet.create();
             rs.addResource({
                 path: "/test.js",
                 content: [
@@ -148,7 +148,7 @@ buster.testCase("Integration", {
     "test loading second session": function (done) {
         var self = this;
         assert(true);
-        var rs = bResources.resourceSet.create();
+        var rs = rampResources.resourceSet.create();
 
         this.p.capture(function (slave, phantom) {
             self.c.createSession(rs).then(function (sc1) {
@@ -189,7 +189,7 @@ buster.testCase("Integration", {
     "test loads session when slave is captured": function (done) {
         var self = this;
 
-        var rs = bResources.resourceSet.create();
+        var rs = rampResources.resourceSet.create();
         rs.addResource({
             path: "/test.js",
             content: 'buster.emit("testing", 123);'
@@ -210,7 +210,7 @@ buster.testCase("Integration", {
     "test is able to relative path lookups in slaves": function (done) {
         var self = this;
 
-        var rs = bResources.resourceSet.create();
+        var rs = rampResources.resourceSet.create();
         rs.addResource({
             path: "/",
             content: [
@@ -241,7 +241,7 @@ buster.testCase("Integration", {
     "test provides buster.env.contextPath": function (done) {
         var self = this;
 
-        var rs = bResources.resourceSet.create();
+        var rs = rampResources.resourceSet.create();
         rs.addResource({
             path: "/foo.js",
             content: 'var e = document.createElement("script"); e.src = buster.env.contextPath + "/bar.js"; document.body.appendChild(e);'
@@ -263,7 +263,7 @@ buster.testCase("Integration", {
     "test provides buster.env.id": function (done) {
         var self = this;
 
-        var rs = bResources.resourceSet.create();
+        var rs = rampResources.resourceSet.create();
         rs.addResource({
             path: "/foo.js",
             content: 'buster.emit("kindofblue", buster.env.id);'
