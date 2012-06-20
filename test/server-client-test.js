@@ -147,7 +147,14 @@ buster.testCase("server client", {
         }));
 
         this.c.clearCache();
-    }
+    },
+
+    "should reject promise when connecting to non-existant server": function (done) {
+        this.c = bCapServ.createServerClient(h.SERVER_PORT - 1);
+        this.c.connect().then(function(){}, done(function (err) {
+            assert(err);
+        }));
+    },
 });
 
 function onRequest(httpServer, cb) {
