@@ -135,6 +135,18 @@ buster.testCase("server client", {
             }));
             this.c.emit("foo", "bar");
         }
+    },
+
+    "should clear cache": function (done) {
+        var self = this;
+
+        onRequest(this.httpServer, done(function (req, res, body) {
+            assert.equals(req.url, "/resources");
+            assert.equals(req.method, "DELETE");
+            res.end();
+        }));
+
+        this.c.clearCache();
     }
 });
 

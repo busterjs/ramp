@@ -125,6 +125,15 @@ buster.testCase("server", {
         })).end();
     },
 
+    "should purge cache via HTTP": function (done) {
+        var stub = this.stub(this.s._resourceCache, "purgeAll");
+
+        h.request({path: "/resources", method: "DELETE"}, done(function (res, body) {
+            assert.equals(res.statusCode, 200);
+            assert.calledOnce(stub);
+        })).end();
+    },
+
     "preparing session inflates and mounts": function () {
         var session = {resourceSet: {}, resourcesPath: "/foo"};
 
