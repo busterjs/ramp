@@ -44,6 +44,13 @@ buster.testCase("session client", {
         sc.end();
     },
 
+    "should resolve end promise": function (done) {
+        assert(true)
+        var sc = bCapServSessionClient._create(this.sessionData, this.pc);
+        sc.end().then(done);
+        this.session.ended();
+    },
+
     "publishing init event emits init data": function (done) {
         this.privatePubsub.on("initialize", done(function (data) {
             assert.equals(data, sc._getInitData());
