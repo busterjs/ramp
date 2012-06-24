@@ -67,9 +67,9 @@ buster.testCase("Session queue", {
             this.sq.enqueueSession(sess1);
             this.sq.enqueueSession(sess2);
 
-            assert.equals(this.sq.sessions.length, 2);
-            assert.equals(this.sq.sessions[0], sess1);
-            assert.equals(this.sq.sessions[1], sess2);
+            assert.equals(this.sq._sessions.length, 2);
+            assert.equals(this.sq._sessions[0], sess1);
+            assert.equals(this.sq._sessions[1], sess2);
         },
 
         "starts session immediately when queue is empty": function () {
@@ -109,7 +109,7 @@ buster.testCase("Session queue", {
             this.slave.unloadSessionComplete();
             assert.calledOnce(sess.ended);
             assert.calledOnce(sess.unloaded);
-            assert.equals(this.sq.sessions.length, 0);
+            assert.equals(this.sq._sessions.length, 0);
             refute(this.sq.currentSession);
         },
 
@@ -400,7 +400,7 @@ buster.testCase("Session queue", {
 
             assert.calledOnce(sess.aborted);
             assert.calledWithExactly(sess.aborted, {message: bCapServSessionQueue.ERR_NO_SLAVES});
-            assert.equals(this.sq.sessions.length, 0);
+            assert.equals(this.sq._sessions.length, 0);
         },
 
         "gets queued if session is already running": function () {
@@ -411,7 +411,7 @@ buster.testCase("Session queue", {
             sess2.joinable = false;
             this.sq.enqueueSession(sess2);
 
-            assert.equals(this.sq.sessions.length, 2);
+            assert.equals(this.sq._sessions.length, 2);
         },
 
         "gets aborted when moved to top of queue": function () {
@@ -426,7 +426,7 @@ buster.testCase("Session queue", {
 
             assert.calledOnce(sess2.aborted);
             assert.calledWithExactly(sess2.aborted, {message: bCapServSessionQueue.ERR_NO_SLAVES});
-            assert.equals(this.sq.sessions.length, 0);
+            assert.equals(this.sq._sessions.length, 0);
         }
     },
 
@@ -438,9 +438,9 @@ buster.testCase("Session queue", {
             this.sq.enqueueSession(this.sess1);
             this.sq.enqueueSession(this.sess2);
 
-            assert.equals(this.sq.sessions.length, 2);
-            assert.equals(this.sq.sessions[0], this.sess1);
-            assert.equals(this.sq.sessions[1], this.sess2);
+            assert.equals(this.sq._sessions.length, 2);
+            assert.equals(this.sq._sessions[0], this.sess1);
+            assert.equals(this.sq._sessions[1], this.sess2);
         },
 
         "does not start session immediately": function () {

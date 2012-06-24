@@ -38,7 +38,7 @@ buster.testCase("server", {
         this.c.createSession(this.rs).then(
             done(function (sessionClient) {
                 assert(bCapServSessionClient.isPrototypeOf(sessionClient));
-                assert(self.s._sessionQueue.sessions.some(function (s) {
+                assert(self.s._sessionQueue._sessions.some(function (s) {
                     return s.id = sessionClient.sessionId;
                 }));
             })
