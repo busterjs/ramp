@@ -158,7 +158,16 @@ buster.testCase("session client", {
                 slave: mockSlaveA,
                 slaves: [mockSlaveB]
             });
-        }
+        },
+
+        "notifies on abort": function (done) {
+            var spy = this.spy();
+            this.sc.onAbort(done(function (e) {
+                assert.equals(e.error, "An error");
+            }));
+
+            this.session.aborted("An error");
+        },
     },
 
     "also sets state when initializing": function (done) {
