@@ -39,18 +39,18 @@ buster.testCase("Session queue", {
     "adds slave when slave is prepared": function () {
         var slave = h.mockSlave();
         this.sq.addSlave(slave);
-        assert.equals(this.sq.slaves.length, 0);
+        assert.equals(this.sq.slaves().length, 0);
 
         slave.readyDeferred.resolve();
-        assert.equals(this.sq.slaves.length, 1);
-        assert.same(this.sq.slaves[0], slave);
+        assert.equals(this.sq.slaves().length, 1);
+        assert.same(this.sq.slaves()[0], slave);
     },
 
     "ignores slaves that fails prepare": function () {
         var slave = h.mockSlave();
         this.sq.addSlave(slave);
         slave.readyDeferred.reject();
-        assert.equals(this.sq.slaves.length, 0);
+        assert.equals(this.sq.slaves().length, 0);
     },
 
     "with slaves": {
@@ -266,16 +266,16 @@ buster.testCase("Session queue", {
 
          "removes slave when it ends": function () {
              this.slave2.mockEnd();
-             assert.equals(this.sq.slaves.length, 2);
-             assert.same(this.sq.slaves[0], this.slave1);
-             assert.same(this.sq.slaves[1], this.slave3);
+             assert.equals(this.sq.slaves().length, 2);
+             assert.same(this.sq.slaves()[0], this.slave1);
+             assert.same(this.sq.slaves()[1], this.slave3);
 
              this.slave1.mockEnd();
-             assert.equals(this.sq.slaves.length, 1);
-             assert.same(this.sq.slaves[0], this.slave3);
+             assert.equals(this.sq.slaves().length, 1);
+             assert.same(this.sq.slaves()[0], this.slave3);
 
              this.slave3.mockEnd();
-             assert.equals(this.sq.slaves.length, 0);
+             assert.equals(this.sq.slaves().length, 0);
          },
 
          "yields all slaves to loaded session": function () {
@@ -328,16 +328,16 @@ buster.testCase("Session queue", {
          },
 
          "slave ends before prepare": function () {
-             assert.equals(this.sq.slaves.length, 3);
+             assert.equals(this.sq.slaves().length, 3);
 
              var slave = h.mockSlave();
              this.sq.addSlave(slave);
              slave.mockEnd();
 
-             assert.equals(this.sq.slaves.length, 3);
-             assert.same(this.sq.slaves[0], this.slave1);
-             assert.same(this.sq.slaves[1], this.slave2);
-             assert.same(this.sq.slaves[2], this.slave3);
+             assert.equals(this.sq.slaves().length, 3);
+             assert.same(this.sq.slaves()[0], this.slave1);
+             assert.same(this.sq.slaves()[1], this.slave2);
+             assert.same(this.sq.slaves()[2], this.slave3);
          }
     },
 
@@ -480,19 +480,6 @@ buster.testCase("Session queue", {
 
         assert.calledOnce(spy);
         assert.same(spy.getCall(0).args[0], slave);
-    },
-
-    "adds slave to preparingSlaves immediately": function () {
-        var slave = h.mockSlave();
-        this.sq.addSlave(slave);
-        assert.same(this.sq.preparingSlaves[0], slave);
-    },
-
-    "removes slave from preparingSlaves when prepared": function () {
-        var slave = h.mockSlave();
-        this.sq.addSlave(slave);
-        slave.readyDeferred.resolve();
-        assert.equals(this.sq.preparingSlaves.length, 0);
     },
 
     "kills jon-joinable session when all slaves leave": function () {
