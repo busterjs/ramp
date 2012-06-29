@@ -162,8 +162,8 @@ buster.testCase("Session", {
 
         "notifies when session is aborted": function (done) {
             var self = this;
-            this.privatePubsubClient.on("aborted", done(function (e) {
-                assert.equals(e.error.message, "Some reason");
+            this.privatePubsubClient.on("state", done(function (e) {
+                assert.equals(e.aborted, "Some reason");
             }));
             this.session.aborted({message: "Some reason"});
         },
