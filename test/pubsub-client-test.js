@@ -259,11 +259,5 @@ buster.testCase("pubsub-client", {
             pc2.disconnect();
             refute.called(self.fayeClient.disconnect);
         }));
-    },
-
-    "fails inherit when not connected": function () {
-        assert.exception(function () {
-            this.pc.inherit("/foo");
-        }.bind(this));
     }
 });
