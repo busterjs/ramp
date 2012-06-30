@@ -78,7 +78,7 @@ buster.testCase("Integration", {
         var self = this;
 
         this.p.capture(done(function (slave, phantom) {
-            assert.equals(self.s._sessionQueue.slaves.length, 1);
+            assert.equals(self.s._sessionQueue.slaves().length, 1);
         }));
     },
 
@@ -86,16 +86,16 @@ buster.testCase("Integration", {
         var self = this;
 
         this.p.capture(function (slave, phantom) {
-            assert.equals(self.s._sessionQueue.slaves.length, 1);
+            assert.equals(self.s._sessionQueue.slaves().length, 1);
 
             self.p.capture(function (slave, phantom2) {
-                assert.equals(self.s._sessionQueue.slaves.length, 2);
+                assert.equals(self.s._sessionQueue.slaves().length, 2);
 
                 phantom.kill().then(function () {
-                    assert.equals(self.s._sessionQueue.slaves.length, 1);
+                    assert.equals(self.s._sessionQueue.slaves().length, 1);
 
                     phantom2.kill().then(done(function () {
-                        assert.equals(self.s._sessionQueue.slaves.length, 0);
+                        assert.equals(self.s._sessionQueue.slaves().length, 0);
                     }));
                 });
             });
