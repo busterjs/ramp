@@ -131,9 +131,8 @@ buster.testCase("Session", {
         },
 
         "should emit state when client initializes": function (done) {
-            this.privatePubsubClient.on("initialized", done(function (e) {
-                assert(e.session);
-                assert.equals(e.session, this.sessionData);
+            this.privatePubsubClient.on("state", done(function (e) {
+                assert(e);
             }.bind(this)));
             this.privatePubsubClient.emit("initialize", {});
         },
@@ -162,8 +161,8 @@ buster.testCase("Session", {
 
         "notifies when session is aborted": function (done) {
             var self = this;
-            this.privatePubsubClient.on("aborted", done(function (e) {
-                assert.equals(e.error.message, "Some reason");
+            this.privatePubsubClient.on("state", done(function (e) {
+                assert.equals(e.aborted, "Some reason");
             }));
             this.session.aborted({message: "Some reason"});
         },

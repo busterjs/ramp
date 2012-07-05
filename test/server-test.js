@@ -38,7 +38,7 @@ buster.testCase("server", {
         this.c.createSession(this.rs).then(
             done(function (sessionClient) {
                 assert(bCapServSessionClient.isPrototypeOf(sessionClient));
-                assert(self.s._sessionQueue.sessions.some(function (s) {
+                assert(self.s._sessionQueue._sessions.some(function (s) {
                     return s.id = sessionClient.sessionId;
                 }));
             })
@@ -198,9 +198,8 @@ buster.testCase("server", {
 
     "should get list of slaves from session queue": function () {
         var slaves = [{foo: "bar"}];
-        this.s._sessionQueue.slaves = slaves;
+        this.s._sessionQueue.slaves = function () { return slaves };
         assert.equals(this.s.slaves(), slaves);
-        refute.same(this.s.slaves(), slaves);
     },
 
     "serves slave prison": function (done) {

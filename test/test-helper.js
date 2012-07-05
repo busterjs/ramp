@@ -62,6 +62,9 @@ module.exports = {
 
             prepare: sinon.spy(function () {
                 this.readyDeferred = when.defer();
+                this.readyDeferred.then(function () {
+                    this.isReady = true;
+                }.bind(this));
                 return this.readyDeferred.promise;
             }),
 
