@@ -2,57 +2,13 @@ var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
 
-var bCapServ = require("./../lib/buster-capture-server");
 var rampResources = require("ramp-resources");
-var http = require("http");
-var when = require("when");
-var PhantomFactory = require("./phantom-factory");
-var cp = require("child_process");
-
-var uuid = require("node-uuid");
-
-function createServerBundle(port, tc, done) {
-    var bundle = {};
-
-    var cs = cp.spawn("node", [__dirname + "/server-loader.js", port]);
-    cs.stderr.pipe(process.stderr);
-    cs.stdout.setEncoding("utf8");
-    cs.stdout.on("data", function (data) {
-        bundle.port = parseInt(data, 10);
-        bundle.c = bCapServ.createServerClient(bundle.port);
-        bundle.c.connect();
-        bundle.p = new PhantomFactory(bundle.port);
-        buster.extend(tc, bundle);
-        done();
-    });
-
-    return {
-        tearDown: function (done) {
-            var promises = [this.tearDownServer(), this.tearDownBrowsers(), bundle.c.disconnect];
-            when.all(promises).then(done)
-        },
-
-        tearDownServer: function () {
-            var deferred = when.defer();
-
-            cs.on("exit", deferred.resolve);
-            cs.kill("SIGKILL");
-
-            return deferred.promise;
-        },
-
-        tearDownBrowsers: function () {
-            return when.all(bundle.p.killAll());
-        }
-    }
-}
+var h = require("./test-helper");
 
 buster.testRunner.timeout = 4000;
 buster.testCase("Integration", {
     setUp: function (done) {
-        var self = this;
-
-        this.serverBundle = createServerBundle(0, this, done);
+        this.serverBundle = h.createServerBundle(0, this, done);
     },
 
     tearDown: function (done) {
@@ -176,7 +132,7 @@ buster.testCase("Integration", {
 
         this.p.capture(function (slave, phantom) {
             self.serverBundle.tearDownServer().then(function () {
-                self.serverBundle = createServerBundle(self.port, self, function () {
+                self.serverBundle = h.createServerBundle(self.port, self, function () {
                 });
             });
         });
