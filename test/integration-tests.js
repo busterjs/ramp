@@ -62,35 +62,36 @@ buster.testCase("Integration", {
     "test one browser": function (done) {
         var self = this;
 
-        assert.equals(this.c.slaves.length, 0);
-
-        this.p.capture(done(function (slave, phantom) {
-            assert.equals(self.c.slaves.length, 1);
-            assert.match(self.c.slaves[0], slave);
+        this.p.capture(done(function (e, phantom) {
+            assert.equals(e.slaves.length, 1);
+            assert.match(e.slaves[0], e.slave);
         }));
     },
 
     "test multiple browsers": function (done) {
         var self = this;
 
-        assert.equals(this.c.slaves.length, 0);
+        this.p.capture(function (e1, phantom) {
+            assert.equals(e1.slaves.length, 1);
 
-        this.p.capture(function (slave1, phantom) {
-            assert.equals(self.c.slaves.length, 1);
-            assert.match(self.c.slaves[0], slave1);
+            self.p.capture(function (e2, phantom2) {
+                assert.equals(e2.slaves.length, 2);
 
-            self.p.capture(function (slave2, phantom2) {
-                assert.equals(self.c.slaves.length, 2);
-                assert.match(self.c.slaves[0], slave1);
-                assert.match(self.c.slaves[1], slave2);
+                var timesCalled = 0;
+                self.c.on("slave:freed", function (e) {
+                    switch(++timesCalled) {
+                    case 1:
+                        assert.equals(e.slaves.length, 1);
+                        break;
+                    case 2:
+                        assert.equals(e.slaves.length, 0);
+                        done();
+                        break;
+                    }
+                });
 
                 phantom.kill().then(function () {
-                    assert.equals(self.c.slaves.length, 1);
-                    assert.match(self.c.slaves[0], slave2);
-
-                    phantom2.kill().then(done(function () {
-                        assert.equals(self.c.slaves.length, 0);
-                    }));
+                    phantom2.kill().then(function(){});
                 });
             });
         });
@@ -99,7 +100,7 @@ buster.testCase("Integration", {
     "test posting events from session": function (done) {
         var self = this;
 
-        this.p.capture(function (slave, phantom) {
+        this.p.capture(function (e, phantom) {
             var rs = rampResources.resourceSet.create();
             rs.addResource({
                 path: "/test.js",
@@ -117,7 +118,7 @@ buster.testCase("Integration", {
 
     "test subscribing to events from session": function (done) {
         var self = this;
-        this.p.capture(function (slave, phantom) {
+        this.p.capture(function (e, phantom) {
             var rs = rampResources.resourceSet.create();
             rs.addResource({
                 path: "/test.js",
@@ -144,7 +145,7 @@ buster.testCase("Integration", {
         assert(true);
         var rs = rampResources.resourceSet.create();
 
-        this.p.capture(function (slave, phantom) {
+        this.p.capture(function (e, phantom) {
             self.c.createSession(rs).then(function (sc1) {
                 sc1.onLoad(function () {
                     sc1.end();
@@ -193,7 +194,7 @@ buster.testCase("Integration", {
 
         self.c.createSession(rs).then(function (sc) {
             sc.onLoad(function () {
-                self.p.capture(function (slave, phantom) {});
+                self.p.capture(function (e, phantom) {});
             });
 
             sc.on("testing", done(function (e) {
@@ -225,7 +226,7 @@ buster.testCase("Integration", {
                 '});'].join("\n")
         });
 
-        this.p.capture(function (slave, phantom) {});
+        this.p.capture(function (e, phantom) {});
         this.c.createSession(rs).then(function (sc) {
             sc.on("veryclever", done(function (e) {
                 assert.equals(e.data, 123);
@@ -247,7 +248,7 @@ buster.testCase("Integration", {
         });
         rs.loadPath.append("/foo.js");
 
-        this.p.capture(function (slave, phantom) {});
+        this.p.capture(function (e, phantom) {});
         this.c.createSession(rs).then(function (sc) {
             sc.on("nicelydone", done(function (e) {
                 assert.equals(e.data, 123);
@@ -265,7 +266,8 @@ buster.testCase("Integration", {
         });
         rs.loadPath.append("/foo.js");
 
-        this.p.capture(function (slave, phantom) {
+        this.p.capture(function (e, phantom) {
+            var slave = e.slave;
             self.c.createSession(rs).then(function (sc) {
                 sc.on("kindofblue", done(function (e) {
                     assert.equals(e.data, slave.id);
@@ -277,8 +279,8 @@ buster.testCase("Integration", {
     "test provides user agent": function (done) {
         var self = this;
 
-        this.p.capture(done(function (slave, phantom) {
-            assert.match(slave.userAgent, "PhantomJS");
+        this.p.capture(done(function (e, phantom) {
+            assert.match(e.slave.userAgent, "PhantomJS");
         }));
     }
 });

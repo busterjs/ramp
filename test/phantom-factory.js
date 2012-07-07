@@ -39,7 +39,7 @@ PhantomFactory.prototype = {
         c.connect().then(function () {
             c.on("slave:captured", function (e) {
                 c.disconnect();
-                connectDeferred.resolve(e.slave);
+                connectDeferred.resolve(e);
             });
         });
 
