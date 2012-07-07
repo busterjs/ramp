@@ -7,33 +7,24 @@ var rampResources = require("ramp-resources");
 var http = require("http");
 var when = require("when");
 var PhantomFactory = require("./phantom-factory");
-
+var cp = require("child_process");
 
 var uuid = require("node-uuid");
 
 function createServerBundle(port, tc, done) {
     var bundle = {};
-    bundle.httpServer = http.createServer(function (req, res) {
-        res.writeHead(418); res.end();
-    });
-    bundle.httpServer.listen(port, function () {
-        bundle.port = bundle.httpServer.address().port;
 
+    var cs = cp.spawn("node", [__dirname + "/server-loader.js", port]);
+    cs.stderr.pipe(process.stderr);
+    cs.stdout.setEncoding("utf8");
+    cs.stdout.on("data", function (data) {
+        bundle.port = parseInt(data, 10);
         bundle.c = bCapServ.createServerClient(bundle.port);
         bundle.c.connect();
-
         bundle.p = new PhantomFactory(bundle.port);
-
         buster.extend(tc, bundle);
-
         done();
     });
-
-    reqSocks = [];
-    bundle.httpServer.on("connection", function (sock) { reqSocks.push(sock) });
-
-    bundle.s = bCapServ.createServer();
-    bundle.s.attach(bundle.httpServer);
 
     return {
         tearDown: function (done) {
@@ -44,9 +35,8 @@ function createServerBundle(port, tc, done) {
         tearDownServer: function () {
             var deferred = when.defer();
 
-            bundle.httpServer.on("close", deferred.resolve);
-            bundle.httpServer.close();
-            reqSocks.forEach(function (s) { s.end(); });
+            cs.on("exit", deferred.resolve);
+            cs.kill("SIGKILL");
 
             return deferred.promise;
         },
@@ -66,32 +56,40 @@ buster.testCase("Integration", {
     },
 
     tearDown: function (done) {
-        console.log("ENDING TEST");
         this.serverBundle.tearDown(done);
     },
 
     "test one browser": function (done) {
         var self = this;
 
+        assert.equals(this.c.slaves.length, 0);
+
         this.p.capture(done(function (slave, phantom) {
-            assert.equals(self.s._sessionQueue.slaves().length, 1);
+            assert.equals(self.c.slaves.length, 1);
+            assert.match(self.c.slaves[0], slave);
         }));
     },
 
     "test multiple browsers": function (done) {
         var self = this;
 
-        this.p.capture(function (slave, phantom) {
-            assert.equals(self.s._sessionQueue.slaves().length, 1);
+        assert.equals(this.c.slaves.length, 0);
 
-            self.p.capture(function (slave, phantom2) {
-                assert.equals(self.s._sessionQueue.slaves().length, 2);
+        this.p.capture(function (slave1, phantom) {
+            assert.equals(self.c.slaves.length, 1);
+            assert.match(self.c.slaves[0], slave1);
+
+            self.p.capture(function (slave2, phantom2) {
+                assert.equals(self.c.slaves.length, 2);
+                assert.match(self.c.slaves[0], slave1);
+                assert.match(self.c.slaves[1], slave2);
 
                 phantom.kill().then(function () {
-                    assert.equals(self.s._sessionQueue.slaves().length, 1);
+                    assert.equals(self.c.slaves.length, 1);
+                    assert.match(self.c.slaves[0], slave2);
 
                     phantom2.kill().then(done(function () {
-                        assert.equals(self.s._sessionQueue.slaves().length, 0);
+                        assert.equals(self.c.slaves.length, 0);
                     }));
                 });
             });
@@ -161,7 +159,8 @@ buster.testCase("Integration", {
         });
     },
 
-    "test recaptures when server restarts": function (done) {
+    // TODO: Make the server client handle server restart.
+    "// test recaptures when server restarts": function (done) {
         var self = this;
         var oldServerBundle = this.serverBundle;
 
@@ -173,11 +172,12 @@ buster.testCase("Integration", {
                 assert(true);
                 oldServerBundle.tearDownBrowsers().then(done);
             }
-        })
+        });
 
         this.p.capture(function (slave, phantom) {
             self.serverBundle.tearDownServer().then(function () {
-                self.serverBundle = createServerBundle(self.port, self, function () {});
+                self.serverBundle = createServerBundle(self.port, self, function () {
+                });
             });
         });
     },

@@ -37,9 +37,9 @@ PhantomFactory.prototype = {
         var c = bCaptureServer.createServerClient(this.port);
 
         c.connect().then(function () {
-            c.on("slave:captured", function (slave) {
+            c.on("slave:captured", function (e) {
                 c.disconnect();
-                connectDeferred.resolve(slave);
+                connectDeferred.resolve(e.slave);
             });
         });
 
