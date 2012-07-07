@@ -3,7 +3,7 @@ var assert = buster.assert;
 var refute = buster.refute;
 
 var rampResources = require("ramp-resources");
-var h = require("./test-helper");
+var h = require("./helpers/test-helper");
 
 buster.testCase("Events", {
     setUp: function (done) {

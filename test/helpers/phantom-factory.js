@@ -1,5 +1,5 @@
 var http = require("http");
-var bCaptureServer = require("./../lib/buster-capture-server");
+var bCaptureServer = require("./../../lib/buster-capture-server");
 var EventEmitter = require("events").EventEmitter;
 var CP = require("child_process");
 var faye = require("faye");

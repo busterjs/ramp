@@ -1,4 +1,4 @@
-var bCapServ = require("./../lib/buster-capture-server");
+var bCapServ = require("./../../lib/buster-capture-server");
 var when = require("when");
 var PhantomFactory = require("./phantom-factory");
 var cp = require("child_process");

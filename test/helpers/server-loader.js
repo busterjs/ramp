@@ -1,4 +1,4 @@
-var bCapServ = require("./../lib/buster-capture-server");
+var bCapServ = require("./../../lib/buster-capture-server");
 var http = require("http");
 
 var server = http.createServer(function (req, res) {
