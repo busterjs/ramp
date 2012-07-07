@@ -10,7 +10,8 @@ module.exports = {
         var cs = cp.spawn("node", [__dirname + "/server-loader.js", port]);
         cs.stderr.pipe(process.stderr);
         cs.stdout.setEncoding("utf8");
-        cs.stdout.on("data", function (data) {
+        cs.stdout.once("data", function (data) {
+            cs.stdout.pipe(process.stdout);
             bundle.port = parseInt(data, 10);
             bundle.c = bCapServ.createServerClient(bundle.port);
             bundle.c.connect();
