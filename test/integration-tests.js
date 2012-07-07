@@ -159,8 +159,7 @@ buster.testCase("Integration", {
         });
     },
 
-    // TODO: Make the server client handle server restart.
-    "// test recaptures when server restarts": function (done) {
+    "test recaptures when server restarts": function (done) {
         var self = this;
         var oldServerBundle = this.serverBundle;
 
