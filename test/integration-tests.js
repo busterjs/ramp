@@ -2,23 +2,30 @@ var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
 
-var bCapServ = require("../../lib/buster-capture-server");
+var bCapServ = require("./../lib/buster-capture-server");
 var rampResources = require("ramp-resources");
 var http = require("http");
 var when = require("when");
-var h = require("./../test-helper");
 var PhantomFactory = require("./phantom-factory");
 
 
 var uuid = require("node-uuid");
 
-function createServerBundle(done) {
+function createServerBundle(port, tc, done) {
     var bundle = {};
     bundle.httpServer = http.createServer(function (req, res) {
-        res.writeHead(h.NO_RESPONSE_STATUS_CODE); res.end();
+        res.writeHead(418); res.end();
     });
-    bundle.httpServer.listen(h.SERVER_PORT, function () {
-        bundle.httpServer.WTF = uuid();
+    bundle.httpServer.listen(port, function () {
+        bundle.port = bundle.httpServer.address().port;
+
+        bundle.c = bCapServ.createServerClient(bundle.port);
+        bundle.c.connect();
+
+        bundle.p = new PhantomFactory(bundle.port);
+
+        buster.extend(tc, bundle);
+
         done();
     });
 
@@ -28,16 +35,7 @@ function createServerBundle(done) {
     bundle.s = bCapServ.createServer();
     bundle.s.attach(bundle.httpServer);
 
-    bundle.c = bCapServ.createServerClient(h.SERVER_PORT);
-    bundle.c.connect();
-
-    bundle.p = new PhantomFactory();
-
     return {
-        extend: function (test) {
-            buster.extend(test, bundle);
-        },
-
         tearDown: function (done) {
             var promises = [this.tearDownServer(), this.tearDownBrowsers(), bundle.c.disconnect];
             when.all(promises).then(done)
@@ -48,7 +46,7 @@ function createServerBundle(done) {
 
             bundle.httpServer.on("close", deferred.resolve);
             bundle.httpServer.close();
-            reqSocks.forEach(function (s) { s.destroy(); });
+            reqSocks.forEach(function (s) { s.end(); });
 
             return deferred.promise;
         },
@@ -64,14 +62,12 @@ buster.testCase("Integration", {
     setUp: function (done) {
         var self = this;
 
-        this.serverBundle = createServerBundle(done);
-        this.serverBundle.extend(this);
+        this.serverBundle = createServerBundle(0, this, done);
     },
 
     tearDown: function (done) {
-        this.serverBundle.tearDown(function () {
-            setTimeout(done, 200);
-        });
+        console.log("ENDING TEST");
+        this.serverBundle.tearDown(done);
     },
 
     "test one browser": function (done) {
@@ -181,7 +177,7 @@ buster.testCase("Integration", {
 
         this.p.capture(function (slave, phantom) {
             self.serverBundle.tearDownServer().then(function () {
-                self.serverBundle = createServerBundle(function () {});
+                self.serverBundle = createServerBundle(self.port, self, function () {});
             });
         });
     },

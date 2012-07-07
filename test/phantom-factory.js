@@ -1,14 +1,13 @@
 var http = require("http");
-// var bCapServ = require("./../../lib/buster-capture-server");
-var bCaptureServer = require("../../lib/buster-capture-server");
+var bCaptureServer = require("./../lib/buster-capture-server");
 var EventEmitter = require("events").EventEmitter;
 var CP = require("child_process");
 var faye = require("faye");
 var when = require("when");
 var phantomPort = 12000;
-var h = require("./../test-helper");
 
-var PhantomFactory = function () {
+var PhantomFactory = function (port) {
+    this.port = port;
     this.phantoms = [];
 };
 
@@ -16,7 +15,7 @@ module.exports = PhantomFactory;
 
 PhantomFactory.prototype = {
     openCapture: function (ready) {
-        var captureUrl = "http://0.0.0.0:" + h.SERVER_PORT + "/capture";
+        var captureUrl = "http://0.0.0.0:" + this.port + "/capture";
 
         var phantom = Phantom(function () {
             phantom.open(captureUrl, function () {
@@ -35,7 +34,7 @@ PhantomFactory.prototype = {
             ready(e[0], e[1]);
         });
 
-        var c = bCaptureServer.createServerClient(h.SERVER_PORT);
+        var c = bCaptureServer.createServerClient(this.port);
 
         c.connect().then(function () {
             c.on("slave:captured", function (slave) {
@@ -90,11 +89,13 @@ var Phantom = function (onready) {
             if (isOpening) throw new Error("Attempted to open URL before prev page was loaded");
             isOpening = true;
 
-            h.request({
+            http.request({
+                host: "0.0.0.0",
                 port: phantomControlPort,
+                method: "GET",
                 path: "/load",
                 headers: {"X-Phantom-Load-Url": url}
-            }, function(res, body){}).end();
+            }).end();
 
             eventEmitter.once("page", function (status) {
                 isOpening = false;
