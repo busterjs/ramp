@@ -27,7 +27,7 @@ PhantomFactory.prototype = {
         this.phantoms.push(phantom);
     },
 
-    capture: function(ready) {
+    capture: function (ready) {
         var connectDeferred = when.defer();
         var phantomDeferred = when.defer();
 
@@ -62,11 +62,14 @@ var Phantom = function (onready) {
     var phantomControlPort = ++phantomPort; // TODO: reuse old ports
     var blankPageUrl = "http://127.0.0.1:" + phantomControlPort + "/blank";
 
-    var phantom = CP.spawn("phantomjs", [phantomScriptPath, phantomControlPort]);
+    var phantom = CP.spawn("phantomjs", [
+        phantomScriptPath,
+        phantomControlPort
+    ]);
     phantom.stdout.on("data", function (data) {
         var msgs = data.toString("utf8").split("\n");
         msgs.forEach(function (msg) {
-            if (msg.length == 0) return;
+            if (msg.length === 0) { return; }
             var command = msg.match(/^[^ ]+/)[0];
             var data = msg.slice(command.length + 1).trim();
             eventEmitter.emit(command, data);
@@ -87,18 +90,22 @@ var Phantom = function (onready) {
 
     return {
         open: function (url, onload) {
-            if (isOpening) throw new Error("Attempted to open URL before prev page was loaded");
+            if (isOpening) {
+                throw new Error(
+                    "Attempted to open URL before prev page was loaded"
+                );
+            }
             isOpening = true;
 
             h.request({
                 port: phantomControlPort,
                 path: "/load",
                 headers: {"X-Phantom-Load-Url": url}
-            }, function(res, body){}).end();
+            }, function (res, body) {}).end();
 
             eventEmitter.once("page", function (status) {
                 isOpening = false;
-                if (status == "success") {
+                if (status === "success") {
                     onload();
                 } else {
                     throw new Error("Unknown page load status: " + status);
@@ -108,7 +115,7 @@ var Phantom = function (onready) {
 
         kill: function () {
             var deferred = when.defer();
-            if (this.isKilled) return;
+            if (this.isKilled) { return; }
             this.isKilled = true;
 
             // Loading a blank page ensures beforeunload callback gets called
@@ -120,4 +127,4 @@ var Phantom = function (onready) {
             return deferred.promise;
         }
     };
-}
+};

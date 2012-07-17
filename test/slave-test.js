@@ -16,8 +16,9 @@ buster.testCase("slave", {
         var self = this;
 
         this.httpServer = http.createServer(function (req, res) {
-            if (self.resourceMiddleware.respond(req, res)) return;
-            res.writeHead(h.NO_RESPONSE_STATUS_CODE); res.end();
+            if (self.resourceMiddleware.respond(req, res)) { return; }
+            res.writeHead(h.NO_RESPONSE_STATUS_CODE);
+            res.end();
         });
         this.httpServer.listen(h.SERVER_PORT, done);
 
@@ -38,7 +39,7 @@ buster.testCase("slave", {
         h.request({path: this.slave.prisonPath}, done(function (res, body) {
             assert.equals(res.statusCode, 200);
             assert.equals(body.match(/<frame[^s]/g).length, 1);
-        })).end()
+        })).end();
     },
 
     "serves prison with header": function (done) {
@@ -47,7 +48,7 @@ buster.testCase("slave", {
         h.request({path: this.slave.prisonPath}, done(function (res, body) {
             assert.equals(res.statusCode, 200);
             assert.equals(body.match(/<frame[^s]/g).length, 2);
-        })).end()
+        })).end();
     },
 
     "mounts header resource set": function (done) {
@@ -62,13 +63,13 @@ buster.testCase("slave", {
         h.request({path: this.slave.headerPath}, done(function (res, body) {
             assert.equals(res.statusCode, 200);
             assert.equals(body, headerContent);
-        })).end()
+        })).end();
     },
 
     "loading session": function (done) {
         var self = this;
         var sessionData = {foo: "bar"};
-        var session = {serialize: function () { return sessionData }};
+        var session = {serialize: function () { return sessionData; }};
 
         this.pc.on("slave:" + this.slave._id + ":session:load", function (s) {
             assert.equals(s, sessionData);
@@ -113,7 +114,7 @@ buster.testCase("slave", {
             this.mockBrowser = bCapServPubsubClient.create({
                 host: "0.0.0.0",
                 port: h.SERVER_PORT
-            })
+            });
             this.mockBrowser.connect().then(function () {
                 self.mockBrowser.emit(
                     "slave:" + self.slave._id + ":imprisoned",
@@ -141,7 +142,7 @@ buster.testCase("slave", {
         var expected = {
             prisonPath: this.slave.prisonPath,
             id: this.slave._id
-        }
+        };
 
         assert.match(this.slave.serialize(), expected);
     },
@@ -151,7 +152,7 @@ buster.testCase("slave", {
 
         h.request({path: this.slave.prisonPath}, done(function (res, body) {
             assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
-        })).end()
+        })).end();
     },
 
     "teardown tears down pubsub client": function () {
@@ -175,8 +176,10 @@ buster.testCase("slave", {
 
         this.slave.teardown();
 
-        h.request({path: this.slave.headerFramePath}, done(function (res, body) {
+        h.request({
+            path: this.slave.headerFramePath
+        }, done(function (res, body) {
             assert.equals(res.statusCode, h.NO_RESPONSE_STATUS_CODE);
-        })).end()
+        })).end();
     }
 });

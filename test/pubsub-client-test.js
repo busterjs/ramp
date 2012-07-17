@@ -35,7 +35,8 @@ buster.testCase("pubsub-client", {
         var client = this.pc._createFayeClient();
         assert.calledOnce(spy);
 
-        var url = "http://" + this.pc._serverHost + ":" + this.pc._serverPort + "/messaging";
+        var url = "http://" + this.pc._serverHost + ":" +
+                this.pc._serverPort + "/messaging";
         assert.calledWith(faye.Client, url);
     },
 
@@ -49,7 +50,8 @@ buster.testCase("pubsub-client", {
         assert(true);
 
         this.pc.connect().then(function () {
-            // Will throw uncaught exception due to double resolve if not handled
+            // Will throw uncaught exception due to
+            // double resolve if not handled
             self.pc._fayeClient.publish("/initialie/" + self.pc._id, {})
                 .callback(done);
         });
@@ -61,16 +63,18 @@ buster.testCase("pubsub-client", {
             this.pc._fayeClient = this.mockFaye;
         },
 
-        "should get faye event name": function ( ){
+        "should get faye event name": function () {
             assert.equals(this.pc._getEventName("foo"), "/user/foo");
         },
 
-        "should get namespaced faye event name": function ( ){
-            assert.equals(this.pc._getEventName("foo:bar:baz"), "/user/foo-bar-baz");
+        "should get namespaced faye event name": function () {
+            assert.equals(this.pc._getEventName("foo:bar:baz"),
+                          "/user/foo-bar-baz");
         },
 
         "should have unique event name for ambiguities": function () {
-            refute.equals(this.pc._getEventName("foo:bar:baz"), this.pc._getEventName("foo-bar-baz"));
+            refute.equals(this.pc._getEventName("foo:bar:baz"),
+                          this.pc._getEventName("foo-bar-baz"));
         },
 
         "should fail when getting invalid event name": function () {

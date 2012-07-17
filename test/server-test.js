@@ -13,7 +13,8 @@ var h = require("./test-helper");
 buster.testCase("server", {
     setUp: function (done) {
         this.httpServer = http.createServer(function (req, res) {
-            res.writeHead(h.NO_RESPONSE_STATUS_CODE); res.end();
+            res.writeHead(h.NO_RESPONSE_STATUS_CODE);
+            res.end();
         });
         this.httpServer.listen(h.SERVER_PORT, function () {
             this.c.connect().then(done);
@@ -39,7 +40,7 @@ buster.testCase("server", {
             done(function (sessionClient) {
                 assert(bCapServSessionClient.isPrototypeOf(sessionClient));
                 assert(self.s._sessionQueue._sessions.some(function (s) {
-                    return s.id = sessionClient.sessionId;
+                    return (s.id = sessionClient.sessionId);
                 }));
             })
         );
@@ -97,11 +98,12 @@ buster.testCase("server", {
 
         h.request({path: "/capture", method: "GET"}, done(function (res, body) {
             assert.equals(res.statusCode, 302);
-            assert.equals(res.headers["location"], slave.prisonPath);
+            assert.equals(res.headers.location, slave.prisonPath);
             assert.equals(JSON.parse(body), slave.serialize());
 
             assert.calledOnce(this.s._sessionQueue.addSlave);
-            assert.same(this.s._sessionQueue.addSlave.getCall(0).args[0], slave);
+            var firstArg = this.s._sessionQueue.addSlave.getCall(0).args[0];
+            assert.same(firstArg, slave);
         }.bind(this))).end();
     },
 
@@ -111,12 +113,12 @@ buster.testCase("server", {
             var slave = JSON.parse(body);
 
             assert.equals(res.statusCode, 302);
-            assert.equals(res.headers["location"], slave.prisonPath);
+            assert.equals(res.headers.location, slave.prisonPath);
         })).end();
     },
 
     "should list cache via HTTP": function (done) {
-        var resources = [{foo: "bar"}]
+        var resources = [{ foo: "bar" }];
         this.stub(this.s._resourceCache, "resourceVersions").returns(resources);
 
         h.request({path: "/resources"}, done(function (res, body) {
@@ -128,7 +130,10 @@ buster.testCase("server", {
     "should purge cache via HTTP": function (done) {
         var stub = this.stub(this.s._resourceCache, "purgeAll");
 
-        h.request({path: "/resources", method: "DELETE"}, done(function (res, body) {
+        h.request({
+            path: "/resources",
+            method: "DELETE"
+        }, done(function (res, body) {
             assert.equals(res.statusCode, 200);
             assert.calledOnce(stub);
         })).end();
@@ -138,27 +143,27 @@ buster.testCase("server", {
         var session = {resourceSet: {}, resourcesPath: "/foo"};
 
         var rs = {};
-        var inflateDeferred = when.defer();
-        inflateDeferred.resolve(rs);
+        var d = when.defer();
+        d.resolve(rs);
 
-        this.stub(this.s._resourceCache, "inflate").returns(inflateDeferred.promise);
+        this.stub(this.s._resourceCache, "inflate").returns(d.promise);
         this.stub(this.s._resourceMiddleware, "mount");
 
         this.s._sessionQueue.prepareSession(session);
 
-        assert.calledOnce(this.s._resourceMiddleware.mount)
+        assert.calledOnce(this.s._resourceMiddleware.mount);
         var args = this.s._resourceMiddleware.mount.getCall(0).args;
-        assert.equals(args[0], session.resourcesPath)
-        assert.same(args[1], rs)
+        assert.equals(args[0], session.resourcesPath);
+        assert.same(args[1], rs);
     },
 
     "teardown session unmounts": function () {
-        var session = {resourcesPath: "/fofoafo", teardown: this.spy()};
+        var session = { resourcesPath: "/fofoaf", teardown: this.spy() };
         this.stub(this.s._resourceMiddleware, "unmount");
         this.s._sessionQueue.teardownSession(session);
 
         assert.calledOnce(this.s._resourceMiddleware.unmount);
-        assert.calledWithExactly(this.s._resourceMiddleware.unmount, "/fofoafo");
+        assert.calledWithExactly(this.s._resourceMiddleware.unmount, "/fofoaf");
         assert.calledOnce(session.teardown);
     },
 
@@ -174,13 +179,17 @@ buster.testCase("server", {
         assert.same(args[1], res);
     },
 
-    "should not set header on slaves when header is not specified": function (done) {
-        var stub = this.stub(bCapServSlave, "setHeader");
+    "should not set header on slaves when header is not specified":
+        function (done) {
+            var stub = this.stub(bCapServSlave, "setHeader");
 
-        h.request({path: "/capture", method: "GET"}, done(function (res, body) {
-            refute.called(stub);
-        })).end();
-    },
+            h.request({
+                path: "/capture",
+                method: "GET"
+            }, done(function (res, body) {
+                refute.called(stub);
+            })).end();
+        },
 
     "should set header on slaves": function (done) {
         var stub = this.stub(bCapServSlave, "setHeader");
@@ -198,33 +207,40 @@ buster.testCase("server", {
 
     "should get list of slaves from session queue": function () {
         var slaves = [{foo: "bar"}];
-        this.s._sessionQueue.slaves = function () { return slaves };
+        this.s._sessionQueue.slaves = function () { return slaves; };
         assert.equals(this.s.slaves(), slaves);
     },
 
     "serves slave prison": function (done) {
         bCapServ.testHelper.captureSlave(h.SERVER_PORT).then(function (slave) {
-            h.request({path: slave.prisonPath, method: "GET"}, done(function (res, body) {
+            h.request({
+                path: slave.prisonPath,
+                method: "GET"
+            }, done(function (res, body) {
                 assert.equals(res.statusCode, 200);
             })).end();
         });
     },
 
-    "should re-capture when visiting slave like URL for non-existant slave": function (done) {
-        var self = this;
+    "should re-capture when visiting slave like URL for non-existant slave":
+        function (done) {
+            var self = this;
 
-        h.request({path: "/slaves/123-def/browser", method: "GET"}, done(function (res, body) {
-            assert.equals(res.statusCode, 302);
-            assert.equals(res.headers["location"], self.s.capturePath);
-        })).end();
-    },
+            h.request({
+                path: "/slaves/123-def/browser",
+                method: "GET"
+            }, done(function (res, body) {
+                assert.equals(res.statusCode, 302);
+                assert.equals(res.headers.location, self.s.capturePath);
+            })).end();
+        },
 
     // Needs to get a chance to load the first time
     "should not re-capture immediately after capture": function (done) {
         h.request({path: this.s.capturePath}, function (res, body) {
             var slave = JSON.parse(body);
             h.request({path: slave.prisonPath}, done(function (res, body) {
-                refute(res.headers["location"]);
+                refute(res.headers.location);
                 assert.equals(res.statusCode, 200);
             })).end();
         }).end();

@@ -9,6 +9,17 @@ var faye = require("faye");
 var when = require("when");
 var h = require("./test-helper");
 
+function onRequest(httpServer, cb) {
+    httpServer.on("request", function (req, res) {
+        var body = "";
+        req.setEncoding("utf8");
+        req.on("data", function (chunk) { body += chunk; });
+        req.on("end", function () {
+            cb(req, res, body);
+        });
+    });
+}
+
 buster.testCase("server client", {
     setUp: function (done) {
         var self = this;
@@ -126,7 +137,7 @@ buster.testCase("server client", {
         },
 
         tearDown: function () {
-            this.c.disconnect()
+            this.c.disconnect();
         },
 
         "test has evnets": function (done) {
@@ -149,21 +160,11 @@ buster.testCase("server client", {
         this.c.clearCache();
     },
 
-    "should reject promise when connecting to non-existant server": function (done) {
-        this.c = bCapServ.createServerClient(h.SERVER_PORT - 1);
-        this.c.connect().then(function(){}, done(function (err) {
-            assert(err);
-        }));
-    },
+    "should reject promise when connecting to non-existant server":
+        function (done) {
+            this.c = bCapServ.createServerClient(h.SERVER_PORT - 1);
+            this.c.connect().then(function () {}, done(function (err) {
+                assert(err);
+            }));
+        }
 });
-
-function onRequest(httpServer, cb) {
-    httpServer.on("request", function (req, res) {
-        var body = "";
-        req.setEncoding("utf8");
-        req.on("data", function (chunk) { body += chunk;});
-        req.on("end", function () {
-            cb(req, res, body)
-        });
-    });
-}

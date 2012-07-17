@@ -1,4 +1,4 @@
- buster = require("buster");
+var buster = require("buster");
 var assert = buster.assert;
 var refute = buster.refute;
 
@@ -38,29 +38,33 @@ buster.testCase("session client", {
     },
 
     "should end": function (done) {
-        assert(true)
+        assert(true);
         var sc = bCapServSessionClient._create(this.sessionData, this.pc);
         this.privatePubsub.on("end", done);
         sc.end();
     },
 
     "should resolve end promise": function (done) {
-        assert(true)
+        assert(true);
         var sc = bCapServSessionClient._create(this.sessionData, this.pc);
         sc.end().then(done);
         this.session.ended();
     },
 
     "publishing init event emits init data": function (done) {
+        var sc;
+
         this.privatePubsub.on("initialize", done(function (data) {
             assert.equals(data, sc._getInitData());
         }));
 
-        var sc = bCapServSessionClient._create(this.sessionData, this.pc);
+        sc = bCapServSessionClient._create(this.sessionData, this.pc);
     },
 
     "init data as owner": function () {
-        var sc = bCapServSessionClient._create(this.sessionData, this.pc, {owner: true});
+        var sc = bCapServSessionClient._create(this.sessionData, this.pc, {
+            owner: true
+        });
         assert.match(sc._getInitData(), {isOwner: true});
     },
 
@@ -96,15 +100,25 @@ buster.testCase("session client", {
 
         "resolves loaded, started and ended when ending": function (done) {
             assert(true);
-            when.all([this.sc.onStart(), this.sc.onLoad(), this.sc.onEnd()]).then(done);
+            when.all([
+                this.sc.onStart(),
+                this.sc.onLoad(),
+                this.sc.onEnd()
+            ]).then(done);
             this.session.ended();
         },
 
-        "resolves loaded, started, ended and unloaded when unloading": function (done) {
-            assert(true);
-            when.all([this.sc.onStart(), this.sc.onLoad(), this.sc.onEnd(), this.sc.onUnload()]).then(done);
-            this.session.unloaded();
-        },
+        "resolves loaded, started, ended and unloaded when unloading":
+            function (done) {
+                assert(true);
+                when.all([
+                    this.sc.onStart(),
+                    this.sc.onLoad(),
+                    this.sc.onEnd(),
+                    this.sc.onUnload()
+                ]).then(done);
+                this.session.unloaded();
+            },
 
         "emitting with client id": function (done) {
             var self = this;
@@ -128,7 +142,8 @@ buster.testCase("session client", {
 
         "stores session properties": function () {
             assert.equals(this.sc.sessionId, this.sessionData.id);
-            assert.equals(this.sc.resourcesPath, this.sessionData.resourcesPath);
+            assert.equals(this.sc.resourcesPath,
+                          this.sessionData.resourcesPath);
         },
 
         "notifies when slaves are captured": function (done) {

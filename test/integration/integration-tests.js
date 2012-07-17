@@ -15,15 +15,18 @@ var uuid = require("node-uuid");
 function createServerBundle(done) {
     var bundle = {};
     bundle.httpServer = http.createServer(function (req, res) {
-        res.writeHead(h.NO_RESPONSE_STATUS_CODE); res.end();
+        res.writeHead(h.NO_RESPONSE_STATUS_CODE);
+        res.end();
     });
     bundle.httpServer.listen(h.SERVER_PORT, function () {
         bundle.httpServer.WTF = uuid();
         done();
     });
 
-    reqSocks = [];
-    bundle.httpServer.on("connection", function (sock) { reqSocks.push(sock) });
+    var reqSocks = [];
+    bundle.httpServer.on("connection", function (sock) {
+        reqSocks.push(sock);
+    });
 
     bundle.s = bCapServ.createServer();
     bundle.s.attach(bundle.httpServer);
@@ -39,8 +42,12 @@ function createServerBundle(done) {
         },
 
         tearDown: function (done) {
-            var promises = [this.tearDownServer(), this.tearDownBrowsers(), bundle.c.disconnect];
-            when.all(promises).then(done)
+            var promises = [
+                this.tearDownServer(),
+                this.tearDownBrowsers(),
+                bundle.c.disconnect
+            ];
+            when.all(promises).then(done);
         },
 
         tearDownServer: function () {
@@ -56,7 +63,7 @@ function createServerBundle(done) {
         tearDownBrowsers: function () {
             return when.all(bundle.p.killAll());
         }
-    }
+    };
 }
 
 buster.testRunner.timeout = 4000;
@@ -173,11 +180,11 @@ buster.testCase("Integration", {
 
         this.c.connect();
         this.c.on("slave:captured", function () {
-            if (++timesCaptured == 2) {
+            if (++timesCaptured === 2) {
                 assert(true);
                 oldServerBundle.tearDownBrowsers().then(done);
             }
-        })
+        });
 
         this.p.capture(function (slave, phantom) {
             self.serverBundle.tearDownServer().then(function () {
@@ -244,7 +251,9 @@ buster.testCase("Integration", {
         var rs = rampResources.resourceSet.create();
         rs.addResource({
             path: "/foo.js",
-            content: 'var e = document.createElement("script"); e.src = buster.env.contextPath + "/bar.js"; document.body.appendChild(e);'
+            content: 'var e = document.createElement("script"); ' +
+                     'e.src = buster.env.contextPath + "/bar.js"; ' +
+                     'document.body.appendChild(e);'
         });
         rs.addResource({
             path: "/bar.js",

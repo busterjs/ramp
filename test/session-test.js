@@ -24,7 +24,10 @@ buster.testCase("Session", {
     "should create with resource set": function (done) {
         var sessionData = {resourceSet: this.rsSrl};
 
-        bCapServSession.create(sessionData, h.mockPubsubServer()).then(done(function (session) {
+        bCapServSession.create(
+            sessionData,
+            h.mockPubsubServer()
+        ).then(done(function (session) {
             assert(bCapServSession.isPrototypeOf(session));
         }.bind(this)));
     },
@@ -32,7 +35,10 @@ buster.testCase("Session", {
     "should create non-joinable": function (done) {
         var sessionData = {resourceSet: {}, joinable: false};
 
-        bCapServSession.create(sessionData, h.mockPubsubServer()).then(done(function (session) {
+        bCapServSession.create(
+            sessionData,
+            h.mockPubsubServer()
+        ).then(done(function (session) {
             assert.isFalse(session.joinable);
         }.bind(this)));
     },
@@ -55,8 +61,12 @@ buster.testCase("Session", {
 
     "should have static resource paths when specified": function (done) {
         var sessions = [
-            bCapServSession.create({staticResourcesPath: true}, h.mockPubsubServer()),
-            bCapServSession.create({staticResourcesPath: true}, h.mockPubsubServer())
+            bCapServSession.create({
+                staticResourcesPath: true
+            }, h.mockPubsubServer()),
+            bCapServSession.create({
+                staticResourcesPath: true
+            }, h.mockPubsubServer())
         ];
         when.all(sessions).then(done(function (sessions) {
             var s1 = sessions[0];
@@ -95,12 +105,19 @@ buster.testCase("Session", {
 
             this.httpServer = http.createServer();
             this.httpServer.listen(h.SERVER_PORT, function () {
-                bCapServSession.create({}, self.ps).then(done(function (session) {
+                bCapServSession.create(
+                    {},
+                    self.ps
+                ).then(done(function (session) {
                     self.session = session;
                     self.sessionData = session.serialize();
 
-                    self.pubsubClient = self.ps.createClient(self.session.messagingPath);
-                    self.privatePubsubClient = self.ps.createClient(self.session.privateMessagingPath);
+                    self.pubsubClient = self.ps.createClient(
+                        self.session.messagingPath
+                    );
+                    self.privatePubsubClient = self.ps.createClient(
+                        self.session.privateMessagingPath
+                    );
                 }));
             });
 
@@ -218,11 +235,14 @@ buster.testCase("Session", {
         }
     },
 
-    "should create with resource set": function (done) {
+    "should create with resource set II": function (done) {
         var self = this;
         var sessionData = {resourceSet: this.rsSrl};
 
-        bCapServSession.create(sessionData, h.mockPubsubServer()).then(function (session) {
+        bCapServSession.create(
+            sessionData,
+            h.mockPubsubServer()
+        ).then(function (session) {
             assert(session.resourceSet);
             var foo = session.resourceSet.get("/foo.js");
             assert(foo);

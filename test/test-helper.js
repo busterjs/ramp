@@ -18,7 +18,11 @@ module.exports = {
         var req = http.request(options, function (res) {
             var body = "";
             res.on("data", function (chunk) { body += chunk; });
-            res.on("end", function () { callback && callback(res, body); });
+            res.on("end", function () {
+                if (typeof callback === "function") {
+                    callback(res, body);
+                }
+            });
         });
         return req;
     },
@@ -30,20 +34,22 @@ module.exports = {
             log: test.spy(),
             info: test.spy(),
             debug: test.spy()
-        }
+        };
     },
 
     mockPubsubServer: function () {
         return buster.extend(buster.eventEmitter.create(), {
-            getClient: function () { return module.exports.mockFayeClient() },
+            getClient: function () { return module.exports.mockFayeClient(); },
             createClient: function () {
-                return bCapServPubsubClient.create({_fayeClient: this.getClient()})
+                return bCapServPubsubClient.create({
+                    _fayeClient: this.getClient()
+                });
             },
             addExtension: sinon.spy(),
             removeExtension: sinon.spy(),
             bind: sinon.spy(),
             unbind: sinon.spy()
-        })
+        });
     },
 
     mockFayeClient: function () {
@@ -51,7 +57,7 @@ module.exports = {
             publish: sinon.stub(),
             subscribe: sinon.stub(),
             disconnect: sinon.stub()
-        }
+        };
     },
 
     mockSlave: function () {

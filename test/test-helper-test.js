@@ -9,7 +9,8 @@ var h = require("./test-helper");
 buster.testCase("test helper", {
     setUp: function (done) {
         this.httpServer = http.createServer(function (req, res) {
-            res.writeHead(h.NO_RESPONSE_STATUS_CODE); res.end();
+            res.writeHead(h.NO_RESPONSE_STATUS_CODE);
+            res.end();
         });
         this.httpServer.listen(h.SERVER_PORT, done);
 
@@ -25,7 +26,10 @@ buster.testCase("test helper", {
     "should capture slave": function (done) {
         var self = this;
         var ua = "My User Agent";
-        bCapServ.testHelper.captureSlave(h.SERVER_PORT, ua).then(done(function () {
+        bCapServ.testHelper.captureSlave(
+            h.SERVER_PORT,
+            ua
+        ).then(done(function () {
             var slaves = self.s.slaves();
             assert.equals(slaves.length, 1);
         }));

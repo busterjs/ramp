@@ -46,12 +46,12 @@ buster.testCase("pubsub server", {
         var c1 = bCapServPubsubClient.create({
             host: "0.0.0.0",
             port: h.SERVER_PORT
-        })
+        });
         c1.connect().then(function () {
             var c2 = bCapServPubsubClient.create({
                 host: "0.0.0.0",
                 port: h.SERVER_PORT
-            })
+            });
             c2.connect().then(done(function () {
                 c1.disconnect();
                 c2.disconnect();
@@ -71,7 +71,7 @@ buster.testCase("pubsub server", {
         var c1 = bCapServPubsubClient.create({
             host: "0.0.0.0",
             port: h.SERVER_PORT
-        })
+        });
         c1.connect().then(function () {
             c1.disconnect();
         });
@@ -87,7 +87,7 @@ buster.testCase("pubsub server", {
         var c1 = bCapServPubsubClient.create({
             host: "0.0.0.0",
             port: h.SERVER_PORT
-        })
+        });
         c1.connect().then(function () {
             c1.disconnect();
         });
