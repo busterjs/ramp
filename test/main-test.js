@@ -18,7 +18,7 @@ buster.testCase("Main", {
     "test one browser": function (done) {
         var self = this;
 
-        this.p.capture(done(function (e, phantom) {
+        this.b.capture(done(function (e, browser) {
             assert.equals(e.slaves.length, 1);
             assert.match(e.slaves[0], e.slave);
         }));
@@ -27,10 +27,10 @@ buster.testCase("Main", {
     "test multiple browsers": function (done) {
         var self = this;
 
-        this.p.capture(function (e1, phantom) {
+        this.b.capture(function (e1, browser) {
             assert.equals(e1.slaves.length, 1);
 
-            self.p.capture(function (e2, phantom2) {
+            self.b.capture(function (e2, browser2) {
                 assert.equals(e2.slaves.length, 2);
 
                 var timesCalled = 0;
@@ -46,8 +46,8 @@ buster.testCase("Main", {
                     }
                 });
 
-                phantom.kill().then(function () {
-                    phantom2.kill().then(function(){});
+                browser.kill().then(function () {
+                    browser2.kill().then(function(){});
                 });
             });
         });
@@ -58,7 +58,7 @@ buster.testCase("Main", {
         assert(true);
         var rs = rampResources.resourceSet.create();
 
-        this.p.capture(function (e, phantom) {
+        this.b.capture(function (e, browser) {
             self.c.createSession(rs).then(function (sc1) {
                 sc1.onLoad(function () {
                     sc1.end();
@@ -87,7 +87,7 @@ buster.testCase("Main", {
             }
         });
 
-        this.p.capture(function (slave, phantom) {
+        this.b.capture(function (slave, browser) {
             self.serverBundle.tearDownServer().then(function () {
                 self.serverBundle = h.createServerBundle(self.port, self, function () {
                 });
@@ -107,7 +107,7 @@ buster.testCase("Main", {
 
         self.c.createSession(rs).then(function (sc) {
             sc.onLoad(function () {
-                self.p.capture(function (e, phantom) {});
+                self.b.capture(function (e, browser) {});
             });
 
             sc.on("testing", done(function (e) {
@@ -139,7 +139,7 @@ buster.testCase("Main", {
                 '});'].join("\n")
         });
 
-        this.p.capture(function (e, phantom) {});
+        this.b.capture(function (e, browser) {});
         this.c.createSession(rs).then(function (sc) {
             sc.on("veryclever", done(function (e) {
                 assert.equals(e.data, 123);
@@ -161,7 +161,7 @@ buster.testCase("Main", {
         });
         rs.loadPath.append("/foo.js");
 
-        this.p.capture(function (e, phantom) {});
+        this.b.capture(function (e, browser) {});
         this.c.createSession(rs).then(function (sc) {
             sc.on("nicelydone", done(function (e) {
                 assert.equals(e.data, 123);
@@ -179,7 +179,7 @@ buster.testCase("Main", {
         });
         rs.loadPath.append("/foo.js");
 
-        this.p.capture(function (e, phantom) {
+        this.b.capture(function (e, browser) {
             var slave = e.slave;
             self.c.createSession(rs).then(function (sc) {
                 sc.on("kindofblue", done(function (e) {
@@ -192,7 +192,7 @@ buster.testCase("Main", {
     "test provides user agent": function (done) {
         var self = this;
 
-        this.p.capture(done(function (e, phantom) {
+        this.b.capture(done(function (e, browser) {
             assert.match(e.slave.userAgent, "PhantomJS");
         }));
     }

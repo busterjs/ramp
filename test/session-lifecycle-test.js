@@ -18,7 +18,7 @@ buster.testCase("Events", {
     "calls them for instantly queued session": function (done) {
         var self = this;
 
-        this.p.capture(function (e, phantom) {
+        this.b.capture(function (e, browser) {
             var rs = rampResources.resourceSet.create();
 
             self.c.createSession(rs).then(function (sessionClient) {
@@ -53,7 +53,7 @@ buster.testCase("Events", {
         var self = this;
         var rs = rampResources.resourceSet.create();
 
-        this.p.capture(function (e, phantom) {
+        this.b.capture(function (e, browser) {
             self.c.createSession(rs).then(function (sc1) {
                 sc1.onLoad(function () {
                     sc1.end();

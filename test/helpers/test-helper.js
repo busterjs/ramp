@@ -15,7 +15,7 @@ module.exports = {
             bundle.port = parseInt(data, 10);
             bundle.c = bCapServ.createServerClient(bundle.port);
             bundle.c.connect();
-            bundle.p = new PhantomFactory(bundle.port);
+            bundle.b = new PhantomFactory(bundle.port);
             buster.extend(tc, bundle);
             done();
         });
@@ -36,7 +36,7 @@ module.exports = {
             },
 
             tearDownBrowsers: function () {
-                return when.all(bundle.p.killAll());
+                return when.all(bundle.b.killAll());
             }
         }
     }

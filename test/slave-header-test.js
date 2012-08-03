@@ -28,7 +28,7 @@ buster.testCase("Slave header", {
         });
 
         this.c.setHeader(headerRs, 100).then(function () {
-            self.p.capture(function (e, phantom) {});
+            self.b.capture(function (e, browser) {});
         });
     }
 });
