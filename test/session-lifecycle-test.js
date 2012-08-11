@@ -36,13 +36,13 @@ buster.testCase("Session lifecycle", {
                 });
 
                 sessionClient.onUnload(done(function () {
-                    assert.calledOnce(startSpy);
-                    assert.calledOnce(loadSpy);
+                    assert(startSpy.calledOnce);
+                    assert(loadSpy.calledOnce);
                     assert(startSpy.calledBefore(loadSpy));
                     assert.equals(loadSpy.getCall(0).args[0], [e.slave]);
-                    assert.calledOnce(endSpy);
+                    assert(endSpy.calledOnce);
                     assert(loadSpy.calledBefore(endSpy));
-                    assert.calledOnce(unloadSpy);
+                    assert(unloadSpy.calledOnce);
                     assert(endSpy.calledBefore(unloadSpy));
                 }));
             });
@@ -74,13 +74,13 @@ buster.testCase("Session lifecycle", {
                         });
 
                         sc2.onUnload(done(function () {
-                            assert.calledOnce(startSpy);
-                            assert.calledOnce(loadSpy);
+                            assert(startSpy.calledOnce);
+                            assert(loadSpy.calledOnce);
                             assert(startSpy.calledBefore(loadSpy));
                             assert.equals(loadSpy.getCall(0).args[0], [e.slave]);
-                            assert.calledOnce(endSpy);
+                            assert(endSpy.calledOnce);
                             assert(loadSpy.calledBefore(endSpy));
-                            assert.calledOnce(unloadSpy);
+                            assert(unloadSpy.calledOnce);
                         assert(endSpy.calledBefore(unloadSpy));
                         }));
                     });
