@@ -6,7 +6,7 @@ var rampResources = require("ramp-resources");
 var h = require("./helpers/test-helper");
 
 buster.testRunner.timeout = 4000;
-buster.testCase("Events", {
+buster.testCase("Session lifecycle", {
     setUp: function (done) {
         this.serverBundle = h.createServerBundle(0, this, done);
     },
