@@ -15,7 +15,7 @@ buster.testCase("Session lifecycle", {
         this.serverBundle.tearDown(done);
     },
 
-    "calls them for instantly queued session": function (done) {
+    "calls callbacks for instantly queued session": function (done) {
         var self = this;
 
         this.b.capture(function (e, browser) {
@@ -49,7 +49,7 @@ buster.testCase("Session lifecycle", {
         });
     },
 
-    "calls them when starting queued session": function (done) {
+    "calls callbacks when starting queued session": function (done) {
         var self = this;
         var rs = rampResources.resourceSet.create();
 
