@@ -89,6 +89,11 @@ var Phantom = function (onready) {
 
     return {
         open: function (url, onload) {
+            if (this.isKilled) {
+                onload();
+                return;
+            }
+
             if (isOpening) {
                 throw new Error(
                     "Attempted to open URL before prev page was loaded"
@@ -109,7 +114,7 @@ var Phantom = function (onready) {
                 if (status === "success") {
                     onload();
                 } else {
-                    throw new Error("Unknown page load status: " + status);
+                    throw new Error("Unknown page load status for " + url +  ": " + status);
                 }
             });
         },

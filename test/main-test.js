@@ -4,6 +4,7 @@ var refute = buster.refute;
 
 var rampResources = require("ramp-resources");
 var h = require("./helpers/test-helper");
+var bCapServ = require("./../lib/buster-capture-server");
 
 buster.testRunner.timeout = 4000;
 buster.testCase("Main", {
@@ -195,5 +196,27 @@ buster.testCase("Main", {
         this.b.capture(done(function (e, browser) {
             assert.match(e.slave.userAgent, "PhantomJS");
         }));
+    },
+
+    "emits session lifecycle events to server client": function (done) {
+        var self = this;
+        var rs = rampResources.resourceSet.create();
+        var sessionClient;
+
+        this.b.capture(function (e, browser) {
+            var slave = e.slave;
+            self.c.createSession(rs).then(function (sc) {
+                sessionClient = sc;
+            });
+        });
+
+        this.c.on("session:started", function (sess) {
+            assert.equals(sess.id, sessionClient.sessionId);
+            sessionClient.end();
+        });
+        this.c.on("session:ended", function (sess) {
+            assert.equals(sess.id, sessionClient.sessionId);
+            done();
+        });
     }
 });
