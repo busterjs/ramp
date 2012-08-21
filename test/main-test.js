@@ -4,7 +4,8 @@ var refute = buster.refute;
 
 var rampResources = require("ramp-resources");
 var h = require("./helpers/test-helper");
-var bCapServ = require("./../lib/buster-capture-server");
+var cp = require("child_process");
+var sys = require("sys");
 
 buster.testRunner.timeout = 4000;
 buster.testCase("Main", {
@@ -216,6 +217,23 @@ buster.testCase("Main", {
         });
         this.c.on("session:ended", function (sess) {
             assert.equals(sess.id, sessionClient.sessionId);
+            done();
+        });
+    },
+
+    "kills session when server client spawning it dies": function (done) {
+        var sc = cp.spawn("node", [__dirname + "/main-test-session-client.js", this.port]);
+        sc.stdout.setEncoding("utf8");
+        sc.stdout.on("data", function (data) {
+            sys.print("[SC PROCESS] ", data);
+        });
+
+        this.c.on("session:started", function (sess) {
+            sc.kill();
+        });
+
+        this.c.on("session:ended", function (sess) {
+            assert(true);
             done();
         });
     }
