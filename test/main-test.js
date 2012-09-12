@@ -220,5 +220,15 @@ buster.testCase("Main", {
                 done();
             });
         });
+    },
+
+    "test emits event when slave dies": function (done) {
+        this.b.capture(function (e, browser) {
+            browser.kill();
+        })
+
+        this.c.on("slave:freed", done(function (e) {
+            assert(true);
+        }));
     }
 });
