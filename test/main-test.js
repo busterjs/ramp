@@ -97,27 +97,6 @@ buster.testCase("Main", {
         });
     },
 
-    "test loads session when slave is captured": function (done) {
-        var self = this;
-
-        var rs = rampResources.resourceSet.create();
-        rs.addResource({
-            path: "/test.js",
-            content: 'buster.emit("testing", 123);'
-        });
-        rs.loadPath.append("/test.js");
-
-        self.c.createSession(rs).then(function (sc) {
-            sc.onLoad(function () {
-                self.b.capture(function (e, browser) {});
-            });
-
-            sc.on("testing", done(function (e) {
-                assert.equals(e.data, 123);
-            }));
-        });
-    },
-
     "test is able to relative path lookups in slaves": function (done) {
         var self = this;
 
@@ -141,11 +120,12 @@ buster.testCase("Main", {
                 '});'].join("\n")
         });
 
-        this.b.capture(function (e, browser) {});
-        this.c.createSession(rs).then(function (sc) {
-            sc.on("veryclever", done(function (e) {
-                assert.equals(e.data, 123);
-            }));
+        this.b.capture(function (e, browser) {
+            self.c.createSession(rs).then(function (sc) {
+                sc.on("veryclever", done(function (e) {
+                    assert.equals(e.data, 123);
+                }));
+            });
         });
     },
 
@@ -163,11 +143,12 @@ buster.testCase("Main", {
         });
         rs.loadPath.append("/foo.js");
 
-        this.b.capture(function (e, browser) {});
-        this.c.createSession(rs).then(function (sc) {
-            sc.on("nicelydone", done(function (e) {
-                assert.equals(e.data, 123);
-            }));
+        this.b.capture(function (e, browser) {
+            self.c.createSession(rs).then(function (sc) {
+                sc.on("nicelydone", done(function (e) {
+                    assert.equals(e.data, 123);
+                }));
+            });
         });
     },
 
@@ -222,19 +203,22 @@ buster.testCase("Main", {
     },
 
     "kills session when server client spawning it dies": function (done) {
-        var sc = cp.spawn("node", [__dirname + "/main-test-session-client.js", this.port]);
-        sc.stdout.setEncoding("utf8");
-        sc.stdout.on("data", function (data) {
-            sys.print("[SC PROCESS] ", data);
-        });
+        var self = this;
+        this.b.capture(function (e, browser) {
+            var sc = cp.spawn("node", [__dirname + "/main-test-session-client.js", self.port]);
+            sc.stdout.setEncoding("utf8");
+            sc.stdout.on("data", function (data) {
+                sys.print("[SC PROCESS] ", data);
+            });
 
-        this.c.on("session:started", function (sess) {
-            sc.kill();
-        });
+            self.c.on("session:started", function (sess) {
+                sc.kill();
+            });
 
-        this.c.on("session:ended", function (sess) {
-            assert(true);
-            done();
+            self.c.on("session:ended", function (sess) {
+                assert(true);
+                done();
+            });
         });
     }
 });

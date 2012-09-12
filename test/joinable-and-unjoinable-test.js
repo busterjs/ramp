@@ -15,41 +15,12 @@ buster.testCase("Joinable and unjoinable", {
         this.serverBundle.tearDown(done);
     },
 
-    "joining a joinable session": function (done) {
-        var self = this;
-
-        this.b.capture(function (e, browser) {
-            var rs = rampResources.resourceSet.create();
-            self.c.createSession(rs).then(function (sessionClient) {
-                sessionClient.onSlaveCaptured(done(function (e) {
-                    assert.equals(e.slaves.length, 2);
-                }));
-            });
-
-            self.b.capture(function (e, browser) {});
-        });
-    },
-
-    "starting a non-joinable session with no slaves captured": function (done) {
+    "starting a session with no slaves captured": function (done) {
         var rs = rampResources.resourceSet.create();
-        this.c.createSession(rs, {joinable: false}).then(function (sessionClient) {
+        this.c.createSession(rs, {}).then(function (sessionClient) {
             sessionClient.onAbort(done(function (e) {
                 assert(e.error);
             }));
-        });
-    },
-
-    "// does not join non joinable session": function (done) {
-        var self = this;
-
-        this.b.capture(function (e, browser) {
-            var rs = rampResources.resourceSet.create();
-            self.c.createSession(rs, {joinable: false}).then(function (sessionClient) {
-                self.b.capture(function (e, browser) {
-                    // TODO: Implement this.
-                    assert.equals(self.c.slaves.length, 1);
-                });
-            });
         });
     }
 });
