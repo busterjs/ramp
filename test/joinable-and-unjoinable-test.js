@@ -1,11 +1,9 @@
-var buster = require("buster");
+var buster = require("buster-node");
 var assert = buster.assert;
-var refute = buster.refute;
 
 var rampResources = require("ramp-resources");
 var h = require("./helpers/test-helper");
 
-buster.testRunner.timeout = 4000;
 buster.testCase("Joinable and unjoinable", {
     setUp: function (done) {
         this.serverBundle = h.createServerBundle(0, this, done);

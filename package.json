@@ -19,7 +19,7 @@
         "url": "git://gitorious.org/buster/buster-capture-server.git"
     },
     "scripts": {
-        "test": "./node_modules/buster/bin/buster-test"
+        "test": "node run-tests.js"
     },
     "dependencies": {
         "buster-core": ">=0.6.2",
@@ -30,7 +30,7 @@
         "when": "https://github.com/cujojs/when/tarball/1.3.0"
     },
     "devDependencies": {
-        "buster": "*",
+        "buster-node": "*",
         "sinon": ">=1.4",
         "htmlparser": "~1.7",
         "soupselect": "~0.2"

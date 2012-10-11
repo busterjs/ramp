@@ -3,6 +3,10 @@ var when = require("when");
 var PhantomFactory = require("./phantom-factory");
 var cp = require("child_process");
 var sys = require("sys");
+var extend = require("buster-core").extend;
+var testRunner = require("buster-node").testRunner;
+
+testRunner.timeout = 4000;
 
 module.exports = {
     createServerBundle: function (port, tc, done) {
@@ -16,7 +20,7 @@ module.exports = {
             bundle.c = bCapServ.createServerClient(bundle.port);
             bundle.c.connect();
             bundle.b = new PhantomFactory(bundle.port);
-            buster.extend(tc, bundle);
+            extend(tc, bundle);
             done();
 
             cs.stdout.on("data", function (data) {
@@ -42,6 +46,6 @@ module.exports = {
             tearDownBrowsers: function () {
                 return when.all(bundle.b.killAll());
             }
-        }
+        };
     }
 }
