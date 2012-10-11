@@ -14,7 +14,7 @@ buster.testCase("Joinable and unjoinable", {
     },
 
     "starting a session with no slaves captured": function (done) {
-        var rs = rampResources.resourceSet.create();
+        var rs = rampResources.createResourceSet();
         this.c.createSession(rs, {}).then(function (sessionClient) {
             sessionClient.onAbort(done(function (e) {
                 assert(e.error);

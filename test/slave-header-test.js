@@ -17,7 +17,7 @@ buster.testCase("Slave header", {
     "serves header": function (done) {
         var self = this;
 
-        var headerRs = rampResources.resourceSet.create();
+        var headerRs = rampResources.createResourceSet();
         headerRs.addResource({
             path: "/",
             content: done(function () {

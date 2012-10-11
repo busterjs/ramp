@@ -23,7 +23,7 @@
     },
     "dependencies": {
         "bane": "~0.1",
-        "ramp-resources": ">=0.4",
+        "ramp-resources": ">=0.5",
         "faye": "~0.8",
         "ejs": "~0.4",
         "node-uuid": "~1",

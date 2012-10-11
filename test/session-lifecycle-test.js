@@ -18,7 +18,7 @@ buster.testCase("Session lifecycle", {
         var self = this;
 
         this.b.capture(function (e, browser) {
-            var rs = rampResources.resourceSet.create();
+            var rs = rampResources.createResourceSet();
 
             self.c.createSession(rs).then(function (sessionClient) {
                 var startSpy = self.spy();
@@ -50,7 +50,7 @@ buster.testCase("Session lifecycle", {
 
     "calls callbacks when starting queued session": function (done) {
         var self = this;
-        var rs = rampResources.resourceSet.create();
+        var rs = rampResources.createResourceSet();
 
         this.b.capture(function (e, browser) {
             self.c.createSession(rs).then(function (sc1) {

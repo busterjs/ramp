@@ -56,7 +56,7 @@ buster.testCase("Main", {
     "test loading second session": function (done) {
         var self = this;
         assert(true);
-        var rs = rampResources.resourceSet.create();
+        var rs = rampResources.createResourceSet();
 
         this.b.capture(function (e, browser) {
             self.c.createSession(rs).then(function (sc1) {
@@ -98,7 +98,7 @@ buster.testCase("Main", {
     "test is able to relative path lookups in slaves": function (done) {
         var self = this;
 
-        var rs = rampResources.resourceSet.create();
+        var rs = rampResources.createResourceSet();
         rs.addResource({
             path: "/",
             content: [
@@ -130,7 +130,7 @@ buster.testCase("Main", {
     "test provides buster.env.contextPath": function (done) {
         var self = this;
 
-        var rs = rampResources.resourceSet.create();
+        var rs = rampResources.createResourceSet();
         rs.addResource({
             path: "/foo.js",
             content: 'var e = document.createElement("script"); e.src = buster.env.contextPath + "/bar.js"; document.body.appendChild(e);'
@@ -153,7 +153,7 @@ buster.testCase("Main", {
     "test provides buster.env.id": function (done) {
         var self = this;
 
-        var rs = rampResources.resourceSet.create();
+        var rs = rampResources.createResourceSet();
         rs.addResource({
             path: "/foo.js",
             content: 'buster.emit("kindofblue", buster.env.id);'
@@ -180,7 +180,7 @@ buster.testCase("Main", {
 
     "emits session lifecycle events to server client": function (done) {
         var self = this;
-        var rs = rampResources.resourceSet.create();
+        var rs = rampResources.createResourceSet();
         var sessionClient;
 
         this.b.capture(function (e, browser) {

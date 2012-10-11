@@ -17,7 +17,7 @@ buster.testCase("Cache", {
         var self = this;
 
         this.b.capture(function (e, browser) {
-            var rs = rampResources.resourceSet.create();
+            var rs = rampResources.createResourceSet();
             rs.addResource({
                 path: "/test.js",
                 content: 'buster.emit("some:event", 123);'

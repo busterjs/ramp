@@ -17,7 +17,7 @@ buster.testCase("Events", {
         var self = this;
 
         this.b.capture(function (e, browser) {
-            var rs = rampResources.resourceSet.create();
+            var rs = rampResources.createResourceSet();
             rs.addResource({
                 path: "/test.js",
                 content: 'buster.emit("some:event", 123);'
@@ -35,7 +35,7 @@ buster.testCase("Events", {
     "test subscribing to events from session": function (done) {
         var self = this;
         this.b.capture(function (e, browser) {
-            var rs = rampResources.resourceSet.create();
+            var rs = rampResources.createResourceSet();
             rs.addResource({
                 path: "/test.js",
                 content: [
