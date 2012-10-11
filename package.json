@@ -22,7 +22,7 @@
         "test": "node run-tests.js"
     },
     "dependencies": {
-        "buster-core": ">=0.6.2",
+        "bane": "~0.1",
         "ramp-resources": ">=0.4",
         "faye": "~0.8",
         "ejs": "~0.4",
@@ -33,6 +33,7 @@
         "buster-node": "*",
         "sinon": ">=1.4",
         "htmlparser": "~1.7",
-        "soupselect": "~0.2"
+        "soupselect": "~0.2",
+        "lodash": "~0.8"
     }
 }

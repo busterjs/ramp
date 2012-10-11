@@ -3,9 +3,8 @@ var when = require("when");
 var PhantomFactory = require("./phantom-factory");
 var cp = require("child_process");
 var sys = require("sys");
-var extend = require("buster-core").extend;
+var _ = require("lodash");
 var testRunner = require("buster-node").testRunner;
-
 testRunner.timeout = 4000;
 
 module.exports = {
@@ -20,7 +19,7 @@ module.exports = {
             bundle.c = bCapServ.createServerClient(bundle.port);
             bundle.c.connect();
             bundle.b = new PhantomFactory(bundle.port);
-            extend(tc, bundle);
+            _.extend(tc, bundle);
             done();
 
             cs.stdout.on("data", function (data) {
