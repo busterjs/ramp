@@ -20,12 +20,22 @@ buster.testCase("Test helper", {
         var promise = bCapServTestHelper.captureSlave(this.port, actualUA);
 
         promise.then(done(function (e) {
-            assert(e);
-            assert.equals(e.slaves, [e.slave]);
+            assert(e.e);
+            assert.equals(e.e.slaves, [e.e.slave]);
 
-            var slave = e.slave;
+            var slave = e.e.slave;
             assert(slave);
             assert.equals(slave.userAgent, actualUA);
+        }));
+    },
+
+    "should provide teardown": function (done) {
+        var actualUA = "My user agent";
+        var promise = bCapServTestHelper.captureSlave(this.port, actualUA);
+
+        promise.then(done(function (e) {
+            assert(e.teardown);
+            e.teardown();
         }));
     }
 });
