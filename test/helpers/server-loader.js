@@ -1,4 +1,4 @@
-var bCapServ = require("./../../lib/buster-capture-server");
+var captureServer = require("./../../lib/ramp-capture-server");
 var http = require("http");
 
 var server = http.createServer(function (req, res) {
@@ -9,5 +9,5 @@ server.listen(parseInt(process.argv[2], 10), function () {
     console.log(server.address().port);
 });
 
-var cs = bCapServ.createServer();
+var cs = captureServer.createServer();
 cs.attach(server);

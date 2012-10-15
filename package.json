@@ -1,8 +1,8 @@
 {
-    "name": "buster-capture-server",
-    "version": "0.5.1",
+    "name": "ramp-capture-server",
+    "version": "0.6.0",
     "description": "Buster capture server",
-    "homepage": "http://busterjs.org/docs/buster-capture-server",
+    "homepage": "http://busterjs.org/docs/ramp-capture-server",
     "author": {
         "name": "August Lilleaas",
         "email": "august.lilleaas@gmail.com",
@@ -13,10 +13,10 @@
         "email": "christian@cjohansen.no",
         "url": "http://cjohansen.no"
     }],
-    "main": "./lib/buster-capture-server",
+    "main": "./lib/ramp-capture-server",
     "repository": {
         "type": "git",
-        "url": "git://gitorious.org/buster/buster-capture-server.git"
+        "url": "git://gitorious.org/buster/ramp-capture-server.git"
     },
     "scripts": {
         "test": "node run-tests.js"
