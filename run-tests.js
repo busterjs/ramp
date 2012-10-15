@@ -14,3 +14,4 @@ require("./test/joinable-and-unjoinable-test");
 require("./test/main-test");
 require("./test/session-lifecycle-test");
 require("./test/slave-header-test");
+require("./test/test-helper-test");
