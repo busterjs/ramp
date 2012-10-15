@@ -3,7 +3,7 @@ var assert = buster.assert;
 var refute = buster.refute;
 
 var h = require("./helpers/test-helper");
-var rCapServTestHelper = require("../lib/ramp-capture-server").testHelper;
+var rampTestHelper = require("../lib/ramp").testHelper;
 
 buster.testCase("Test helper", {
     setUp: function (done) {
@@ -17,7 +17,7 @@ buster.testCase("Test helper", {
 
     "should capture a slave against an actual server": function (done) {
         var actualUA = "My user agent";
-        var promise = rCapServTestHelper.captureSlave(this.port, actualUA);
+        var promise = rampTestHelper.captureSlave(this.port, actualUA);
 
         promise.then(done(function (e) {
             assert(e.e);
@@ -31,7 +31,7 @@ buster.testCase("Test helper", {
 
     "should provide teardown": function (done) {
         var actualUA = "My user agent";
-        var promise = rCapServTestHelper.captureSlave(this.port, actualUA);
+        var promise = rampTestHelper.captureSlave(this.port, actualUA);
 
         promise.then(done(function (e) {
             assert(e.teardown);

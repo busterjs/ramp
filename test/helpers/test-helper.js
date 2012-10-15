@@ -1,4 +1,4 @@
-var rampCaptureServer = require("./../../lib/ramp-capture-server");
+var ramp = require("./../../lib/ramp");
 var when = require("when");
 var PhantomFactory = require("./phantom-factory");
 var cp = require("child_process");
@@ -16,7 +16,7 @@ module.exports = {
         cs.stdout.setEncoding("utf8");
         cs.stdout.once("data", function (data) {
             bundle.port = parseInt(data, 10);
-            bundle.c = rampCaptureServer.createServerClient(bundle.port);
+            bundle.c = ramp.createServerClient(bundle.port);
             bundle.c.connect();
             bundle.b = new PhantomFactory(bundle.port);
             _.extend(tc, bundle);

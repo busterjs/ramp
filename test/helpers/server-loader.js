@@ -1,4 +1,4 @@
-var captureServer = require("./../../lib/ramp-capture-server");
+var ramp = require("./../../lib/ramp");
 var http = require("http");
 
 var server = http.createServer(function (req, res) {
@@ -9,5 +9,5 @@ server.listen(parseInt(process.argv[2], 10), function () {
     console.log(server.address().port);
 });
 
-var cs = captureServer.createServer();
+var cs = ramp.createServer();
 cs.attach(server);

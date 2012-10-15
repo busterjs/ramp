@@ -1,5 +1,5 @@
 var http = require("http");
-var rampCaptureServer = require("./../../lib/ramp-capture-server");
+var ramp = require("./../../lib/ramp");
 var EventEmitter = require("events").EventEmitter;
 var CP = require("child_process");
 var faye = require("faye");
@@ -34,7 +34,7 @@ PhantomFactory.prototype = {
             ready(e[0], e[1]);
         });
 
-        var c = rampCaptureServer.createServerClient(this.port);
+        var c = ramp.createServerClient(this.port);
 
         c.connect().then(function () {
             c.on("slave:captured", function (e) {
