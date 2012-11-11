@@ -15,7 +15,7 @@ module.exports = PhantomFactory;
 
 PhantomFactory.prototype = {
     openCapture: function (ready) {
-        var captureUrl = "http://0.0.0.0:" + this.port + "/capture";
+        var captureUrl = "http://127.0.0.1:" + this.port + "/capture";
 
         var phantom = Phantom(function () {
             phantom.open(captureUrl, function () {
@@ -102,7 +102,7 @@ var Phantom = function (onready) {
             isOpening = true;
 
             http.request({
-                host: "0.0.0.0",
+                host: "127.0.0.1",
                 port: phantomControlPort,
                 method: "GET",
                 path: "/load",
