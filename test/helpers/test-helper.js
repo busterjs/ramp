@@ -5,7 +5,7 @@ var cp = require("child_process");
 var sys = require("sys");
 var _ = require("lodash");
 var testRunner = require("buster-node").testRunner;
-testRunner.timeout = 4000;
+testRunner.timeout = 10000;
 
 module.exports = {
     createServerBundle: function (port, tc, done) {
