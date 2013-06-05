@@ -34,6 +34,6 @@
         "sinon": ">=1.4",
         "htmlparser": "~1.7",
         "soupselect": "~0.2",
-        "lodash": "~0.8"
+        "lodash": "~1.0"
     }
 }
