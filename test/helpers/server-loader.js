@@ -7,7 +7,7 @@ var server = http.createServer(function (req, res) {
 });
 server.listen(parseInt(process.argv[2], 10), function () {
     console.log(server.address().port);
-});
 
-var cs = ramp.createServer();
-cs.attach(server);
+    var cs = ramp.createServer();
+    cs.attach(server);
+});

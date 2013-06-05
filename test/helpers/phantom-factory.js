@@ -65,6 +65,7 @@ var Phantom = function (onready) {
         phantomScriptPath,
         phantomControlPort
     ]);
+
     phantom.stdout.on("data", function (data) {
         var msgs = data.toString("utf8").split("\n");
         msgs.forEach(function (msg) {
@@ -73,6 +74,13 @@ var Phantom = function (onready) {
             var data = msg.slice(command.length + 1).trim();
             eventEmitter.emit(command, data);
         });
+    });
+
+    phantom.on("close", function (code, signal) {
+        if (code) {
+            console.log("Phantomjs exited with error code " + code);
+            console.log("Is 'phantomjs' in PATH?");
+        }
     });
 
     eventEmitter.on("debug", function (data) {
