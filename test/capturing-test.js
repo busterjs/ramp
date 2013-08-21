@@ -24,7 +24,6 @@ buster.testCase("Capturing", {
                     var body = JSON.parse(body);
                     assert.equals(body.length, 1)
                     assert(body[0].id);
-                    assert(body[0].prisonPath);
                     assert(body[0].userAgent);
                     assert.match(body[0].userAgent, /phantomjs/i);
                 }));
