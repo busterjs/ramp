@@ -62,11 +62,27 @@ buster.testCase("Session", {
                 sessionClientInitializer.initialize().then(
                     th.failWhenCalled,
                     done(function (err) {
-                        assert(/no slaves/i.test(err));
+                        assert(/no slaves/i.test(err.message));
                     })
                 );
             },
             th.failWhenCalled
         );
+    },
+
+    "cannot be created with another session in progress": function (done) {
+        th.capture(this, function (rc) {
+            rc.createSession().then(
+                function (sessionClientInitializer) {
+                    assert(sessionClientInitializer.getSession().id);
+                    rc.createSession().then(
+                        th.failWhenCalled,
+                        done(function (err) {
+                            assert(err.message);
+                        })
+                    )
+                },
+                th.failWhenCalled)
+        });
     }
 });
