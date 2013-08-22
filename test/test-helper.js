@@ -129,5 +129,13 @@ module.exports = {
                     module.exports.failWhenCalled)
             },
             module.exports.failWhenCalled);
+    },
+
+    promiseSuccess: function (promise, cb) {
+        promise.then(cb, module.exports.failWhenCalled)
+    },
+
+    promiseFailure: function (promise, cb) {
+        promise.then(module.exports.failWhenCalled, cb);
     }
 };

@@ -1,6 +1,7 @@
 var buster = require("buster-node");1
 var assert = buster.assert;
 var refute = buster.refute;
+var rampResources = require("ramp-resources");
 var ramp = require("../lib/ramp")
 
 var when = require("when");
@@ -83,6 +84,29 @@ buster.testCase("Session", {
                     )
                 },
                 th.failWhenCalled)
+        });
+    },
+
+    "can subscribe to events": function (done) {
+        var self = this;
+
+        th.capture(this, function (rc) {
+            var rs = rampResources.createResourceSet();
+            rs.addResource({
+                path: "/test.js",
+                content: 'buster.emit("some:event", 123);'
+            });
+            rs.loadPath.append("/test.js");
+
+            th.promiseSuccess(rc.createSession(rs), function (sessionClientInitializer) {
+                th.promiseSuccess(
+                    sessionClientInitializer.on("some:event", done(function (e) {
+                        assert.equals(e.data, 123);
+                    })),
+                    function () {
+                        sessionClientInitializer.initialize()
+                    });
+            });
         });
     }
 });
