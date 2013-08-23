@@ -38,6 +38,7 @@ buster.testCase("Slave", {
                     assert(slave.chainsPath)
                     th.httpGet(self.rs.serverUrl + slave.chainsPath, done(function (res, body) {
                         assert.equals(res.statusCode, 200);
+                        assert.match(body, /\<frameset/);
                     }))
                 },
                 th.failWhenCalled
