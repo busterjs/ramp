@@ -53,6 +53,7 @@ module.exports = {
         } else {
             console.log("Booting up Phantom.JS...");
             phantom.create(function (ph) {
+                console.log("Phantom.JS booted!");
                 phantomSharedInstance = ph;
                 deferred.resolve(["ph", phantomSharedInstance, fnReturningResolvedPromise]);
             });
