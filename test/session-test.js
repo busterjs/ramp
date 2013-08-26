@@ -101,6 +101,7 @@ buster.testCase("Session", {
             th.promiseSuccess(rc.createSession(rs), function (sessionClientInitializer) {
                 th.promiseSuccess(
                     sessionClientInitializer.on("some:event", done(function (e) {
+                        assert(e.slaveId);
                         assert.equals(e.data, 123);
                     })),
                     function () {
