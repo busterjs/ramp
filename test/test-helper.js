@@ -115,6 +115,10 @@ module.exports = {
 
     capture: function (test, cb) {
         test.ph.createPage(function (page) {
+            page.set("onConsoleMessage", function (msg) {
+                console.log("[PHANTOM CONSOLE]", msg);
+            })
+
             page.open(test.rs.captureUrl, function (status) {
                 var rc = ramp.createRampClient(test.rs.port);
                 cb(rc);
