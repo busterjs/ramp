@@ -109,5 +109,35 @@ buster.testCase("Session", {
                     });
             });
         });
+    },
+
+    "can publish events": function (done) {
+        var self = this;
+
+        th.capture(this, function (rc) {
+            var rs = rampResources.createResourceSet();
+            rs.addResource({
+                path: "/test.js",
+                content: 'buster.on("other:event", function (e) { buster.emit("final:event", e.data)}).then(function () { buster.emit("some:event"); })'
+            });
+            rs.loadPath.append("/test.js");
+
+            var payload = Math.random().toString()
+            th.promiseSuccess(rc.createSession(rs), function (sessionClientInitializer) {
+                th.promiseSuccess(
+                    when.all([
+                        sessionClientInitializer.on("some:event", function (e) {
+                            sessionClientInitializer.emit("other:event", payload);
+                        }),
+                        sessionClientInitializer.on("final:event", done(function (e) {
+                            assert(e.slaveId);
+                            assert.equals(e.data, payload);
+                        }))
+                    ]),
+                    function () {
+                        sessionClientInitializer.initialize()
+                    });
+            });
+        });
     }
 });
