@@ -26,6 +26,20 @@ function killProcess(proc) {
     return deferred.promise;
 }
 
+function ensureSlavePresent(rc, slaveId, cb) {
+    rc.getSlaves().then(function (slaves) {
+        var slave = slaves.filter(function (s) {
+            return s.id == slaveId
+        })[0];
+
+        if (slave) {
+            cb(rc);
+        } else {
+            ensureSlavePresent(rc, slaveId, cb);
+        }
+    });
+}
+
 module.exports = {
     setUpHelpers: function (testCase, setups) {
         var deferred = when.defer();
@@ -119,9 +133,14 @@ module.exports = {
                 console.log("[PHANTOM CONSOLE]", msg);
             })
 
+
             page.open(test.rs.captureUrl, function (status) {
-                var rc = ramp.createRampClient(test.rs.port);
-                cb(rc);
+                page.get("url", function (url) {
+                    var slaveId = /^[a-z]+:\/\/[^\/]+\/slaves\/([^\/]+)/.exec(url)[1];
+
+                    var rc = ramp.createRampClient(test.rs.port);
+                    ensureSlavePresent(rc, slaveId, cb);
+                });
             });
         });
     },
