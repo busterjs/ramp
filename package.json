@@ -1,0 +1,27 @@
+{
+    "name": "ramp",
+    "version": "0.7.0",
+    "description": "A ramp that makes browsers crash and burn, and hopefully run some tests (or less specifically, load some files and emit some events).",
+    "author": {
+        "name": "August Lilleaas",
+        "email": "august@augustl.com",
+        "url": "http://augustl.com"
+    },
+    "main": "./lib/ramp",
+    "dependencies": {
+        "ramp-resources": ">=0.5",
+        "faye": "~0.8",
+        "ejs": "~0.8",
+        "node-uuid": "~1",
+        "when": "2.2.1",
+        "express": "3.3.4",
+        "mori": "0.2.1"
+    },
+    "devDependencies": {
+        "buster-node": "*",
+        "sinon": ">=1.4",
+        "htmlparser": "~1.7",
+        "soupselect": "~0.2",
+        "phantom": "0.5.2"
+    }
+}
