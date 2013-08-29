@@ -123,8 +123,8 @@ module.exports = {
         }).end();
     },
 
-    failWhenCalled: function () {
-        throw new Exception("Expected not to be called.");
+    failWhenCalled: function (err) {
+        console.log("Unexpeced call", err);
     },
 
     capture: function (test, cb) {

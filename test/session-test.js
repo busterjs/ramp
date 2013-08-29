@@ -5,6 +5,8 @@ var rampResources = require("ramp-resources");
 var ramp = require("../lib/ramp")
 
 var when = require("when");
+var mori = require("mori");
+var when_pipeline = require("when/pipeline");
 var th = require("./test-helper.js");
 
 buster.testCase("Session", {
@@ -138,6 +140,56 @@ buster.testCase("Session", {
                         sessionClientInitializer.initialize()
                     });
             });
+        });
+    },
+
+    "can get current session": function (done) {
+        th.capture(this, function (rc) {
+            th.promiseSuccess(
+                when_pipeline([
+                    function () {
+                        return rc.createSession()
+                    },
+                    function (sessionClientInitializer) {
+                        return sessionClientInitializer.initialize()
+                    }
+                ]),
+                function (sessionClient) {
+                    th.promiseSuccess(rc.getCurrentSession(), done(function (session) {
+                        assert(session);
+                        assert.equals(session, sessionClient.getSession());
+                    }));
+                });
+        });
+    },
+
+    "can get current session when no session is running": function (done) {
+        th.capture(this, function (rc) {
+            th.promiseSuccess(rc.getCurrentSession(), done(function (session) {
+                assert.isNull(session);
+            }));
+        });
+    },
+
+    "can end session": function (done) {
+        th.capture(this, function (rc) {
+            th.promiseSuccess(
+                when_pipeline([
+                    function () {
+                        return rc.createSession()
+                    },
+                    function (sessionClientInitializer) {
+                        return sessionClientInitializer.initialize()
+                    },
+                    function (sessionClient) {
+                        return sessionClient.endSession();
+                    },
+                ]),
+                function () {
+                    th.promiseSuccess(rc.getCurrentSession(), done(function (session) {
+                        assert.isNull(session);
+                    }));
+                });
         });
     }
 });
