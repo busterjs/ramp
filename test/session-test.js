@@ -197,5 +197,30 @@ buster.testCase("Session", {
                     });
                 });
         });
+    },
+
+    "session inaccessible when ended": function (done) {
+        var self = this;
+
+        th.capture(this, function (rc, page) {
+            th.promiseSuccess(
+                when_pipeline([
+                    function () {
+                        return rc.createSession()
+                    },
+                    function (sessionClientInitializer) {
+                        return sessionClientInitializer.initialize()
+                    }
+                ]),
+                function (sessionClient) {
+                    var session = sessionClient.getSession();
+
+                    th.promiseSuccess(sessionClient.endSession(), function () {
+                        th.httpGet(self.rs.serverUrl + session.resourcesPath + "/", done(function (res, body) {
+                            assert.equals(res.statusCode, 418);
+                        }));
+                    });
+                });
+        });
     }
 });
