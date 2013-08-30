@@ -222,5 +222,44 @@ buster.testCase("Session", {
                     });
                 });
         });
+    },
+
+    "session caches resources": function (done) {
+        var resourceSpy = this.spy();
+
+        var rs = rampResources.createResourceSet();
+        rs.addResource({
+            path: "/test.js",
+            etag: "123abc",
+            content: function () {
+                resourceSpy();
+                return "5 + 5;"
+            }
+        });
+        rs.loadPath.append("/test.js");
+
+        th.capture(this, function (rc, page) {
+            th.promiseSuccess(
+                when_pipeline([
+                    function () {
+                        return rc.createSession(rs, {cache: true})
+                    },
+                    function (sessionClientInitializer) {
+                        return sessionClientInitializer.initialize()
+                    },
+                    function (sessionClient) {
+                        sessionClient.endSession();
+                    },
+                    function () {
+                        return rc.createSession(rs, {cache: true})
+                    },
+                    function (sessionClientInitializer) {
+                        return sessionClientInitializer.initialize()
+                    },
+                ]),
+                done(function (sessionClient) {
+                    assert.calledOnce(resourceSpy);
+                }));
+        });
     }
 });
