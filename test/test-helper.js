@@ -26,16 +26,16 @@ function killProcess(proc) {
     return deferred.promise;
 }
 
-function ensureSlavePresent(rc, slaveId, cb) {
+function ensureSlavePresent(rc, slaveId, page, cb) {
     rc.getSlaves().then(function (slaves) {
         var slave = slaves.filter(function (s) {
             return s.id == slaveId
         })[0];
 
         if (slave) {
-            cb(rc);
+            cb(rc, page, slaveId);
         } else {
-            ensureSlavePresent(rc, slaveId, cb);
+            ensureSlavePresent(rc, slaveId, page, cb);
         }
     });
 }
@@ -139,7 +139,7 @@ module.exports = {
                     var slaveId = /^[a-z]+:\/\/[^\/]+\/slaves\/([^\/]+)/.exec(url)[1];
 
                     var rc = ramp.createRampClient(test.rs.port);
-                    ensureSlavePresent(rc, slaveId, cb);
+                    ensureSlavePresent(rc, slaveId, page, cb);
                 });
             });
         });

@@ -172,7 +172,7 @@ buster.testCase("Session", {
     },
 
     "can end session": function (done) {
-        th.capture(this, function (rc) {
+        th.capture(this, function (rc, page) {
             th.promiseSuccess(
                 when_pipeline([
                     function () {
@@ -186,9 +186,15 @@ buster.testCase("Session", {
                     },
                 ]),
                 function () {
-                    th.promiseSuccess(rc.getCurrentSession(), done(function (session) {
+                    th.promiseSuccess(rc.getCurrentSession(), function (session) {
                         assert.isNull(session);
-                    }));
+
+                        // NOTE: This test relies on timing - we should fix it so it polls src until it
+                        // changes, it might not have changed yet at this point.
+                        page.evaluate("function () { return document.getElementById('session_frame').src }", done(function (src) {
+                            assert.match(src, /\/slave_idle/);
+                        }));
+                    });
                 });
         });
     }
