@@ -40,7 +40,7 @@ buster.testCase("Session", {
                 assert.equals(sessionClient.getSlaves().length, 1);
                 assert(sessionClient.getSession().id);
 
-                var testbedUrl = "/sessions/" + sessionClient.getSession().id + "/testbed";
+                var testbedUrl = sessionClient.getSession().resourcesPath + "/";
                 th.httpGet(self.rs.serverUrl + testbedUrl, done(function (res, body) {
                     assert.equals(res.statusCode, 200);
                 }))
