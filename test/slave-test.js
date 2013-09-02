@@ -68,5 +68,26 @@ buster.testCase("Slave", {
                 });
             });
         });
+    },
+
+    "should kill slave when browser dies": function (done) {
+        var  self = this;
+        var rc = ramp.createRampClient(this.rs.port);
+
+        th.capture(this, function (rc, page) {
+            function tryGettingSlaves() {
+                rc.getSlaves().then(function (slaves) {
+                    if (slaves.length === 0) {
+                        assert(true);
+                        done();
+                    } else {
+                        tryGettingSlaves();
+                    }
+                });
+            };
+
+            self.ph.closePage(page);
+            tryGettingSlaves();
+        });
     }
 });

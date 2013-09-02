@@ -81,6 +81,10 @@ module.exports = {
                             cb(page)
                         });
                     },
+                    closePage: function (page) {
+                        phantomSharedInstance.pages.splice(phantomSharedInstance.pages.indexOf(page), 1);
+                        page.close();
+                    },
                     tearDown: function () {
                         var pages = phantomSharedInstance.pages;
                         phantomSharedInstance.pages = [];
