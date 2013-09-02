@@ -73,6 +73,10 @@ module.exports = {
                     instance: instance,
                     createPage: function (cb) {
                         instance.createPage(function (page) {
+                            page.set("onConsoleMessage", function (msg) {
+                                console.log("[PHANTOM CONSOLE]", msg);
+                            })
+
                             phantomSharedInstance.pages.push(page);
                             cb(page)
                         });
@@ -148,11 +152,6 @@ module.exports = {
 
     capture: function (test, cb) {
         test.ph.createPage(function (page) {
-            page.set("onConsoleMessage", function (msg) {
-                console.log("[PHANTOM CONSOLE]", msg);
-            })
-
-
             page.open(test.rs.captureUrl, function (status) {
                 page.get("url", function (url) {
                     var slaveId = /^[a-z]+:\/\/[^\/]+\/slaves\/([^\/]+)/.exec(url)[1];
