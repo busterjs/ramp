@@ -126,6 +126,8 @@ module.exports = {
     },
 
     httpGet: function (url, cb) {
+        cb = cb || function(){};
+        var deferred = when.defer();
         var url = URL.parse(url);
 
         var body = "";
@@ -142,8 +144,10 @@ module.exports = {
             });
             res.on("end", function () {
                 cb(res, body);
+                deferred.resolve({res: res, body: body});
             })
         }).end();
+        return deferred.promise;
     },
 
     failWhenCalled: function (err) {

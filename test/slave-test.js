@@ -4,6 +4,7 @@ var refute = buster.refute;
 var ramp = require("../lib/ramp")
 
 var when = require("when");
+var when_pipeline = require("when/pipeline");
 var th = require("./test-helper.js");
 
 buster.testCase("Slave", {
@@ -31,18 +32,41 @@ buster.testCase("Slave", {
     "should be able to load chains for a slave": function (done) {
         var self = this;
 
-        th.capture(this, function (rc) {
-            rc.getSlaves().then(
-                function (slaves) {
-                    var slave = slaves[0];
-                    assert(slave.chainsPath)
-                    th.httpGet(self.rs.serverUrl + slave.chainsPath, done(function (res, body) {
-                        assert.equals(res.statusCode, 200);
-                        assert.match(body, /\<frameset/);
-                    }))
+        th.promiseSuccess(
+            when_pipeline([
+                function () {
+                    return th.httpGet(self.rs.serverUrl + "/capture");
                 },
-                th.failWhenCalled
-            );
+                function (e) {
+                    assert.equals(e.res.statusCode, 302);
+                    return th.httpGet(self.rs.serverUrl + e.res.headers.location);
+                },
+                function (e) {
+                    assert.equals(e.res.statusCode, 200);
+                    assert.match(e.body, /\<frameset/);
+                }
+            ]).then(done));
+    },
+
+    "should create new slave when loading chains for already active slave": function (done) {
+        var self = this;
+
+        this.ph.createPage(function (page1) {
+            page1.open(self.rs.captureUrl, function (status) {
+                page1.get("url", function (slave1Url) {
+                    self.ph.createPage(function (page2) {
+                        page2.open(slave1Url, function (status) {
+                            page2.get("url", done(function (slave2Url) {
+                                refute.equals(slave1Url, slave2Url);
+                                assert.match(slave2Url, /\/slaves\/[^\/]+\/chains/)
+                            }));
+                        });
+                    });
+
+                    // var rc = ramp.createRampClient(test.rs.port);
+                    // ensureSlavePresent(rc, slaveId, page, cb);
+                });
+            });
         });
     }
 });
