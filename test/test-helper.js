@@ -46,8 +46,8 @@ module.exports = {
         when.all(setups.map(function (f) { return f() })).then(function (res) {
             testCase._tearDownHelperFns = [];
             Array.prototype.slice.call(res).forEach(function (thing) {
-                testCase[thing[0]] = thing[1];
-                testCase._tearDownHelperFns.push(thing[2]);
+                testCase[thing.name] = thing.value;
+                testCase._tearDownHelperFns.push(thing.tearDown);
             });
             deferred.resolve();
         });
@@ -63,13 +63,13 @@ module.exports = {
     ph: function () {
         var deferred = when.defer();
         if (phantomSharedInstance) {
-            deferred.resolve(["ph", phantomSharedInstance, fnReturningResolvedPromise]);
+            deferred.resolve({name: "ph", value: phantomSharedInstance, tearDown: fnReturningResolvedPromise});
         } else {
             console.log("Booting up Phantom.JS...");
             phantom.create(function (ph) {
                 console.log("Phantom.JS booted!");
                 phantomSharedInstance = ph;
-                deferred.resolve(["ph", phantomSharedInstance, fnReturningResolvedPromise]);
+                deferred.resolve({name: "ph", value: phantomSharedInstance, tearDown: fnReturningResolvedPromise});
             });
         }
         return deferred.promise;
@@ -85,14 +85,17 @@ module.exports = {
             var port = parseInt(data, 10);
             var rampServerUrl = "http://localhost:" + port;
 
-            deferred.resolve([
-                "rs",
-                {serverUrl: rampServerUrl,
-                 captureUrl: rampServerUrl + "/capture",
-                 port: port},
-                function () {
+            deferred.resolve({
+                name: "rs",
+                value: {
+                    serverUrl: rampServerUrl,
+                    captureUrl: rampServerUrl + "/capture",
+                    port: port
+                },
+                tearDown: function () {
                     return when.all([killProcess(cs)]);
-                }]);
+                }
+            });
 
             cs.stdout.on("data", function (data) {
                 sys.print("[SERVER PROCESS] ", data);
