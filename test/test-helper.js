@@ -63,13 +63,29 @@ module.exports = {
     ph: function () {
         var deferred = when.defer();
         if (phantomSharedInstance) {
-            deferred.resolve({name: "ph", value: phantomSharedInstance, tearDown: fnReturningResolvedPromise});
+            deferred.resolve({name: "ph", value: phantomSharedInstance, tearDown: phantomSharedInstance.tearDown});
         } else {
             console.log("Booting up Phantom.JS...");
-            phantom.create(function (ph) {
+            phantom.create(function (instance) {
                 console.log("Phantom.JS booted!");
-                phantomSharedInstance = ph;
-                deferred.resolve({name: "ph", value: phantomSharedInstance, tearDown: fnReturningResolvedPromise});
+                phantomSharedInstance = {
+                    pages: [],
+                    instance: instance,
+                    createPage: function (cb) {
+                        instance.createPage(function (page) {
+                            phantomSharedInstance.pages.push(page);
+                            cb(page)
+                        });
+                    },
+                    tearDown: function () {
+                        var pages = phantomSharedInstance.pages;
+                        phantomSharedInstance.pages = [];
+                        return when.all(pages.map(function (page) {
+                            page.close();
+                        }));
+                    }
+                };
+                deferred.resolve({name: "ph", value: phantomSharedInstance, tearDown: phantomSharedInstance.tearDown});
             });
         }
         return deferred.promise;
