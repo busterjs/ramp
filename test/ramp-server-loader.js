@@ -6,7 +6,7 @@ var server = http.createServer(function (req, res) {
     res.end();
 });
 
-server.listen(0, function () {
+server.listen(parseInt(process.argv[2], 10), function () {
     console.log(server.address().port);
 
     var cs = ramp.createRampServer({slaveTimeoutHint: 1000, slaveLoadTimeHint: 1000});

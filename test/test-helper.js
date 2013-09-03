@@ -102,13 +102,7 @@ module.exports = {
     rs: function () {
         var deferred = when.defer();
 
-        var cs = cp.spawn("node", [__dirname + "/ramp-server-loader.js"]);
-        cs.stderr.pipe(process.stderr);
-        cs.stdout.setEncoding("utf8");
-        cs.stdout.once("data", function (data) {
-            var port = parseInt(data, 10);
-            var rampServerUrl = "http://localhost:" + port;
-
+        module.exports.spawnServer(0, function (port, rampServerUrl, process) {
             deferred.resolve({
                 name: "rs",
                 value: {
@@ -117,16 +111,27 @@ module.exports = {
                     port: port
                 },
                 tearDown: function () {
-                    return when.all([killProcess(cs)]);
+                    return when.all([killProcess(process)]);
                 }
-            });
-
-            cs.stdout.on("data", function (data) {
-                sys.print("[SERVER PROCESS] ", data);
             });
         });
 
         return deferred.promise;
+    },
+
+    spawnServer: function (port, cb) {
+        var cs = cp.spawn("node", [__dirname + "/ramp-server-loader.js", port]);
+        cs.stderr.pipe(process.stderr);
+        cs.stdout.setEncoding("utf8");
+        cs.stdout.once("data", function (data) {
+            var port = parseInt(data, 10);
+            var rampServerUrl = "http://localhost:" + port;
+
+            cb(port, rampServerUrl, cs);
+            cs.stdout.on("data", function (data) {
+                sys.print("[SERVER PROCESS] ", data);
+            });
+        });
     },
 
     httpGet: function (url, cb) {
