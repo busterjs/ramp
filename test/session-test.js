@@ -303,5 +303,25 @@ buster.testCase("Session", {
                     assert.calledTwice(resourceSpy);
                 }));
         });
+    },
+
+    "initializing with no slaves means there's no currently running session": function (done) {
+        var rc = ramp.createRampClient(this.rs.port);
+
+        th.promiseFailure(
+            when_pipeline([
+                function () {
+                    return rc.createSession()
+                },
+                function (sessionClientInitializer) {
+                    return sessionClientInitializer.initialize()
+                }
+            ]),
+            function (err) {
+                assert(/no slaves/i.test(err.message));
+                th.promiseSuccess(rc.getCurrentSession(), done(function (session) {
+                    assert.isNull(session);
+                }));
+            });
     }
 });
