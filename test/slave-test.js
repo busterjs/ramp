@@ -16,6 +16,39 @@ buster.testCase("Slave", {
         return th.tearDownHelpers(this);
     },
 
+    "capturing one browser": function (done) {
+        var self = this;
+
+        th.capture(this, function () {
+            th.httpGet(self.rs.serverUrl + "/slaves", done(function (res, body) {
+                assert.equals(res.statusCode, 200);
+                var body = JSON.parse(body);
+                assert.equals(body.length, 1)
+                assert(body[0].id);
+                assert(body[0].userAgent);
+                assert.match(body[0].userAgent, /phantomjs/i);
+            }));
+        });
+    },
+
+    "capturing two browsers": function (done) {
+        var self = this;
+
+        var slaveADeferred = when.defer();
+        th.capture(this, slaveADeferred.resolve);
+
+        var slaveBDeferred = when.defer();
+        th.capture(this, slaveBDeferred.resolve);
+
+        when.all([slaveADeferred.promise, slaveBDeferred.promise]).then(function () {
+            th.httpGet(self.rs.serverUrl + "/slaves", done(function (res, body) {
+                assert.equals(res.statusCode, 200);
+                var body = JSON.parse(body);
+                assert.equals(body.length, 2)
+            }))
+        });
+    },
+
     "should be able to get slaves": function (done) {
         th.capture(this, function (rc) {
             rc.getSlaves().then(
