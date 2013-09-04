@@ -110,7 +110,22 @@ function sessionEnd(rampClient, sessionClient, req, res) {
     );
 };
 
-var rampServer = ramp.createRampServer();
+function createHeaderResourceSet() {
+    var rs = rampResources.createResourceSet();
+    rs.addResource({
+        path: "/",
+        content: "<p>This is the slave header.</p><style>body { background-color: #336699; color: #fff; text-align: center; }</style>"
+    });
+
+    return rs;
+};
+
+var rampServer = ramp.createRampServer({
+    header: {
+        resourceSet: createHeaderResourceSet(),
+        height: 80
+    }
+});
 var httpServer = http.createServer();
 httpServer.listen(PORT, function () {
     console.log("Running at http://localhost:" + PORT);
