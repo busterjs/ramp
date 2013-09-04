@@ -113,6 +113,8 @@ function sessionEnd(rampClient, sessionClient, req, res) {
 var rampServer = ramp.createRampServer();
 var httpServer = http.createServer();
 httpServer.listen(PORT, function () {
+    console.log("Running at http://localhost:" + PORT);
+
     var rampClient = ramp.createRampClient(PORT);
 
     httpServer.on("request", function (req, res) {
