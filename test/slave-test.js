@@ -105,7 +105,7 @@ buster.testCase("Slave", {
 
     "should kill slave when browser dies": function (done) {
         var  self = this;
-        var rc = ramp.createRampClient(this.rs.port);
+        var rc = this.rs.createRampClient();
 
         th.capture(this, function (rc, page) {
             function tryGettingSlaves() {

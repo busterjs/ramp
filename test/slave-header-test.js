@@ -42,6 +42,7 @@ buster.testCase("Slave header", {
     },
 
     tearDown: function (done) {
+        this.rc.destroy();
         this.httpServer.close(done);
     },
 

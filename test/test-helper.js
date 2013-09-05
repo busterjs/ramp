@@ -103,14 +103,22 @@ module.exports = {
         var deferred = when.defer();
 
         module.exports.spawnServer(0, function (port, rampServerUrl, process) {
+            var rampClients = [];
             deferred.resolve({
                 name: "rs",
                 value: {
+                    rampClients: rampClients,
+                    createRampClient: function () {
+                        var rc = ramp.createRampClient(port);
+                        rampClients.push(rc);
+                        return rc;
+                    },
                     serverUrl: rampServerUrl,
                     captureUrl: rampServerUrl + "/capture",
                     port: port
                 },
                 tearDown: function () {
+                    rampClients.forEach(function (rc) { rc.destroy(); })
                     return when.all([killProcess(process)]);
                 }
             });
@@ -169,7 +177,7 @@ module.exports = {
                 page.get("url", function (url) {
                     var slaveId = /^[a-z]+:\/\/[^\/]+\/slaves\/([^\/]+)/.exec(url)[1];
 
-                    var rc = ramp.createRampClient(test.rs.port);
+                    var rc = test.rs.createRampClient();
                     ensureSlavePresent(rc, slaveId, page, cb);
                 });
             });

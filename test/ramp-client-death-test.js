@@ -41,7 +41,7 @@ buster.testCase("Ramp client death", {
         rcproc.stdout.pipe(process.stdout);
         rcproc.stderr.pipe(process.stderr);
 
-        var rc = ramp.createRampClient(this.rs.port);
+        var rc = this.rs.createRampClient();
 
         th.promiseSuccess(
             when_pipeline([

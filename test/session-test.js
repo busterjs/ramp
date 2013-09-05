@@ -49,7 +49,7 @@ buster.testCase("Session", {
     },
 
     "is created when there are no slaves captured": function (done) {
-        var rc = ramp.createRampClient(this.rs.port);
+        var rc = this.rs.createRampClient();
         rc.createSession().then(
             done(function (sessionClientInitializer) {
                 assert(sessionClientInitializer.getSession().id)
@@ -59,7 +59,7 @@ buster.testCase("Session", {
     },
 
     "is not initialized when there are no slaves captured": function (done) {
-        var rc = ramp.createRampClient(this.rs.port);
+        var rc = this.rs.createRampClient();
         rc.createSession().then(
             function (sessionClientInitializer) {
                 sessionClientInitializer.initialize().then(
@@ -306,7 +306,7 @@ buster.testCase("Session", {
     },
 
     "initializing with no slaves means there's no currently running session": function (done) {
-        var rc = ramp.createRampClient(this.rs.port);
+        var rc = this.rs.createRampClient();
 
         th.promiseFailure(
             when_pipeline([

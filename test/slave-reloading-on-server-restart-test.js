@@ -19,7 +19,9 @@ buster.testCase("Slave reloading on server restart", {
 
         th.spawnServer(0, function (port, rampServerUrl, process) {
             // Pretending to be th.rs.
-            self.rs = {captureUrl: rampServerUrl + "/capture", port: port};
+            self.rs = {captureUrl: rampServerUrl + "/capture", port: port, createRampClient: function () {
+                return ramp.createRampClient(port);
+            }};
 
             th.capture(self, function (rc, page) {
                 process.kill("SIGKILL");
