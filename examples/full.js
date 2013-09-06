@@ -2,6 +2,7 @@ var ramp = require("../lib/ramp");
 var http = require("http");
 var when_pipeline = require("when/pipeline");
 var rampResources = require("ramp-resources");
+var utils = require("./full-utils");
 
 var PORT = 7070;
 var GLOBAL_SESSION_CLIENT = null;
@@ -110,42 +111,12 @@ function sessionEnd(rampClient, sessionClient, req, res) {
     );
 };
 
-function createHeaderResourceSet() {
-    var rs = rampResources.createResourceSet();
-    rs.addResource({
-        path: "/",
-        content: "<p>This is the slave header.</p><style>body { background-color: #336699; color: #fff; text-align: center; }</style>"
-    });
-
-    return rs;
-};
-
-var verbosity = process.argv.filter(function (arg) { return /\-v/.test(arg) })[0]
-
-function createLogger(verbosity) {
-    var level = verbosity ? verbosity.slice(1).length : 0;
-    var logger = {};
-
-    var levels = ["debug", "info", "log", "warn", "error"]
-    var minLevel = (2 - level);
-    for (var i = 0, ii = levels.length; i < ii; i++) {
-        var level = levels[i];
-        if (i < minLevel) {
-            logger[level] = function(){};
-        } else {
-            logger[level] = console.log
-        }
-    }
-
-    return logger;
-};
-
 var rampServer = ramp.createRampServer({
     header: {
-        resourceSet: createHeaderResourceSet(),
+        resourceSet: utils.createHeaderResourceSet(),
         height: 80
     },
-    logger: createLogger(verbosity)
+    logger: utils.createLogger(process.argv.filter(function (arg) { return /\-v/.test(arg) })[0])
 });
 
 
