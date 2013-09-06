@@ -16,6 +16,9 @@
         "when": "2.2.1",
         "mori": "0.2.1"
     },
+    "scripts": {
+        "test": "node run-tests.js"
+    },
     "devDependencies": {
         "buster-node": "*",
         "sinon": ">=1.4",
