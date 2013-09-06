@@ -38,6 +38,7 @@ buster.testCase("Session", {
         th.capture(this, function (rc) {
             th.initializeSession(rc.createSession(), function (sessionClient) {
                 refute(sessionClient.initialize);
+                assert.equals(sessionClient.getInitialSlaves().length, 1);
                 assert(sessionClient.getSession().id);
 
                 var testbedUrl = sessionClient.getSession().resourcesPath + "/";
