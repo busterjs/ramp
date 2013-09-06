@@ -111,7 +111,7 @@ function sessionEnd(rampClient, sessionClient, req, res) {
     );
 };
 
-var rampServer = ramp.createRampServer({
+var rampServer = ramp.createServer({
     header: {
         resourceSet: utils.createHeaderResourceSet(),
         height: 80

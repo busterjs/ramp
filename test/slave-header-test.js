@@ -27,7 +27,7 @@ buster.testCase("Slave header", {
                 content: 'Hello, World!'
             });
 
-            var rampServer = ramp.createRampServer({
+            var rampServer = ramp.createServer({
                 header: {
                     resourceSet: rs,
                     height: 80
