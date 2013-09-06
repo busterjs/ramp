@@ -323,5 +323,69 @@ buster.testCase("Session", {
                     assert.isNull(session);
                 }));
             });
+    },
+
+    "makes buster.env.contextPath available": function (done) {
+        var rs = rampResources.createResourceSet();
+        rs.addResource({
+            path: "/foo.js",
+            content: 'var e = document.createElement("script"); e.src = buster.env.contextPath + "/bar.js"; document.body.appendChild(e);'
+        });
+        rs.addResource({
+            path: "/bar.js",
+            content: 'buster.emit("nicelydone", 123);'
+        });
+        rs.loadPath.append("/foo.js");
+
+        th.capture(this, function (rc, page) {
+            th.promiseSuccess(
+                when_pipeline([
+                    function () {
+                        return rc.createSession(rs);
+                    },
+                    function (sessionClientInitializer) {
+                        return when_pipeline([
+                            function () {
+                                return sessionClientInitializer.on("nicelydone", done(function (e) {
+                                    assert.equals(e.data, 123);
+                                }));
+                            },
+                            function () {
+                                return sessionClientInitializer.initialize();
+                            }
+                        ])
+                    }
+                ]))
+        });
+    },
+
+    "makes buster.env.id available": function (done) {
+        var rs = rampResources.createResourceSet();
+        rs.addResource({
+            path: "/foo.js",
+            content: 'buster.emit("blackjazz", buster.env.id)'
+        });
+        rs.loadPath.append("/foo.js");
+
+        th.capture(this, function (rc, page, slaveId) {
+            th.promiseSuccess(
+                when_pipeline([
+                    function () {
+                        return rc.createSession(rs);
+                    },
+                    function (sessionClientInitializer) {
+                        return when_pipeline([
+                            function () {
+                                return sessionClientInitializer.on("blackjazz", done(function (e) {
+                                    assert.equals(e.data, slaveId);
+                                }));
+                            },
+                            function () {
+                                return sessionClientInitializer.initialize();
+                            }
+                        ])
+                    }
+                ]))
+        });
     }
 });
