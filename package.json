@@ -14,14 +14,11 @@
         "ejs": "~0.8",
         "node-uuid": "~1",
         "when": "2.2.1",
-        "express": "3.3.4",
         "mori": "0.2.1"
     },
     "devDependencies": {
         "buster-node": "*",
         "sinon": ">=1.4",
-        "htmlparser": "~1.7",
-        "soupselect": "~0.2",
         "phantom": "0.5.2"
     }
 }
