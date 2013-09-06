@@ -120,12 +120,35 @@ function createHeaderResourceSet() {
     return rs;
 };
 
+var verbosity = process.argv.filter(function (arg) { return /\-v/.test(arg) })[0]
+
+function createLogger(verbosity) {
+    var level = verbosity ? verbosity.slice(1).length : 0;
+    var logger = {};
+
+    var levels = ["debug", "info", "log", "warn", "error"]
+    var minLevel = (2 - level);
+    for (var i = 0, ii = levels.length; i < ii; i++) {
+        var level = levels[i];
+        if (i < minLevel) {
+            logger[level] = function(){};
+        } else {
+            logger[level] = console.log
+        }
+    }
+
+    return logger;
+};
+
 var rampServer = ramp.createRampServer({
     header: {
         resourceSet: createHeaderResourceSet(),
         height: 80
-    }
+    },
+    logger: createLogger(verbosity)
 });
+
+
 var httpServer = http.createServer();
 httpServer.listen(PORT, function () {
     console.log("Running at http://localhost:" + PORT);
