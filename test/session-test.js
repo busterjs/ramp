@@ -387,5 +387,36 @@ buster.testCase("Session", {
                     }
                 ]))
         });
+    },
+
+    "emits event when slave dies": function (done) {
+        var self = this;
+        th.capture(this, function (rc, page, slaveId) {
+            th.promiseSuccess(
+                when_pipeline([
+                    function () {
+                        return rc.createSession()
+                    },
+                    function (sessionClientInitializer) {
+                        return when_pipeline([
+                            function () {
+                                return sessionClientInitializer.onSlaveDeath(function (e) {
+                                    assert.equals(e.slaveId, slaveId);
+
+                                    th.promiseSuccess(rc.getSlaves(), done(function (slaves) {
+                                        assert.equals(slaves.length, 0);
+                                    }));
+                                })
+                            },
+                            function () {
+                                return sessionClientInitializer.initialize()
+                            }
+                        ])
+                    }
+                ]),
+                function () {
+                    self.ph.closePage(page);
+                });
+        });
     }
 });
