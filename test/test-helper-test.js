@@ -26,7 +26,7 @@ buster.testCase("Test helper", {
         th.promiseSuccess(
             when_pipeline([
                 function () {
-                    return ramp.testHelper.captureSlave(self.rs.port, "My User Agent");;
+                    return ramp.testHelper.captureSlave(self.rs.port, "My User Agent");
                 },
                 function (actualCapturedSlave) {
                     capturedSlave = actualCapturedSlave;
@@ -35,6 +35,7 @@ buster.testCase("Test helper", {
                 function (slaves) {
                     assert.equals(slaves.length, 1);
                     assert.equals(capturedSlave.slave, slaves[0]);
+                    assert.equals(capturedSlave.slave.userAgent, "My User Agent");
                 }
             ]),
             function () {
