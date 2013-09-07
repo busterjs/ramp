@@ -106,6 +106,7 @@ buster.testCase("Session", {
                     sessionClientInitializer.on("some:event", done(function (e) {
                         assert(e.slaveId);
                         assert.equals(e.data, 123);
+                        assert.equals(e.event, "some:event");
                     })),
                     function () {
                         sessionClientInitializer.initialize()
@@ -137,6 +138,37 @@ buster.testCase("Session", {
                             assert.equals(e.data, payload);
                         }))
                     ]),
+                    function () {
+                        sessionClientInitializer.initialize()
+                    });
+            });
+        });
+    },
+
+
+    "can subscribe to all events": function (done) {
+        var self = this;
+
+        th.capture(this, function (rc, page, slaveId) {
+            var rs = rampResources.createResourceSet();
+            rs.addResource({
+                path: "/test.js",
+                content: 'buster.emit("some:event", 123); buster.emit("other/event-:", 456);'
+            });
+            rs.loadPath.append("/test.js");
+
+            th.promiseSuccess(rc.createSession(rs), function (sessionClientInitializer) {
+                var spy = self.spy();
+                th.promiseSuccess(
+                    sessionClientInitializer.on(function (e) {
+                        spy(e);
+
+                        if (spy.calledTwice) {
+                            assert.calledWith(spy, {slaveId: slaveId, data: 123, event: "some:event"});
+                            assert.calledWith(spy, {slaveId: slaveId, data: 456, event: "other/event-:"});
+                            done();
+                        }
+                    }),
                     function () {
                         sessionClientInitializer.initialize()
                     });
