@@ -142,7 +142,7 @@ module.exports = {
         });
     },
 
-    httpGet: function (url, cb) {
+    http: function (method, url, cb) {
         cb = cb || function(){};
         var deferred = when.defer();
         var url = URL.parse(url);
@@ -153,7 +153,7 @@ module.exports = {
             hostname: url.hostname,
             port: url.port,
             path: url.path,
-            method: "GET"
+            method: method
         }, function (res) {
             res.setEncoding("utf8");
             res.on("data", function (chunk) {

@@ -20,7 +20,7 @@ buster.testCase("Slave", {
         var self = this;
 
         th.capture(this, function () {
-            th.httpGet(self.rs.serverUrl + "/slaves", done(function (res, body) {
+            th.http("GET", self.rs.serverUrl + "/slaves", done(function (res, body) {
                 assert.equals(res.statusCode, 200);
                 var body = JSON.parse(body);
                 assert.equals(body.length, 1)
@@ -41,7 +41,7 @@ buster.testCase("Slave", {
         th.capture(this, slaveBDeferred.resolve);
 
         when.all([slaveADeferred.promise, slaveBDeferred.promise]).then(function () {
-            th.httpGet(self.rs.serverUrl + "/slaves", done(function (res, body) {
+            th.http("GET", self.rs.serverUrl + "/slaves", done(function (res, body) {
                 assert.equals(res.statusCode, 200);
                 var body = JSON.parse(body);
                 assert.equals(body.length, 2)
@@ -68,11 +68,11 @@ buster.testCase("Slave", {
         th.promiseSuccess(
             when_pipeline([
                 function () {
-                    return th.httpGet(self.rs.serverUrl + "/capture");
+                    return th.http("GET", self.rs.serverUrl + "/capture");
                 },
                 function (e) {
                     assert.equals(e.res.statusCode, 302);
-                    return th.httpGet(self.rs.serverUrl + e.res.headers.location);
+                    return th.http("GET", self.rs.serverUrl + e.res.headers.location);
                 },
                 function (e) {
                     assert.equals(e.res.statusCode, 200);

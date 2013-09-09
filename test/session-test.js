@@ -42,7 +42,7 @@ buster.testCase("Session", {
                 assert(sessionClient.getSession().id);
 
                 var testbedUrl = sessionClient.getSession().resourcesPath + "/";
-                th.httpGet(self.rs.serverUrl + testbedUrl, done(function (res, body) {
+                th.http("GET", self.rs.serverUrl + testbedUrl, done(function (res, body) {
                     assert.equals(res.statusCode, 200);
                 }))
             });
@@ -249,7 +249,7 @@ buster.testCase("Session", {
                     var session = sessionClient.getSession();
 
                     th.promiseSuccess(sessionClient.endSession(), function () {
-                        th.httpGet(self.rs.serverUrl + session.resourcesPath + "/", done(function (res, body) {
+                        th.http("GET", self.rs.serverUrl + session.resourcesPath + "/", done(function (res, body) {
                             assert.equals(res.statusCode, 418);
                         }));
                     });

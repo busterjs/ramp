@@ -53,11 +53,11 @@ buster.testCase("Slave header", {
         th.promiseSuccess(
             when_pipeline([
                 function () {
-                    return th.httpGet(serverUrl + "/capture")
+                    return th.http("GET", serverUrl + "/capture")
                 },
                 function (e) {
                     assert.equals(e.res.statusCode, 302);
-                    return th.httpGet(serverUrl + e.res.headers.location);
+                    return th.http("GET", serverUrl + e.res.headers.location);
                 },
                 function (e) {
                     assert.equals(e.res.statusCode, 200);
@@ -66,7 +66,7 @@ buster.testCase("Slave header", {
                     assert.match(e.body, /\/slave_header\//);
                 },
                 function () {
-                    return th.httpGet(serverUrl + "/slave_header/");
+                    return th.http("GET", serverUrl + "/slave_header/");
                 },
                 function (e) {
                     assert.equals(e.res.statusCode, 200);
