@@ -451,5 +451,35 @@ buster.testCase("Session", {
                     self.ph.closePage(page);
                 });
         });
+    },
+
+    "emits event when session is aborted": function (done) {
+        var self = this;
+        th.capture(this, function (rc, page, slaveId) {
+            th.promiseSuccess(
+                when_pipeline([
+                    function () {
+                        return rc.createSession()
+                    },
+                    function (sessionClientInitializer) {
+                        return when_pipeline([
+                            function () {
+                                return sessionClientInitializer.onSessionAbort(function (e) {
+                                    done();
+                                })
+                            },
+                            function () {
+                                return sessionClientInitializer.initialize()
+                            }
+                        ])
+                    }
+                ]),
+                function (sessionClient) {
+                    var url = sessionClient.getSession().sessionUrl
+                    th.http("DELETE", self.rs.serverUrl + url, function (res, body) {
+                        assert.equals(res.statusCode, 200);
+                    });
+                });
+        });
     }
 });
