@@ -160,12 +160,12 @@ buster.testCase("Session", {
             th.promiseSuccess(rc.createSession(rs), function (sessionClientInitializer) {
                 var spy = self.spy();
                 th.promiseSuccess(
-                    sessionClientInitializer.on(function (e) {
-                        spy(e);
+                    sessionClientInitializer.on(function (eventName, e) {
+                        spy(eventName, e);
 
                         if (spy.calledTwice) {
-                            assert.calledWith(spy, {slaveId: slaveId, data: 123, event: "some:event"});
-                            assert.calledWith(spy, {slaveId: slaveId, data: 456, event: "other/event-:"});
+                            assert.calledWith(spy, "some:event", {slaveId: slaveId, data: 123, event: "some:event"});
+                            assert.calledWith(spy, "other/event-:", {slaveId: slaveId, data: 456, event: "other/event-:"});
                             done();
                         }
                     }),
