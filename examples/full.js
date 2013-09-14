@@ -8,6 +8,7 @@ var PORT = 7070;
 var GLOBAL_SESSION_CLIENT = null;
 
 function showHomePage(rampClient, req, res) {
+    res.writeHead(200, {"content-type": "text/html"});
     res.write("<h1>Ramp demo</h1>");
     res.write("<a target='_blank' href='/capture'>Capture</a>");
 
