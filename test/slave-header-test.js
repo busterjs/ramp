@@ -70,7 +70,7 @@ buster.testCase("Slave header", {
                 },
                 function (e) {
                     assert.equals(e.res.statusCode, 200);
-                    assert.equals(e.body , "Hello, World!");
+                    assert.match(e.body , /^Hello\, World\!/);
                 }
             ]),
             done);
