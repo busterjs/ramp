@@ -1,26 +1,20 @@
 module.exports = {
     paths: [
-        "lib/*.js",
-        "test/*.js",
-        "test/integration/*.js"
+        "lib/amd-shim.js",
+        "lib/ramp-slave-chains-frameset.js",
+        "lib/ramp-slave-chains-session-frame-initializer.js",
+        "lib/faye-event-listening-utils.js"
     ],
     linterOptions: {
-        node: true,
         browser: true,
         plusplus: true,
+        maxlen: 999999,
         vars: true,
-        nomen: true,
-        forin: true,
-        sloppy: true,
         regexp: true,
-        es5: true,
         predef: [
-            "phantom",
-            "Phantom",
-            "WebPage",
-            "assert",
-            "refute",
-            "buster"
+            "when",
+            "module",
+            "require"
         ]
     }
 };

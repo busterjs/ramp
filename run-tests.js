@@ -1,8 +1,9 @@
 var buster = require("buster-node");
-require("./test/cache-test");
-require("./test/events-test");
-require("./test/joinable-and-unjoinable-test");
-require("./test/main-test");
-require("./test/session-lifecycle-test");
-require("./test/slave-header-test");
-require("./test/test-helper-test");
+buster.testRunner.timeout = 4000;
+
+require("./test/session-test")
+require("./test/slave-test")
+require("./test/slave-reloading-on-server-restart-test")
+require("./test/slave-header-test")
+require("./test/ramp-client-death-test")
+require("./test/test-helper-test")

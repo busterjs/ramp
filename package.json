@@ -1,39 +1,27 @@
 {
     "name": "ramp",
-    "version": "0.6.0",
-    "description": "Buster capture server",
-    "homepage": "http://busterjs.org/docs/ramp",
+    "version": "0.7.0",
+    "description": "A ramp that makes browsers crash and burn, and hopefully run some tests (or less specifically, load some files and emit some events).",
     "author": {
         "name": "August Lilleaas",
-        "email": "august.lilleaas@gmail.com",
+        "email": "august@augustl.com",
         "url": "http://augustl.com"
     },
-    "contributors": [{
-        "name": "Christian Johansen",
-        "email": "christian@cjohansen.no",
-        "url": "http://cjohansen.no"
-    }],
     "main": "./lib/ramp",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/busterjs/ramp.git"
+    "dependencies": {
+        "ramp-resources": ">=0.5",
+        "faye": "~0.8",
+        "ejs": "~0.8",
+        "node-uuid": "~1",
+        "when": "2.2.1",
+        "mori": "0.2.1"
     },
     "scripts": {
         "test": "node run-tests.js"
     },
-    "dependencies": {
-        "bane": "~0.1",
-        "ramp-resources": ">=0.5",
-        "faye": "~0.8",
-        "ejs": "~0.4",
-        "node-uuid": "~1",
-        "when": "https://github.com/cujojs/when/tarball/1.8.1"
-    },
     "devDependencies": {
         "buster-node": "*",
         "sinon": ">=1.4",
-        "htmlparser": "~1.7",
-        "soupselect": "~0.2",
-        "lodash": "~1.0"
+        "phantom": "0.5.2"
     }
 }

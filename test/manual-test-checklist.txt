@@ -1,0 +1,5 @@
+This checklist contains manual tests that needs to be performed when changing heartbeat related code. Ideally these tests should be automated, but since they consist of capturing on a 2nd machine and physically pulling the plug to kill networking in certain ways, using phantomjs for this is quite hard (?).
+
+* Pull the plug when slave is fully up and running
+* Re-insert the plug after slave has been removed. Faye client should have gotten deleted so we get a re-capture.
+* Pull the plug before the slave sends off its initial heartbeat.
