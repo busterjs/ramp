@@ -22,8 +22,18 @@ function createHeaderResourceSet() {
     var rs = rampResources.createResourceSet();
     rs.addResource({
         path: "/",
-        content: "<p>This is the slave header.</p><style>body { background-color: #336699; color: #fff; text-align: center; }</style>"
+        content: "<p>This is the slave header.</p>"
     });
+    rs.addResource({
+        path: "/status.js",
+        content: "buster.onConnectionStatusChange(function (status) { document.body.className = status ? 'connected' : 'disconnected' })"
+    });
+    rs.loadPath.append("/status.js");
+    rs.addResource({
+        path: "/status.css",
+        content: "body { background-color: #336699; color: #fff; text-align: center; } body.disconnected { background-color: red; }"
+    });
+    rs.loadPath.append("/status.css");
 
     return rs;
 };
