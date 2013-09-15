@@ -1,4 +1,4 @@
-var buster = require("buster-node");1
+var buster = require("buster-node");
 var assert = buster.assert;
 var refute = buster.refute;
 var rampResources = require("ramp-resources");
