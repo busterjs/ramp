@@ -1,6 +1,6 @@
 {
     "name": "ramp",
-    "version": "0.7.0",
+    "version": "1.0.0",
     "description": "A ramp that makes browsers crash and burn, and hopefully run some tests (or less specifically, load some files and emit some events).",
     "author": {
         "name": "August Lilleaas",
@@ -9,7 +9,7 @@
     },
     "main": "./lib/ramp",
     "dependencies": {
-        "ramp-resources": ">=0.5",
+        "ramp-resources": "~1.0",
         "faye": "~0.8",
         "ejs": "~0.8",
         "node-uuid": "~1",
