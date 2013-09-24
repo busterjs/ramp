@@ -3,3 +3,4 @@ This checklist contains manual tests that needs to be performed when changing he
 * Pull the plug when slave is fully up and running
 * Re-insert the plug after slave has been removed. Faye client should have gotten deleted so we get a re-capture.
 * Pull the plug before the slave sends off its initial heartbeat.
+* Suspend a laptop, slaves should get recaptured or be still alive.
