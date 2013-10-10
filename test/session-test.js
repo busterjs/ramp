@@ -481,5 +481,45 @@ buster.testCase("Session", {
                     });
                 });
         });
+    },
+
+    "test bed is the same with static paths": function (done) {
+        var self = this;
+
+        var testbedUrlA;
+        var testbedUrlB;
+
+        th.capture(this, function (rc) {
+            th.promiseSuccess(
+                when_pipeline([
+                    function () {
+                        return rc.createSession(null, {staticResourcesPath: true});
+                    },
+                    function (sessionClientInitializer) {
+                        return sessionClientInitializer.initialize()
+                    },
+                    function (sessionClient) {
+                        testbedUrlA = sessionClient.getSession().resourcesPath;
+                        return sessionClient.endSession()
+                    },
+                    function () {
+                        return rc.createSession(null, {staticResourcesPath: true});
+                    },
+                    function (sessionClientInitializer) {
+                        return sessionClientInitializer.initialize()
+                    },
+                    function (sessionClient) {
+                        testbedUrlB = sessionClient.getSession().resourcesPath;
+                    }
+                ]),
+                done(function () {
+                    assert(testbedUrlA);
+                    assert(testbedUrlB);
+                    assert.equals(testbedUrlA, testbedUrlB, "For static sessions, the path should be the same");
+                }))
+        });
+    },
+
+    "// test bed is loaded with static paths": function () {
     }
 });
