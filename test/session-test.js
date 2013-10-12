@@ -518,8 +518,5 @@ buster.testCase("Session", {
                     assert.equals(testbedUrlA, testbedUrlB, "For static sessions, the path should be the same");
                 }))
         });
-    },
-
-    "// test bed is loaded with static paths": function () {
     }
 });
