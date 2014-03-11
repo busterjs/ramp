@@ -9,7 +9,7 @@ var buster = require("buster-node");
 var assert = buster.assert;
 var refute = buster.refute;
 
-var ramp = require("ramp");
+var ramp = require("../lib/ramp");
 
 var phantomSharedInstance = null;
 
