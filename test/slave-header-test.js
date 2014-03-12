@@ -43,7 +43,8 @@ buster.testCase("Slave header", {
 
     tearDown: function (done) {
         this.rc.destroy();
-        this.httpServer.close(done);
+        this.httpServer.on("close", done);
+        this.httpServer.close();
     },
 
     "should be present": function (done) {
