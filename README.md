@@ -1,5 +1,7 @@
 # ramp
 
+[![Build status](https://secure.travis-ci.org/busterjs/ramp.png?branch=master)](http://travis-ci.org/busterjs/ramp)
+
 A ramp that makes browsers crash and burn, and hopefully run some tests.
 
 ## Running tests
