@@ -17,7 +17,8 @@
         "mori": "0.2.1"
     },
     "scripts": {
-        "test": "node run-tests.js"
+        "test": "node run-tests.js",
+        "test-debug": "node --debug-brk run-tests.js"
     },
     "devDependencies": {
         "buster-node": "*",
