@@ -24,5 +24,6 @@
         "buster-node": "*",
         "sinon": ">=1.4",
         "phantom": "0.5.2"
-    }
+    },
+	"license": "BSD"
 }
