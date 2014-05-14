@@ -15,3 +15,11 @@ But you can use ramp to whatever. Not just running tests.
 ## Examples
 
 So, yeah.
+
+
+## Changelog
+
+**1.0.4** (14.05.2014)
+
+* support for static paths
+* `"SIGINT"` isn't hooked anymore
