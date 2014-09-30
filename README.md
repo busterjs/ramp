@@ -19,6 +19,10 @@ So, yeah.
 
 ## Changelog
 
+**1.0.5** (30.09.2014)
+
+* it is now possible to pass slave id as url param
+
 **1.0.4** (14.05.2014)
 
 * support for static paths
