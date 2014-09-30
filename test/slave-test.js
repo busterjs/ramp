@@ -1,7 +1,9 @@
+"use strict";
+
 var buster = require("buster-node");
 var assert = buster.assert;
 var refute = buster.refute;
-var ramp = require("../lib/ramp")
+var ramp = require("../lib/ramp");
 
 var when = require("when");
 var when_pipeline = require("when/pipeline");
@@ -22,8 +24,8 @@ buster.testCase("Slave", {
         th.capture(this, function () {
             th.http("GET", self.rs.serverUrl + "/slaves", done(function (res, body) {
                 assert.equals(res.statusCode, 200);
-                var body = JSON.parse(body);
-                assert.equals(body.length, 1)
+                body = JSON.parse(body);
+                assert.equals(body.length, 1);
                 assert(body[0].id);
                 assert(body[0].userAgent);
                 assert.match(body[0].userAgent, /phantomjs/i);
@@ -43,9 +45,9 @@ buster.testCase("Slave", {
         when.all([slaveADeferred.promise, slaveBDeferred.promise]).then(function () {
             th.http("GET", self.rs.serverUrl + "/slaves", done(function (res, body) {
                 assert.equals(res.statusCode, 200);
-                var body = JSON.parse(body);
-                assert.equals(body.length, 2)
-            }))
+                body = JSON.parse(body);
+                assert.equals(body.length, 2);
+            }));
         });
     },
 
@@ -56,6 +58,20 @@ buster.testCase("Slave", {
                     assert.equals(slaves.length, 1);
                     assert(slaves[0].id);
                     assert.match(slaves[0].userAgent, /phantom/i);
+                }),
+                th.failWhenCalled
+            );
+        });
+    },
+
+    "pass slave id as url param": function (done) {
+        this.rs.captureUrl += "?id=123";
+
+        th.capture(this, function (rc) {
+            rc.getSlaves().then(
+                done(function (slaves) {
+                    assert.equals(slaves.length, 1);
+                    assert.equals(slaves[0].id, "123");
                 }),
                 th.failWhenCalled
             );
@@ -76,9 +92,10 @@ buster.testCase("Slave", {
                 },
                 function (e) {
                     assert.equals(e.res.statusCode, 200);
-                    assert.match(e.body, /\<frameset/);
+                    assert.match(e.body, /<frameset/);
                 }
-            ]).then(done));
+            ]).then(done)
+        );
     },
 
     "should create new slave when loading chains for already active slave": function (done) {
@@ -91,7 +108,7 @@ buster.testCase("Slave", {
                         page2.open(slave1Url, function (status) {
                             page2.get("url", done(function (slave2Url) {
                                 refute.equals(slave1Url, slave2Url);
-                                assert.match(slave2Url, /\/slaves\/[^\/]+\/chains/)
+                                assert.match(slave2Url, /\/slaves\/[^\/]+\/chains/);
                             }));
                         });
                     });
@@ -117,7 +134,7 @@ buster.testCase("Slave", {
                         tryGettingSlaves();
                     }
                 });
-            };
+            }
 
             self.ph.closePage(page);
             tryGettingSlaves();

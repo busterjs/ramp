@@ -1,12 +1,11 @@
 module.exports = {
     paths: [
-        "lib/amd-shim.js",
-        "lib/ramp-slave-chains-frameset.js",
-        "lib/ramp-slave-chains-session-frame-initializer.js",
-        "lib/faye-event-listening-utils.js"
+        "lib/**/*.js",
+        "test/**/*.js"
     ],
     linterOptions: {
         browser: true,
+        node: true,
         plusplus: true,
         maxlen: 999999,
         vars: true,
