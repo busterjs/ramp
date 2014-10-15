@@ -19,6 +19,10 @@ So, yeah.
 
 ## Changelog
 
+**1.0.6** (15.10.2014)
+
+* `/slave_death` event is now published
+
 **1.0.5** (30.09.2014)
 
 * it is now possible to pass slave id as url param
