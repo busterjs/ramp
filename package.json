@@ -7,6 +7,7 @@
         "email": "august@augustl.com",
         "url": "http://augustl.com"
     },
+    "license": "BSD-3-Clause",
     "main": "./lib/ramp",
     "dependencies": {
         "ramp-resources": "~1.0",
