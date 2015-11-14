@@ -1,30 +1,32 @@
 {
-    "name": "ramp",
-    "version": "1.0.6",
-    "description": "A ramp that makes browsers crash and burn, and hopefully run some tests (or less specifically, load some files and emit some events).",
-    "author": {
-        "name": "August Lilleaas",
-        "email": "august@augustl.com",
-        "url": "http://augustl.com"
-    },
-    "license": "BSD-3-Clause",
-    "main": "./lib/ramp",
-    "dependencies": {
-        "ramp-resources": "~1.0",
-        "faye": "~0.8",
-        "ejs": "~0.8",
-        "node-uuid": "~1",
-        "when": "2.2.1",
-        "mori": "0.2.1"
-    },
-    "scripts": {
-        "test": "node run-tests.js",
-        "test-debug": "node --debug-brk run-tests.js"
-    },
-    "devDependencies": {
-        "buster-node": "*",
-        "sinon": ">=1.4",
-        "phantom": "0.5.2"
-    },
-	"license": "BSD"
+  "name": "ramp",
+  "version": "1.0.6",
+  "description": "A ramp that makes browsers crash and burn, and hopefully run some tests (or less specifically, load some files and emit some events).",
+  "author": {
+    "name": "August Lilleaas",
+    "email": "august@augustl.com",
+    "url": "http://augustl.com"
+  },
+  "main": "./lib/ramp",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/busterjs/ramp.git"
+  },
+  "dependencies": {
+    "ramp-resources": "1.x",
+    "faye": "0.8.x",
+    "ejs": "0.8.x",
+    "node-uuid": "1.x",
+    "when": "2.x",
+    "mori": "0.2.x"
+  },
+  "scripts": {
+    "test": "node run-tests.js",
+    "test-debug": "node --debug-brk run-tests.js"
+  },
+  "devDependencies": {
+    "buster-node": "0.7.x",
+    "phantom": "0.8.x"
+  },
+  "license": "BSD-3-Clause"
 }
