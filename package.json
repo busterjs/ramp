@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "ramp-resources": "2.x",
-    "faye": "0.8.x",
+    "faye": "1.x",
     "ejs": "2.x",
     "node-uuid": "1.x",
     "when": "2.x",
