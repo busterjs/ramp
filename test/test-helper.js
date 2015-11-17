@@ -6,23 +6,15 @@ var http = require("http");
 var URL = require("url");
 
 var buster = require("buster-node");
-var assert = buster.assert;
-var refute = buster.refute;
 
 var ramp = require("../lib/ramp");
 
 var phantomSharedInstance = null;
 
-function fnReturningResolvedPromise() {
-    var deferred = when.defer();
-    deferred.resolve();
-    return deferred.promise;
-}
-
 function killProcess(proc) {
     var deferred = when.defer();
     proc.on("exit", deferred.resolve);
-    proc.kill("SIGKILL")
+    proc.kill("SIGKILL");
     return deferred.promise;
 }
 
