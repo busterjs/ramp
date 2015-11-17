@@ -13,7 +13,7 @@
     "url": "https://github.com/busterjs/ramp.git"
   },
   "dependencies": {
-    "ramp-resources": "1.x",
+    "ramp-resources": "2.x",
     "faye": "0.8.x",
     "ejs": "0.8.x",
     "node-uuid": "1.x",
