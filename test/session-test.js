@@ -1,6 +1,6 @@
 var buster = require("buster-node");
-var assert = buster.assert;
-var refute = buster.refute;
+var assert = buster.referee.assert;
+var refute = buster.referee.refute;
 var rampResources = require("ramp-resources");
 var ramp = require("../lib/ramp");
 

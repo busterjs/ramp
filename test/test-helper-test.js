@@ -1,11 +1,8 @@
 var buster = require("buster-node");
-var assert = buster.assert;
-var refute = buster.refute;
-var rampResources = require("ramp-resources");
-var ramp = require("../lib/ramp")
+var assert = buster.referee.assert;
+var ramp = require("../lib/ramp");
 
 var when = require("when");
-var mori = require("mori");
 var when_pipeline = require("when/pipeline");
 var th = require("./test-helper.js");
 

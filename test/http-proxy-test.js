@@ -1,6 +1,5 @@
 var buster = require("buster-node");
-var assert = buster.assert;
-var refute = buster.refute;
+var assert = buster.referee.assert;
 
 var http = require("http");
 var when = require("when");
@@ -14,8 +13,8 @@ buster.testCase("HTTP proxy", {
         var httpDeferred = when.defer();
         this.httpServer = http.createServer();
         this.httpServer.listen(0, function () {
-            this.httpPort = this.httpServer.address().port
-            httpDeferred.resolve()
+            this.httpPort = this.httpServer.address().port;
+            httpDeferred.resolver.resolve()
         }.bind(this));
 
         return when.all([
@@ -57,8 +56,8 @@ buster.testCase("HTTP proxy", {
                     return rc.createSession(rs);
                 },
                 function (sessionClientInitializer) {
-                    return sessionClientInitializer.initialize()
-                },
+                    return sessionClientInitializer.initialize();
+                }
             ])});
     }
-})
+});

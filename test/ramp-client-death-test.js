@@ -1,28 +1,23 @@
 var buster = require("buster-node");
-var assert = buster.assert;
-var refute = buster.refute;
+var assert = buster.referee.assert;
 
 var ramp = require("./../lib/ramp");
 var th = require("./test-helper.js");
-var when = require("when");
 var when_pipeline = require("when/pipeline");
 var cp = require("child_process");
 
 function pollForSession(port, pred) {
     var rc = ramp.createRampClient(port);
-    var deferred = when.defer();
     var poll = function () {
-        rc.getCurrentSession().then(function (session) {
+        return rc.getCurrentSession().then(function (session) {
             var result = pred(session);
             if (result === undefined) {
-                poll();
-            } else {
-                deferred.resolve(result);
+                return poll();
             }
-        }, deferred.reject);
+            return result
+        });
     };
-    poll();
-    return deferred.promise;
+    return poll();
 }
 
 buster.testCase("Ramp client death", {

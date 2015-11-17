@@ -1,8 +1,8 @@
 "use strict";
 
 var buster = require("buster-node");
-var assert = buster.assert;
-var refute = buster.refute;
+var assert = buster.referee.assert;
+var refute = buster.referee.refute;
 var ramp = require("../lib/ramp");
 
 var when = require("when");
@@ -37,10 +37,10 @@ buster.testCase("Slave", {
         var self = this;
 
         var slaveADeferred = when.defer();
-        th.capture(this, slaveADeferred.resolve);
+        th.capture(this, slaveADeferred.resolver.resolve);
 
         var slaveBDeferred = when.defer();
-        th.capture(this, slaveBDeferred.resolve);
+        th.capture(this, slaveBDeferred.resolver.resolve);
 
         when.all([slaveADeferred.promise, slaveBDeferred.promise]).then(function () {
             th.http("GET", self.rs.serverUrl + "/slaves", done(function (res, body) {

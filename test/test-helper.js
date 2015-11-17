@@ -13,7 +13,7 @@ var phantomSharedInstance = null;
 
 function killProcess(proc) {
     var deferred = when.defer();
-    proc.on("exit", deferred.resolve);
+    proc.on("exit", deferred.resolver.resolve);
     proc.kill("SIGKILL");
     return deferred.promise;
 }
@@ -34,16 +34,13 @@ function ensureSlavePresent(rc, slaveId, page, cb) {
 
 module.exports = {
     setUpHelpers: function (testCase, setups) {
-        var deferred = when.defer();
-        when.all(setups.map(function (f) { return f() })).then(function (res) {
+        return when.all(setups.map(function (f) { return f() })).then(function (res) {
             testCase._tearDownHelperFns = [];
             Array.prototype.slice.call(res).forEach(function (thing) {
                 testCase[thing.name] = thing.value;
                 testCase._tearDownHelperFns.push(thing.tearDown);
             });
-            deferred.resolve();
         });
-        return deferred.promise;
     },
 
     tearDownHelpers: function (testCase) {
@@ -55,7 +52,7 @@ module.exports = {
     ph: function () {
         var deferred = when.defer();
         if (phantomSharedInstance) {
-            deferred.resolve({name: "ph", value: phantomSharedInstance, tearDown: phantomSharedInstance.tearDown});
+            deferred.resolver.resolve({name: "ph", value: phantomSharedInstance, tearDown: phantomSharedInstance.tearDown});
         } else {
             console.log("Booting up Phantom.JS...");
             phantom.create(function (instance) {
@@ -85,7 +82,7 @@ module.exports = {
                         }));
                     }
                 };
-                deferred.resolve({name: "ph", value: phantomSharedInstance, tearDown: phantomSharedInstance.tearDown});
+                deferred.resolver.resolve({name: "ph", value: phantomSharedInstance, tearDown: phantomSharedInstance.tearDown});
             });
         }
         return deferred.promise;
@@ -96,7 +93,7 @@ module.exports = {
 
         module.exports.spawnServer(0, function (port, rampServerUrl, process) {
             var rampClients = [];
-            deferred.resolve({
+            deferred.resolver.resolve({
                 name: "rs",
                 value: {
                     rampClients: rampClients,
@@ -153,7 +150,7 @@ module.exports = {
             });
             res.on("end", function () {
                 cb(res, body);
-                deferred.resolve({res: res, body: body});
+                deferred.resolver.resolve({res: res, body: body});
             })
         }).end();
         return deferred.promise;
