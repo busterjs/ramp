@@ -18,7 +18,7 @@
     "ejs": "2.x",
     "node-uuid": "1.x",
     "when": "2.x",
-    "mori": "0.2.x"
+    "mori": "0.3.x"
   },
   "scripts": {
     "test": "node run-tests.js",
