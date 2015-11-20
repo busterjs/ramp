@@ -157,7 +157,8 @@ module.exports = {
     },
 
     failWhenCalled: function (err) {
-        console.log("Unexpeced call", err);
+        console.log("Unexpected call", err);
+        throw err;
     },
 
     capture: function (test, cb) {
