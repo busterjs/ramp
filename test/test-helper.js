@@ -156,39 +156,24 @@ module.exports = {
         return deferred.promise;
     },
 
-    failWhenCalled: function (err) {
-        console.log("Unexpected call", err);
-        throw err;
-    },
-
-    capture: function (test, cb) {
+    capture: function (test) {
+        var d = when.defer();
         test.ph.createPage(function (page) {
             page.open(test.rs.captureUrl, function (status) {
                 page.get("url", function (url) {
                     var slaveId = /^[a-z]+:\/\/[^\/]+\/slaves\/([^\/]+)/.exec(url)[1];
 
                     var rc = test.rs.createRampClient();
-                    ensureSlavePresent(rc, slaveId, page, cb);
+                    ensureSlavePresent(rc, slaveId, page, function (rc, page, slaveId) {
+                        d.resolver.resolve({
+                            rc: rc,
+                            page: page,
+                            slaveId: slaveId
+                        });
+                    });
                 });
             });
         });
-    },
-
-    initializeSession: function (createPromise, cb) {
-        createPromise.then(
-            function (sessionClientInitializer) {
-                sessionClientInitializer.initialize().then(
-                    function (sessionClient) { cb(sessionClient) },
-                    module.exports.failWhenCalled)
-            },
-            module.exports.failWhenCalled);
-    },
-
-    promiseSuccess: function (promise, cb) {
-        promise.then(cb, module.exports.failWhenCalled)
-    },
-
-    promiseFailure: function (promise, cb) {
-        promise.then(module.exports.failWhenCalled, cb);
+        return d.promise;
     }
 };

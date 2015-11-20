@@ -22,7 +22,7 @@ buster.testCase("Slave reloading on server restart", {
                 return ramp.createRampClient(port);
             }};
 
-            th.capture(self, function (rc, page) {
+            th.capture(self).then(function () {
                 process.kill("SIGKILL");
                 process.on("exit", function () {
                     th.spawnServer(port, function (port, rampServerUrl, process) {
@@ -39,7 +39,7 @@ buster.testCase("Slave reloading on server restart", {
                             }, function () {
                                 tryGettingSlaves();
                             });
-                        };
+                        }
 
                         tryGettingSlaves();
                     });
@@ -47,4 +47,4 @@ buster.testCase("Slave reloading on server restart", {
             });
         });
     }
-})
+});

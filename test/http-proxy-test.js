@@ -5,7 +5,6 @@ var http = require("http");
 var when = require("when");
 var ramp = require("./../lib/ramp");
 var rampResources = require("ramp-resources");
-var when_pipeline = require("when/pipeline");
 var th = require("./test-helper.js");
 
 buster.testCase("HTTP proxy", {
@@ -47,17 +46,18 @@ buster.testCase("HTTP proxy", {
 
         var rs = rampResources.createResourceSet();
         rs.addResource({path: "/myproxy", backend: "http://localhost:" + httpPort});
-        rs.addResource({path: "/test.js", content: "function ajax(path) { var r = new XMLHttpRequest(); r.open('GET', path, true); r.send() }; ajax(buster.env.contextPath + '/myproxy'); ajax(buster.env.contextPath + '/myproxy/test');"});
+        rs.addResource({
+            path: "/test.js",
+            content: "function ajax(path) { var r = new XMLHttpRequest(); r.open('GET', path, true); r.send() }; ajax(buster.env.contextPath + '/myproxy'); ajax(buster.env.contextPath + '/myproxy/test');"
+        });
         rs.loadPath.append("/test.js");
 
-        th.capture(this, function (rc) {
-            when_pipeline([
-                function () {
-                    return rc.createSession(rs);
-                },
-                function (sessionClientInitializer) {
-                    return sessionClientInitializer.initialize();
-                }
-            ])});
+        th.capture(this)
+            .then(function (captured) {
+                return captured.rc.createSession(rs);
+            })
+            .then(function (sessionClientInitializer) {
+                return sessionClientInitializer.initialize();
+            });
     }
 });

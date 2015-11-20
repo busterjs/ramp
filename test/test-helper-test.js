@@ -15,13 +15,14 @@ buster.testCase("Test helper", {
         return th.tearDownHelpers(this);
     },
 
-    "should be able to capture mock slave": function (done) {
+    "should be able to capture mock slave": function () {
+        // note: this gives random failures
+
         var self = this;
         var rc = this.rs.createRampClient();
         var capturedSlave;
 
-        th.promiseSuccess(
-            when_pipeline([
+        return when_pipeline([
                 function () {
                     return ramp.testHelper.captureSlave(self.rs.port, "My User Agent");
                 },
@@ -34,21 +35,20 @@ buster.testCase("Test helper", {
                     assert.equals(capturedSlave.slave, slaves[0]);
                     assert.equals(capturedSlave.slave.userAgent, "My User Agent");
                 }
-            ]),
-            function () {
+            ])
+            .then(function () {
                 capturedSlave.teardown();
 
                 function pollSlaves() {
-                    rc.getSlaves().then(
-                        function (slaves) {
-                            if (slaves.length === 0) {
-                                done();
-                            } else {
-                                pollSlaves();
-                            }
-                        });
+                    return rc.getSlaves().then(function (slaves) {
+                        if (slaves.length === 0) {
+                            return true;
+                        } else {
+                            return pollSlaves();
+                        }
+                    });
                 }
-                pollSlaves();
+                return pollSlaves();
             })
     }
 });

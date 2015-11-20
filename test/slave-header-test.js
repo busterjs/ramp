@@ -14,7 +14,7 @@ buster.testCase("Slave header", {
         var httpServer = http.createServer(function (req, res) {
             res.writeHead(418);
             res.end();
-        })
+        });
 
         httpServer.listen(0, function () {
             self.httpServer = httpServer;
@@ -46,12 +46,10 @@ buster.testCase("Slave header", {
         this.httpServer.close();
     },
 
-    "should be present": function (done) {
-        var self = this;
+    "should be present": function () {
         var serverUrl = "http://localhost:" + this.httpServerPort;
 
-        th.promiseSuccess(
-            when_pipeline([
+        return when_pipeline([
                 function () {
                     return th.http("GET", serverUrl + "/capture")
                 },
@@ -72,7 +70,6 @@ buster.testCase("Slave header", {
                     assert.equals(e.res.statusCode, 200);
                     assert.match(e.body , /^Hello\, World\!/);
                 }
-            ]),
-            done);
+            ]);
     }
-})
+});

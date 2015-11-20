@@ -29,7 +29,7 @@ buster.testCase("Ramp client death", {
         return th.tearDownHelpers(this);
     },
 
-    "should end session": function (done) {
+    "should end session": function () {
         var self = this;
 
         var rcproc = cp.spawn("node", [__dirname + "/ramp-client-with-session-loader.js", this.rs.port]);
@@ -38,8 +38,7 @@ buster.testCase("Ramp client death", {
 
         var rc = this.rs.createRampClient();
 
-        th.promiseSuccess(
-            when_pipeline([
+        return when_pipeline([
                 function () {
                     return pollForSession(self.rs.port, function (session) { if (session) return session })
                 },
@@ -52,19 +51,17 @@ buster.testCase("Ramp client death", {
                 function () {
                     assert(true)
                 }
-            ]),
-            done);
+            ]);
     },
 
-    "should end session when graceful": function (done) {
+    "should end session when graceful": function () {
         var self = this;
 
         var rcproc = cp.spawn("node", [__dirname + "/ramp-client-with-session-loader.js", this.rs.port]);
         rcproc.stdout.pipe(process.stdout);
         rcproc.stderr.pipe(process.stderr);
 
-        th.promiseSuccess(
-            when_pipeline([
+        return when_pipeline([
                 function () {
                     return pollForSession(self.rs.port, function (session) { if (session) return session })
                 },
@@ -77,7 +74,6 @@ buster.testCase("Ramp client death", {
                 function () {
                     assert(true)
                 }
-            ]),
-            done);
+            ]);
     }
-})
+});

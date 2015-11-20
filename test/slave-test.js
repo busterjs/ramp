@@ -21,7 +21,7 @@ buster.testCase("Slave", {
     "capturing one browser": function (done) {
         var self = this;
 
-        th.capture(this, function () {
+        th.capture(this).then(function () {
             th.http("GET", self.rs.serverUrl + "/slaves", done(function (res, body) {
                 assert.equals(res.statusCode, 200);
                 body = JSON.parse(body);
@@ -37,10 +37,10 @@ buster.testCase("Slave", {
         var self = this;
 
         var slaveADeferred = when.defer();
-        th.capture(this, slaveADeferred.resolver.resolve);
+        th.capture(this).then(slaveADeferred.resolver.resolve);
 
         var slaveBDeferred = when.defer();
-        th.capture(this, slaveBDeferred.resolver.resolve);
+        th.capture(this).then(slaveBDeferred.resolver.resolve);
 
         when.all([slaveADeferred.promise, slaveBDeferred.promise]).then(function () {
             th.http("GET", self.rs.serverUrl + "/slaves", done(function (res, body) {
@@ -51,38 +51,35 @@ buster.testCase("Slave", {
         });
     },
 
-    "should be able to get slaves": function (done) {
-        th.capture(this, function (rc) {
-            rc.getSlaves().then(
-                done(function (slaves) {
-                    assert.equals(slaves.length, 1);
-                    assert(slaves[0].id);
-                    assert.match(slaves[0].userAgent, /phantom/i);
-                }),
-                th.failWhenCalled
-            );
-        });
+    "should be able to get slaves": function () {
+        return th.capture(this)
+            .then(function (captured) {
+                return captured.rc.getSlaves();
+            })
+            .then(function (slaves) {
+                assert.equals(slaves.length, 1);
+                assert(slaves[0].id);
+                assert.match(slaves[0].userAgent, /phantom/i);
+            });
     },
 
-    "pass slave id as url param": function (done) {
+    "pass slave id as url param": function () {
         this.rs.captureUrl += "?id=123";
 
-        th.capture(this, function (rc) {
-            rc.getSlaves().then(
-                done(function (slaves) {
-                    assert.equals(slaves.length, 1);
-                    assert.equals(slaves[0].id, "123");
-                }),
-                th.failWhenCalled
-            );
-        });
+        return th.capture(this)
+            .then(function (captured) {
+                return captured.rc.getSlaves()
+            })
+            .then(function (slaves) {
+                assert.equals(slaves.length, 1);
+                assert.equals(slaves[0].id, "123");
+            });
     },
 
-    "should be able to load chains for a slave": function (done) {
+    "should be able to load chains for a slave": function () {
         var self = this;
 
-        th.promiseSuccess(
-            when_pipeline([
+        return when_pipeline([
                 function () {
                     return th.http("GET", self.rs.serverUrl + "/capture");
                 },
@@ -94,8 +91,7 @@ buster.testCase("Slave", {
                     assert.equals(e.res.statusCode, 200);
                     assert.match(e.body, /<frameset/);
                 }
-            ]).then(done)
-        );
+            ]);
     },
 
     "should create new slave when loading chains for already active slave": function (done) {
@@ -124,9 +120,9 @@ buster.testCase("Slave", {
         var  self = this;
         var rc = this.rs.createRampClient();
 
-        th.capture(this, function (rc, page) {
+        th.capture(this).then(function (captured) {
             function tryGettingSlaves() {
-                rc.getSlaves().then(function (slaves) {
+                captured.rc.getSlaves().then(function (slaves) {
                     if (slaves.length === 0) {
                         assert(true);
                         done();
@@ -136,7 +132,7 @@ buster.testCase("Slave", {
                 });
             }
 
-            self.ph.closePage(page);
+            self.ph.closePage(captured.page);
             tryGettingSlaves();
         });
     }
