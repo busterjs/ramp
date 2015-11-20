@@ -64,7 +64,7 @@ module.exports = {
                         instance.createPage(function (page) {
                             page.set("onConsoleMessage", function (msg) {
                                 console.log("[PHANTOM CONSOLE]", msg);
-                            })
+                            });
 
                             phantomSharedInstance.pages.push(page);
                             cb(page)
@@ -107,7 +107,7 @@ module.exports = {
                     port: port
                 },
                 tearDown: function () {
-                    rampClients.forEach(function (rc) { rc.destroy(); })
+                    rampClients.forEach(function (rc) { rc.destroy(); });
                     return when.all([killProcess(process)]);
                 }
             });
