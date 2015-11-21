@@ -445,6 +445,8 @@ buster.testCase("Session", {
 
     "emits event when slave dies": function () {
         var self = this;
+        var deathCallbackDeferred = when.defer();
+
         var captured;
 
         return th.capture(this)
@@ -453,13 +455,16 @@ buster.testCase("Session", {
                 return captured.rc.createSession();
             })
             .then(function (sessionClientInitializer) {
-                var onDeathPromise = new when.promise(function (resolve) {
-                    sessionClientInitializer.onSlaveDeath(resolve);
-                });
+                var subscription = sessionClientInitializer.onSlaveDeath(deathCallbackDeferred.resolver.resolve);
 
                 return when.all([
-                    onDeathPromise,
-                    sessionClientInitializer.initialize(),
+                    subscription,
+                    sessionClientInitializer.initialize()
+                ]);
+            })
+            .then(function () {
+                return when.all([
+                    deathCallbackDeferred.promise,
                     self.ph.closePage(captured.page)
                 ]);
             })
@@ -474,28 +479,34 @@ buster.testCase("Session", {
             });
     },
 
-    "emits event when session is aborted": function (done) {
+    "emits event when session is aborted": function () {
         var self = this;
-        var sessionClientInitializer;
+        var abortCallbackDeferred = when.defer();
 
-        th.capture(this)
+        return th.capture(this)
             .then(function (captured) {
                 return captured.rc.createSession();
             })
-            .then(function (s) {
-                sessionClientInitializer = s;
-                return sessionClientInitializer.onSessionAbort(function (e) {
-                    assert(e);
-                    done();
-                });
+            .then(function (sessionClientInitializer) {
+                var subscription = sessionClientInitializer.onSessionAbort(abortCallbackDeferred.resolver.resolve);
+
+                return when.all([
+                    sessionClientInitializer.initialize(),
+                    subscription
+                ]);
             })
-            .then(function () {
-                return sessionClientInitializer.initialize().then(function (sessionClient) {
-                    var url = sessionClient.getSession().sessionUrl;
-                    th.http("DELETE", self.rs.serverUrl + url, function (res, body) {
-                        assert.equals(res.statusCode, 200);
-                    });
-                });
+            .then(function (r) {
+                var sessionClient = r[0];
+                var url = sessionClient.getSession().sessionUrl;
+                return th.http("DELETE", self.rs.serverUrl + url);
+            })
+            .then(function (httpResult) {
+                assert.equals(httpResult.res.statusCode, 200);
+
+                return abortCallbackDeferred.promise;
+            })
+            .then(function (e) {
+                assert(e);
             });
     },
 
