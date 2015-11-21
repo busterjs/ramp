@@ -94,6 +94,8 @@ buster.testCase("Session", {
     },
 
     "can subscribe to events": function () {
+        var someEventCallbackDeferred = when.defer();
+
         return th.capture(this)
             .then(function (captured) {
                 var rs = rampResources.createResourceSet();
@@ -106,13 +108,14 @@ buster.testCase("Session", {
                 return captured.rc.createSession(rs);
             })
             .then(function (sessionClientInitializer) {
-                var onEventPromise = new when.promise(function (resolve) {
-                    sessionClientInitializer.on("some:event", resolve);
-                });
+                var subscription = sessionClientInitializer.on("some:event", someEventCallbackDeferred.resolver.resolve);
 
-                return sessionClientInitializer.initialize().then(function () {
-                    return onEventPromise;
+                return subscription.then(function () {
+                    return sessionClientInitializer.initialize();
                 });
+            })
+            .then(function () {
+                return someEventCallbackDeferred.promise;
             })
             .then(function (e) {
                 assert(e.slaveId);
@@ -123,6 +126,7 @@ buster.testCase("Session", {
 
     "can publish events": function () {
         var payload = Math.random().toString();
+        var finalEventDeferred = when.defer();
 
         return th.capture(this)
             .then(function (captured) {
@@ -137,17 +141,18 @@ buster.testCase("Session", {
             })
             .then(function (sessionClientInitializer) {
 
-                sessionClientInitializer.on("some:event", function (e) {
+                var sub1 = sessionClientInitializer.on("some:event", function (e) {
                     sessionClientInitializer.emit("other:event", payload);
                 });
 
-                var onFinalEventPromise = new when.promise(function (resolve) {
-                    sessionClientInitializer.on("final:event", resolve);
-                });
+                var sub2 = sessionClientInitializer.on("final:event", finalEventDeferred.resolver.resolve);
 
-                return sessionClientInitializer.initialize().then(function () {
-                    return onFinalEventPromise;
+                return when.all([sub1, sub2]).then(function () {
+                    return sessionClientInitializer.initialize();
                 });
+            })
+            .then(function () {
+                return finalEventDeferred.promise;
             })
             .then(function (e) {
                 assert(e.slaveId);
@@ -159,6 +164,7 @@ buster.testCase("Session", {
     "can subscribe to all events": function () {
         var spy = this.spy();
         var captured;
+        var eventTwiceDeferred = when.defer();
 
         return th.capture(this)
             .then(function (c) {
@@ -175,17 +181,20 @@ buster.testCase("Session", {
             })
             .then(function (sessionClientInitializer) {
 
-                var onEventTwicePromise = new when.promise(function (resolve) {
-                    sessionClientInitializer.on(function (eventName, e) {
-                        spy(eventName, e);
+                var subscription = sessionClientInitializer.on(function (eventName, e) {
+                    spy(eventName, e);
 
-                        if (spy.calledTwice) {
-                            resolve();
-                        }
-                    });
+                    if (spy.calledTwice) {
+                        eventTwiceDeferred.resolver.resolve();
+                    }
                 });
 
-                return when.all([sessionClientInitializer.initialize(), onEventTwicePromise]);
+                return subscription.then(function () {
+                    return sessionClientInitializer.initialize();
+                });
+            })
+            .then(function () {
+                return eventTwiceDeferred.promise;
             })
             .then(function () {
                 assert.calledWith(spy, "some:event", {
@@ -396,18 +405,21 @@ buster.testCase("Session", {
         });
         rs.loadPath.append("/foo.js");
 
+        var nicelyDoneDeferred = when.defer();
+
         return th.capture(this)
             .then(function (captured) {
                 return captured.rc.createSession(rs);
             })
             .then(function (sessionClientInitializer) {
-                var onNicelyDonePromise = new when.promise(function (resolve) {
-                    sessionClientInitializer.on("nicelydone", resolve);
-                });
+                var subscription = sessionClientInitializer.on("nicelydone", nicelyDoneDeferred.resolver.resolve);
 
-                return sessionClientInitializer.initialize().then(function () {
-                    return onNicelyDonePromise;
+                return subscription.then(function () {
+                    return sessionClientInitializer.initialize();
                 });
+            })
+            .then(function () {
+                return nicelyDoneDeferred.promise;
             })
             .then(function (e) {
                 assert.equals(e.data, 123);
@@ -424,19 +436,21 @@ buster.testCase("Session", {
         });
         rs.loadPath.append("/foo.js");
 
+        var blackjazzDeferred = when.defer();
         return th.capture(this)
             .then(function (c) {
                 captured = c;
                 return captured.rc.createSession(rs);
             })
             .then(function (sessionClientInitializer) {
-                var onBlackjazzPromise = new when.promise(function (resolve) {
-                    sessionClientInitializer.on("blackjazz", resolve);
-                });
+                var subscription = sessionClientInitializer.on("blackjazz", blackjazzDeferred.resolver.resolve);
 
-                return sessionClientInitializer.initialize().then(function () {
-                    return onBlackjazzPromise;
+                return subscription.then(function () {
+                    return sessionClientInitializer.initialize();
                 });
+            })
+            .then(function () {
+                return blackjazzDeferred.promise;
             })
             .then(function (e) {
                 assert.equals(e.data, captured.slaveId);
@@ -457,10 +471,9 @@ buster.testCase("Session", {
             .then(function (sessionClientInitializer) {
                 var subscription = sessionClientInitializer.onSlaveDeath(deathCallbackDeferred.resolver.resolve);
 
-                return when.all([
-                    subscription,
-                    sessionClientInitializer.initialize()
-                ]);
+                return subscription.then(function () {
+                    return sessionClientInitializer.initialize();
+                });
             })
             .then(function () {
                 return when.all([
@@ -490,13 +503,11 @@ buster.testCase("Session", {
             .then(function (sessionClientInitializer) {
                 var subscription = sessionClientInitializer.onSessionAbort(abortCallbackDeferred.resolver.resolve);
 
-                return when.all([
-                    sessionClientInitializer.initialize(),
-                    subscription
-                ]);
+                return subscription.then(function () {
+                    return sessionClientInitializer.initialize();
+                });
             })
-            .then(function (r) {
-                var sessionClient = r[0];
+            .then(function (sessionClient) {
                 var url = sessionClient.getSession().sessionUrl;
                 return th.http("DELETE", self.rs.serverUrl + url);
             })
