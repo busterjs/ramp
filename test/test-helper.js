@@ -1,7 +1,6 @@
 var phantom = require("phantom");
 var when = require("when");
 var cp = require("child_process");
-var sys = require("sys");
 var http = require("http");
 var URL = require("url");
 
@@ -126,7 +125,7 @@ module.exports = {
 
             cb(port, rampServerUrl, cs);
             cs.stdout.on("data", function (data) {
-                sys.print("[SERVER PROCESS] ", data);
+                process.stdout.write("[SERVER PROCESS] " + data + "\n");
             });
         });
     },
