@@ -3,7 +3,6 @@ var assert = buster.referee.assert;
 var ramp = require("../lib/ramp");
 
 var when = require("when");
-var when_pipeline = require("when/pipeline");
 var th = require("./test-helper.js");
 
 buster.testCase("Test helper", {
@@ -22,20 +21,18 @@ buster.testCase("Test helper", {
         var rc = this.rs.createRampClient();
         var capturedSlave;
 
-        return when_pipeline([
-                function () {
-                    return ramp.testHelper.captureSlave(self.rs.port, "My User Agent");
-                },
-                function (actualCapturedSlave) {
-                    capturedSlave = actualCapturedSlave;
-                    return rc.getSlaves();
-                },
-                function (slaves) {
-                    assert.equals(slaves.length, 1);
-                    assert.equals(capturedSlave.slave, slaves[0]);
-                    assert.equals(capturedSlave.slave.userAgent, "My User Agent");
-                }
-            ])
+        return ramp.testHelper.captureSlave(self.rs.port, "My User Agent")
+            .then(function (actualCapturedSlave) {
+                assert(actualCapturedSlave.slave, "No slave returned by captureSlave()");
+                capturedSlave = actualCapturedSlave;
+                return rc.getSlaves();
+            })
+            .then(function (slaves) {
+                assert.equals(slaves.length, 1);
+                assert(slaves[0], "No slave returned by getSlaves()");
+                assert.equals(capturedSlave.slave, slaves[0]);
+                assert.equals(capturedSlave.slave.userAgent, "My User Agent");
+            })
             .then(function () {
                 capturedSlave.teardown();
 
@@ -48,6 +45,7 @@ buster.testCase("Test helper", {
                         }
                     });
                 }
+
                 return pollSlaves();
             })
     }
