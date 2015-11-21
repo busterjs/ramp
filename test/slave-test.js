@@ -17,37 +17,39 @@ buster.testCase("Slave", {
         return th.tearDownHelpers(this);
     },
 
-    "capturing one browser": function (done) {
+    "capturing one browser": function () {
         var self = this;
 
-        th.capture(this).then(function () {
-            th.http("GET", self.rs.serverUrl + "/slaves", done(function (res, body) {
+        return th.capture(this)
+            .then(function () {
+                return th.http("GET", self.rs.serverUrl + "/slaves");
+            })
+            .then(function (r) {
+                var res = r.res;
+                var body = r.body;
                 assert.equals(res.statusCode, 200);
                 body = JSON.parse(body);
                 assert.equals(body.length, 1);
                 assert(body[0].id);
                 assert(body[0].userAgent);
                 assert.match(body[0].userAgent, /phantomjs/i);
-            }));
-        });
+            });
     },
 
-    "capturing two browsers": function (done) {
+    "capturing two browsers": function () {
         var self = this;
 
-        var slaveADeferred = when.defer();
-        th.capture(this).then(slaveADeferred.resolver.resolve);
-
-        var slaveBDeferred = when.defer();
-        th.capture(this).then(slaveBDeferred.resolver.resolve);
-
-        when.all([slaveADeferred.promise, slaveBDeferred.promise]).then(function () {
-            th.http("GET", self.rs.serverUrl + "/slaves", done(function (res, body) {
+        return when.all([th.capture(this), th.capture(this)])
+            .then(function () {
+                return th.http("GET", self.rs.serverUrl + "/slaves");
+            })
+            .then(function (r) {
+                var res = r.res;
+                var body = r.body;
                 assert.equals(res.statusCode, 200);
                 body = JSON.parse(body);
                 assert.equals(body.length, 2);
-            }));
-        });
+            });
     },
 
     "should be able to get slaves": function () {
@@ -111,24 +113,25 @@ buster.testCase("Slave", {
         });
     },
 
-    "should kill slave when browser dies": function (done) {
-        var  self = this;
-        var rc = this.rs.createRampClient();
+    "should kill slave when browser dies": function () {
+        var self = this;
 
-        th.capture(this).then(function (captured) {
-            function tryGettingSlaves() {
-                captured.rc.getSlaves().then(function (slaves) {
-                    if (slaves.length === 0) {
-                        assert(true);
-                        done();
-                    } else {
-                        tryGettingSlaves();
-                    }
-                });
-            }
+        this.rs.createRampClient();
 
-            self.ph.closePage(captured.page);
-            tryGettingSlaves();
-        });
+        return th.capture(this)
+            .then(function (captured) {
+                function tryGettingSlaves() {
+                    return captured.rc.getSlaves()
+                        .then(function (slaves) {
+                            if (slaves.length !== 0) {
+                                return tryGettingSlaves();
+                            }
+                            assert(true);
+                        });
+                }
+
+                self.ph.closePage(captured.page);
+                return tryGettingSlaves();
+            });
     }
 });

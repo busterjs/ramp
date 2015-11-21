@@ -27,22 +27,21 @@ buster.testCase("HTTP proxy", {
         return th.tearDownHelpers(this);
     },
 
-    "should work": function (done) {
+    "should work": function () {
         var httpPort = this.httpPort;
         var httpSpy = this.spy();
 
         var timesCalled = 0;
-        this.httpServer.on("request", function (req, res) {
-            httpSpy(req.url);
+        var onHttpRequestDone = new when.promise(function (resolve) {
+            this.httpServer.on("request", function (req, res) {
+                httpSpy(req.url);
 
-            ++timesCalled;
-            if (timesCalled === 2) {
-                assert(httpSpy.calledTwice);
-                assert.calledWith(httpSpy, "/");
-                assert.calledWith(httpSpy, "/test");
-                done();
-            }
-        });
+                ++timesCalled;
+                if (timesCalled === 2) {
+                    resolve();
+                }
+            });
+        }.bind(this));
 
         var rs = rampResources.createResourceSet();
         rs.addResource({path: "/myproxy", backend: "http://localhost:" + httpPort});
@@ -52,12 +51,20 @@ buster.testCase("HTTP proxy", {
         });
         rs.loadPath.append("/test.js");
 
-        th.capture(this)
+        return th.capture(this)
             .then(function (captured) {
                 return captured.rc.createSession(rs);
             })
             .then(function (sessionClientInitializer) {
                 return sessionClientInitializer.initialize();
+            })
+            .then(function () {
+                return onHttpRequestDone;
+            })
+            .then(function () {
+                assert(httpSpy.calledTwice);
+                assert.calledWith(httpSpy, "/");
+                assert.calledWith(httpSpy, "/test");
             });
     }
 });

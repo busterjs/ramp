@@ -93,8 +93,8 @@ buster.testCase("Session", {
             });
     },
 
-    "can subscribe to events": function (done) {
-        th.capture(this)
+    "can subscribe to events": function () {
+        return th.capture(this)
             .then(function (captured) {
                 var rs = rampResources.createResourceSet();
                 rs.addResource({
@@ -106,20 +106,25 @@ buster.testCase("Session", {
                 return captured.rc.createSession(rs);
             })
             .then(function (sessionClientInitializer) {
-                sessionClientInitializer.on("some:event", done(function (e) {
-                    assert(e.slaveId);
-                    assert.equals(e.data, 123);
-                    assert.equals(e.event, "some:event");
-                }));
+                var onEventPromise = new when.promise(function (resolve) {
+                    sessionClientInitializer.on("some:event", resolve);
+                });
 
-                return sessionClientInitializer.initialize();
+                return sessionClientInitializer.initialize().then(function () {
+                    return onEventPromise;
+                });
+            })
+            .then(function (e) {
+                assert(e.slaveId);
+                assert.equals(e.data, 123);
+                assert.equals(e.event, "some:event");
             });
     },
 
-    "can publish events": function (done) {
-
+    "can publish events": function () {
         var payload = Math.random().toString();
-        th.capture(this)
+
+        return th.capture(this)
             .then(function (captured) {
                 var rs = rampResources.createResourceSet();
                 rs.addResource({
@@ -136,22 +141,26 @@ buster.testCase("Session", {
                     sessionClientInitializer.emit("other:event", payload);
                 });
 
-                sessionClientInitializer.on("final:event", function (e) {
-                    assert(e.slaveId);
-                    assert.equals(e.data, payload);
-                    done();
+                var onFinalEventPromise = new when.promise(function (resolve) {
+                    sessionClientInitializer.on("final:event", resolve);
                 });
 
-                sessionClientInitializer.initialize()
+                return sessionClientInitializer.initialize().then(function () {
+                    return onFinalEventPromise;
+                });
+            })
+            .then(function (e) {
+                assert(e.slaveId);
+                assert.equals(e.data, payload);
             });
     },
 
 
-    "can subscribe to all events": function (done) {
-        var self = this,
-            captured;
+    "can subscribe to all events": function () {
+        var spy = this.spy();
+        var captured;
 
-        th.capture(this)
+        return th.capture(this)
             .then(function (c) {
                 captured = c;
 
@@ -165,27 +174,30 @@ buster.testCase("Session", {
                 return captured.rc.createSession(rs);
             })
             .then(function (sessionClientInitializer) {
-                var spy = self.spy();
 
-                sessionClientInitializer.on(function (eventName, e) {
-                    spy(eventName, e);
+                var onEventTwicePromise = new when.promise(function (resolve) {
+                    sessionClientInitializer.on(function (eventName, e) {
+                        spy(eventName, e);
 
-                    if (spy.calledTwice) {
-                        assert.calledWith(spy, "some:event", {
-                            slaveId: captured.slaveId,
-                            data: 123,
-                            event: "some:event"
-                        });
-                        assert.calledWith(spy, "other/event-:", {
-                            slaveId: captured.slaveId,
-                            data: 456,
-                            event: "other/event-:"
-                        });
-                        done();
-                    }
+                        if (spy.calledTwice) {
+                            resolve();
+                        }
+                    });
                 });
 
-                sessionClientInitializer.initialize();
+                return when.all([sessionClientInitializer.initialize(), onEventTwicePromise]);
+            })
+            .then(function () {
+                assert.calledWith(spy, "some:event", {
+                    slaveId: captured.slaveId,
+                    data: 123,
+                    event: "some:event"
+                });
+                assert.calledWith(spy, "other/event-:", {
+                    slaveId: captured.slaveId,
+                    data: 456,
+                    event: "other/event-:"
+                });
             });
     },
 
@@ -372,7 +384,7 @@ buster.testCase("Session", {
             });
     },
 
-    "makes buster.env.contextPath available": function (done) {
+    "makes buster.env.contextPath available": function () {
         var rs = rampResources.createResourceSet();
         rs.addResource({
             path: "/foo.js",
@@ -384,21 +396,25 @@ buster.testCase("Session", {
         });
         rs.loadPath.append("/foo.js");
 
-        th.capture(this)
+        return th.capture(this)
             .then(function (captured) {
                 return captured.rc.createSession(rs);
             })
             .then(function (sessionClientInitializer) {
-                sessionClientInitializer.on("nicelydone", function (e) {
-                    assert.equals(e.data, 123);
-                    done();
+                var onNicelyDonePromise = new when.promise(function (resolve) {
+                    sessionClientInitializer.on("nicelydone", resolve);
                 });
 
-                return sessionClientInitializer.initialize();
+                return sessionClientInitializer.initialize().then(function () {
+                    return onNicelyDonePromise;
+                });
+            })
+            .then(function (e) {
+                assert.equals(e.data, 123);
             });
     },
 
-    "makes buster.env.id available": function (done) {
+    "makes buster.env.id available": function () {
         var captured;
 
         var rs = rampResources.createResourceSet();
@@ -408,45 +424,53 @@ buster.testCase("Session", {
         });
         rs.loadPath.append("/foo.js");
 
-        th.capture(this)
+        return th.capture(this)
             .then(function (c) {
                 captured = c;
                 return captured.rc.createSession(rs);
             })
             .then(function (sessionClientInitializer) {
-                sessionClientInitializer.on("blackjazz", function (e) {
-                    assert.equals(e.data, captured.slaveId);
-                    done();
+                var onBlackjazzPromise = new when.promise(function (resolve) {
+                    sessionClientInitializer.on("blackjazz", resolve);
                 });
 
-                return sessionClientInitializer.initialize();
+                return sessionClientInitializer.initialize().then(function () {
+                    return onBlackjazzPromise;
+                });
+            })
+            .then(function (e) {
+                assert.equals(e.data, captured.slaveId);
             });
     },
 
-    "emits event when slave dies": function (done) {
+    "emits event when slave dies": function () {
         var self = this;
         var captured;
 
-        th.capture(this)
+        return th.capture(this)
             .then(function (c) {
                 captured = c;
                 return captured.rc.createSession();
             })
             .then(function (sessionClientInitializer) {
-                sessionClientInitializer.onSlaveDeath(function (e) {
-                    assert.equals(e.slaveId, captured.slaveId);
-
-                    captured.rc.getSlaves()
-                        .then(function (slaves) {
-                            assert.equals(slaves.length, 0);
-                            done();
-                        });
+                var onDeathPromise = new when.promise(function (resolve) {
+                    sessionClientInitializer.onSlaveDeath(resolve);
                 });
 
-                return sessionClientInitializer.initialize();
+                return when.all([
+                    onDeathPromise,
+                    sessionClientInitializer.initialize(),
+                    self.ph.closePage(captured.page)
+                ]);
             })
-            .then(function () {
-                self.ph.closePage(captured.page);
+            .then(function (all) {
+                var e = all[0];
+                assert.equals(e.slaveId, captured.slaveId);
+
+                return captured.rc.getSlaves();
+            })
+            .then(function (slaves) {
+                assert.equals(slaves.length, 0);
             });
     },
 
@@ -466,12 +490,11 @@ buster.testCase("Session", {
                 });
             })
             .then(function () {
-                return sessionClientInitializer.initialize();
-            })
-            .then(function (sessionClient) {
-                var url = sessionClient.getSession().sessionUrl;
-                th.http("DELETE", self.rs.serverUrl + url, function (res, body) {
-                    assert.equals(res.statusCode, 200);
+                return sessionClientInitializer.initialize().then(function (sessionClient) {
+                    var url = sessionClient.getSession().sessionUrl;
+                    th.http("DELETE", self.rs.serverUrl + url, function (res, body) {
+                        assert.equals(res.statusCode, 200);
+                    });
                 });
             });
     },
