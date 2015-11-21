@@ -3,7 +3,6 @@ var assert = buster.referee.assert;
 
 var ramp = require("./../lib/ramp");
 var th = require("./test-helper.js");
-var when_pipeline = require("when/pipeline");
 var cp = require("child_process");
 
 function pollForSession(port, pred) {
@@ -38,20 +37,16 @@ buster.testCase("Ramp client death", {
 
         var rc = this.rs.createRampClient();
 
-        return when_pipeline([
-                function () {
-                    return pollForSession(self.rs.port, function (session) { if (session) return session })
-                },
-                function (session) {
-                    rcproc.kill("SIGKILL");
-                },
-                function (session) {
-                    return pollForSession(self.rs.port, function (session) { if (!session) return null });
-                },
-                function () {
-                    assert(true)
-                }
-            ]);
+        return pollForSession(self.rs.port, function (session) { if (session) return session })
+            .then(function (session) {
+                rcproc.kill("SIGKILL");
+            })
+            .then(function (session) {
+                return pollForSession(self.rs.port, function (session) { if (!session) return null });
+            })
+            .then(function () {
+                assert(true)
+            });
     },
 
     "should end session when graceful": function () {
@@ -61,19 +56,15 @@ buster.testCase("Ramp client death", {
         rcproc.stdout.pipe(process.stdout);
         rcproc.stderr.pipe(process.stderr);
 
-        return when_pipeline([
-                function () {
-                    return pollForSession(self.rs.port, function (session) { if (session) return session })
-                },
-                function (session) {
-                    rcproc.kill("SIGINT");
-                },
-                function (session) {
-                    return pollForSession(self.rs.port, function (session) { if (!session) return null });
-                },
-                function () {
-                    assert(true)
-                }
-            ]);
+        return pollForSession(self.rs.port, function (session) { if (session) return session })
+            .then(function (session) {
+                rcproc.kill("SIGINT");
+            })
+            .then(function (session) {
+                return pollForSession(self.rs.port, function (session) { if (!session) return null });
+            })
+            .then(function () {
+                assert(true)
+            });
     }
 });

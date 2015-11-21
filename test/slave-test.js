@@ -6,7 +6,6 @@ var refute = buster.referee.refute;
 var ramp = require("../lib/ramp");
 
 var when = require("when");
-var when_pipeline = require("when/pipeline");
 var th = require("./test-helper.js");
 
 buster.testCase("Slave", {
@@ -79,19 +78,15 @@ buster.testCase("Slave", {
     "should be able to load chains for a slave": function () {
         var self = this;
 
-        return when_pipeline([
-                function () {
-                    return th.http("GET", self.rs.serverUrl + "/capture");
-                },
-                function (e) {
-                    assert.equals(e.res.statusCode, 302);
-                    return th.http("GET", self.rs.serverUrl + e.res.headers.location);
-                },
-                function (e) {
-                    assert.equals(e.res.statusCode, 200);
-                    assert.match(e.body, /<frameset/);
-                }
-            ]);
+        return th.http("GET", self.rs.serverUrl + "/capture")
+            .then(function (e) {
+                assert.equals(e.res.statusCode, 302);
+                return th.http("GET", self.rs.serverUrl + e.res.headers.location);
+            })
+            .then(function (e) {
+                assert.equals(e.res.statusCode, 200);
+                assert.match(e.body, /<frameset/);
+            });
     },
 
     "should create new slave when loading chains for already active slave": function (done) {

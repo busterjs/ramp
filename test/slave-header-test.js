@@ -5,7 +5,6 @@ var ramp = require("./../lib/ramp");
 var http = require("http");
 var rampResources = require("ramp-resources");
 var th = require("./test-helper.js");
-var when_pipeline = require("when/pipeline");
 
 buster.testCase("Slave header", {
     setUp: function (done) {
@@ -49,27 +48,24 @@ buster.testCase("Slave header", {
     "should be present": function () {
         var serverUrl = "http://localhost:" + this.httpServerPort;
 
-        return when_pipeline([
-                function () {
-                    return th.http("GET", serverUrl + "/capture")
-                },
-                function (e) {
-                    assert.equals(e.res.statusCode, 302);
-                    return th.http("GET", serverUrl + e.res.headers.location);
-                },
-                function (e) {
-                    assert.equals(e.res.statusCode, 200);
-                    assert.equals(e.body.match(/\<frame[^s]\s/ig).length, 2, "Should find two frame tags");
-                    assert.match(e.body, /80px/);
-                    assert.match(e.body, /\/slave_header\//);
-                },
-                function () {
-                    return th.http("GET", serverUrl + "/slave_header/");
-                },
-                function (e) {
-                    assert.equals(e.res.statusCode, 200);
-                    assert.match(e.body , /^Hello\, World\!/);
-                }
-            ]);
+        return th.http("GET", serverUrl + "/capture")
+            .then(function (e) {
+                assert.equals(e.res.statusCode, 302);
+                return th.http("GET", serverUrl + e.res.headers.location);
+            })
+            .then(function (e) {
+                assert.equals(e.res.statusCode, 200);
+                assert.equals(e.body.match(/\<frame[^s]\s/ig).length, 2, "Should find two frame tags");
+                assert.match(e.body, /80px/);
+                assert.match(e.body, /\/slave_header\//);
+            })
+            .then(function () {
+                return th.http("GET", serverUrl + "/slave_header/");
+            })
+            .then(function (e) {
+                assert.equals(e.res.statusCode, 200);
+                assert.match(e.body, /^Hello\, World\!/);
+            });
     }
+
 });

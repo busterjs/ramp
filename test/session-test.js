@@ -5,7 +5,6 @@ var rampResources = require("ramp-resources");
 var ramp = require("../lib/ramp");
 
 var when = require("when");
-var when_pipeline = require("when/pipeline");
 var th = require("./test-helper.js");
 
 buster.testCase("Session", {
@@ -357,14 +356,10 @@ buster.testCase("Session", {
     "initializing with no slaves means there's no currently running session": function () {
         var rc = this.rs.createRampClient();
 
-        return when_pipeline([
-                function () {
-                    return rc.createSession()
-                },
-                function (sessionClientInitializer) {
-                    return sessionClientInitializer.initialize()
-                }
-            ])
+        return rc.createSession()
+            .then(function (sessionClientInitializer) {
+                return sessionClientInitializer.initialize();
+            })
             .then(function () {
                 assert(false, "Should not get here");
             })
