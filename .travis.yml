@@ -1,7 +1,9 @@
 language: node_js
 sudo: false
 env:
-  - CXX=g++-4.8 BUSTER_REPORTER=specification
+  global:
+    - CXX=g++-4.8
+    - BUSTER_REPORTER=specification
 addons:
   apt:
     sources:
