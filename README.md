@@ -19,15 +19,20 @@ So, yeah.
 
 ## Changelog
 
-**1.0.6** (15.10.2014)
+**2.0.0** (2015-Nov-24)
+
+* updated dependencies and supported node versions
+* breaking: using `when@3` (instead of v1) and `ramp-resources@2.x`
+
+**1.0.6** (2014-Oct-15)
 
 * `/slave_death` event is now published
 
-**1.0.5** (30.09.2014)
+**1.0.5** (2014-Sep-30)
 
 * it is now possible to pass slave id as url param
 
-**1.0.4** (14.05.2014)
+**1.0.4** (2014-May-14)
 
 * support for static paths
 * `"SIGINT"` isn't hooked anymore
