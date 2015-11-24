@@ -1,3 +1,19 @@
 language: node_js
+sudo: false
+env:
+  global:
+    - CXX=g++-4.8
+    - BUSTER_REPORTER=specification
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - g++-4.8
 node_js:
-  - 0.6
+  - "0.10"
+  - "0.12"
+  - "4"
+  - "5"
+before_install:
+  - npm i -g npm

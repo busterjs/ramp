@@ -1,6 +1,5 @@
 var buster = require("buster-node");
-var assert = buster.assert;
-var refute = buster.refute;
+var assert = buster.referee.assert;
 
 var ramp = require("./../lib/ramp");
 var th = require("./test-helper.js");
@@ -23,7 +22,7 @@ buster.testCase("Slave reloading on server restart", {
                 return ramp.createRampClient(port);
             }};
 
-            th.capture(self, function (rc, page) {
+            th.capture(self).then(function () {
                 process.kill("SIGKILL");
                 process.on("exit", function () {
                     th.spawnServer(port, function (port, rampServerUrl, process) {
@@ -40,7 +39,7 @@ buster.testCase("Slave reloading on server restart", {
                             }, function () {
                                 tryGettingSlaves();
                             });
-                        };
+                        }
 
                         tryGettingSlaves();
                     });
@@ -48,4 +47,4 @@ buster.testCase("Slave reloading on server restart", {
             });
         });
     }
-})
+});

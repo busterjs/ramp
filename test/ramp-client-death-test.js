@@ -1,28 +1,22 @@
 var buster = require("buster-node");
-var assert = buster.assert;
-var refute = buster.refute;
+var assert = buster.referee.assert;
 
 var ramp = require("./../lib/ramp");
 var th = require("./test-helper.js");
-var when = require("when");
-var when_pipeline = require("when/pipeline");
 var cp = require("child_process");
 
 function pollForSession(port, pred) {
     var rc = ramp.createRampClient(port);
-    var deferred = when.defer();
     var poll = function () {
-        rc.getCurrentSession().then(function (session) {
+        return rc.getCurrentSession().then(function (session) {
             var result = pred(session);
             if (result === undefined) {
-                poll();
-            } else {
-                deferred.resolve(result);
+                return poll();
             }
-        }, deferred.reject);
+            return result
+        });
     };
-    poll();
-    return deferred.promise;
+    return poll();
 }
 
 buster.testCase("Ramp client death", {
@@ -34,7 +28,7 @@ buster.testCase("Ramp client death", {
         return th.tearDownHelpers(this);
     },
 
-    "should end session": function (done) {
+    "should end session": function () {
         var self = this;
 
         var rcproc = cp.spawn("node", [__dirname + "/ramp-client-with-session-loader.js", this.rs.port]);
@@ -43,46 +37,34 @@ buster.testCase("Ramp client death", {
 
         var rc = this.rs.createRampClient();
 
-        th.promiseSuccess(
-            when_pipeline([
-                function () {
-                    return pollForSession(self.rs.port, function (session) { if (session) return session })
-                },
-                function (session) {
-                    rcproc.kill("SIGKILL");
-                },
-                function (session) {
-                    return pollForSession(self.rs.port, function (session) { if (!session) return null });
-                },
-                function () {
-                    assert(true)
-                }
-            ]),
-            done);
+        return pollForSession(self.rs.port, function (session) { if (session) return session })
+            .then(function (session) {
+                rcproc.kill("SIGKILL");
+            })
+            .then(function (session) {
+                return pollForSession(self.rs.port, function (session) { if (!session) return null });
+            })
+            .then(function () {
+                assert(true)
+            });
     },
 
-    "should end session when graceful": function (done) {
+    "should end session when graceful": function () {
         var self = this;
 
         var rcproc = cp.spawn("node", [__dirname + "/ramp-client-with-session-loader.js", this.rs.port]);
         rcproc.stdout.pipe(process.stdout);
         rcproc.stderr.pipe(process.stderr);
 
-        th.promiseSuccess(
-            when_pipeline([
-                function () {
-                    return pollForSession(self.rs.port, function (session) { if (session) return session })
-                },
-                function (session) {
-                    rcproc.kill("SIGINT");
-                },
-                function (session) {
-                    return pollForSession(self.rs.port, function (session) { if (!session) return null });
-                },
-                function () {
-                    assert(true)
-                }
-            ]),
-            done);
+        return pollForSession(self.rs.port, function (session) { if (session) return session })
+            .then(function (session) {
+                rcproc.kill("SIGINT");
+            })
+            .then(function (session) {
+                return pollForSession(self.rs.port, function (session) { if (!session) return null });
+            })
+            .then(function () {
+                assert(true)
+            });
     }
-})
+});
