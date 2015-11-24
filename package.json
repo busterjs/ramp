@@ -1,6 +1,6 @@
 {
   "name": "ramp",
-  "version": "1.0.6",
+  "version": "2.0.0",
   "description": "A ramp that makes browsers crash and burn, and hopefully run some tests (or less specifically, load some files and emit some events).",
   "author": {
     "name": "August Lilleaas",
