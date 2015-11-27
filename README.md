@@ -19,6 +19,10 @@ So, yeah.
 
 ## Changelog
 
+**2.0.1** (2015-Nov-28)
+
+* `2.0.0` was based off of a broken version of `ramp-resources` - this fixes `resourceSet.concat()` usages to be promise based
+
 **2.0.0** (2015-Nov-24)
 
 * updated dependencies and supported node versions
