@@ -19,6 +19,10 @@ So, yeah.
 
 ## Changelog
 
+**2.0.2** (2016-Jul-18)
+
+* Lock down faye version
+
 **2.0.1** (2015-Nov-28)
 
 * `2.0.0` was based off of a broken version of `ramp-resources` - this fixes `resourceSet.concat()` usages to be promise based
