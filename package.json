@@ -13,12 +13,12 @@
     "url": "https://github.com/busterjs/ramp.git"
   },
   "dependencies": {
-    "ramp-resources": "2.x",
-    "faye": "1.1.2",
     "ejs": "2.x",
-    "node-uuid": "1.x",
-    "when": "3.x",
-    "mori": "0.3.x"
+    "faye": "1.1.2",
+    "mori": "0.3.x",
+    "ramp-resources": "2.x",
+    "uuid": "^3.0.0",
+    "when": "3.x"
   },
   "scripts": {
     "test": "node run-tests.js",
